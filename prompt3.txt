@@ -1,0 +1,7 @@
+Vamos a trabajar en el componente @Chord.vue y su modelo de datos. Lo reescribiremos para que soporte cualquier tipo de acordes y notas.
+El nombre del acorde debe ser un campo de texto que admita la colección de caracteres [C,D,E,F,G,A,B,M,m,b,#,7,9,1,3,/,-,+,o], esto se debe validar en el diálogo modal de edición.
+Eliminamos "@alt":"flat" del modelo de datos, para guardar solo el string "@chord". De ese modo la configuración del acorde sólo tiene el campo de texto.
+Cuando se represente en el componente se tendrá en cuenta la construcción de string "@chord" del siguiente modo:
+El primer carácter del string se representará con una fuente un 15% mayor que el resto del string, y debe ser uno de los caracteres de la colección [C,D,E,F,G,A,B].
+Prevé otra posibilidad si aparece el carácter '/', en ese caso tanto '/' como el carácter que siga tendrán el mismo tamaño que el primer carácter del acorde.
+

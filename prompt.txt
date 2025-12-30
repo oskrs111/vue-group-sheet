@@ -1,0 +1,131 @@
+CONTEXTO DE LA APLICACIÓN: En los bandas musicales de versiones, un grupo de personas se reúnen para tocar canciones que han compuesto terceros. Para que las canciones se interpreten de la forma adecuada todos los integrantes deben conocer a la perfección tanto los acordes como la estructura exacta de la canción. Los recursos tradicionales de escritura musical son lentos en relación a su edición y requieren de formación que las bandas amateur no acostumbran a tener.
+
+DESCRIPCIÓN DE LA APLICACIÓN: La aplicación de nombre 'Group Sheet Editor', se utilizará para editar gráficamente estructuras de canciones, almacenarlas en el propio navegador para una posterior recuperación, e imprimirlas o exportarlas en formato pdf. La aplicación se desarrollará teniendo en cuenta las anotaciones del apartado 'NOTAS DE IMPLEMENTACIÓN' mas abajo.
+
+ESTRUCTURA DE LA APLICACIÓN: La aplicación será un espacio de trabajo tip o WYSWYG en un Vertical u Horizontal, imitando una hoja de tamaño DIN-A4.
+Defino la estructura de la aplicación a partir del modelo de datos que represento a continuación mediante este objeto JSON:
+
+{
+"$header":{
+"$left":{
+"$top":{"@tempo":"STRING"},
+"$bottom":{"@signature":"STRING"}
+},
+"$center":{
+"$top":{"@name":"STRING"},
+"$bottom":{"@author":"STRING"}
+},
+"$right":{
+"$top":{"@tone":"STRING"}
+}
+},
+
+"@body":[
+{"@id":"A","@b_color":"0x000F0F", "@f_color":"0x000F0F", 
+	"@compass":[
+		{"@chords":[
+			{"@chord":"G", "@alt":"flat", "@div":1}]
+		}],
+			"@compass":[
+		{"@chords":[
+			{"@chord":"C", "@alt":"sharp", "@div":2},
+			{"@chord":"C", "@alt":"none", "@div":2}
+			]
+		}],
+			"@compass":[
+		{"@chords":[
+			{"@chord":"R"}]
+		}],
+			"@compass":[
+		{"@chords":[
+			{"@chord":"G", "@alt":"flat", "@div":4},
+			{"@chord":"A", "@alt":"sharp", "@div":4},
+			{"@chord":"B", "@alt":"none", "@div":4},
+			{"@chord":"C", "@alt":"none", "@div":4}
+			]
+		}]
+},
+{"@id":"B","@b_color":"0x000F0F", "@f_color":"0x000F0F", 
+	"@compass":[
+		{"@chords":[
+			{"@chord":"G", "@alt":"flat", "@div":1}]
+		}],
+			"@compass":[
+		{"@chords":[
+			{"@chord":"C", "@alt":"sharp", "@div":2},
+			{"@chord":"C", "@alt":"none", "@div":2}
+			]
+		}],
+},
+{"@id":"C","@b_color":"0x000F0F", "@f_color":"0x000F0F", 
+	"@compass":[
+		{"@chords":[
+			{"@chord":"G", "@alt":"flat", "@div":1}]
+		}],
+			"@compass":[
+		{"@chords":[
+			{"@chord":"C", "@alt":"sharp", "@div":2},
+			{"@chord":"C", "@alt":"none", "@div":2}
+			]
+		}],
+},
+
+],
+"$structure":[
+{"@id":"A","@b_color":"0x000F0F", "@f_color":"0x000F0F", "@shape":"S"},
+{"@id":"A","@b_color":"0x000F0F", "@f_color":"0x000F0F", "@shape":"S"},
+{"@id":"B","@b_color":"0x000F0F", "@f_color":"0x000F9F", "@shape":"C"},
+{"@id":"C","@b_color":"0x000F0F", "@f_color":"0x009F0F", "@shape":"S"}
+],
+"$notes":[
+{"$id":1, "@text":"Line text"},
+{"$id":2, "@text":"Line text"},
+{"$id":3, "@text":"Line text"},
+],
+"settings":{
+"b_color_deafult":"0x000F0F", "f_color_default":"0x000F0F", "shape_default":"S", "page_orientation":"V"
+}
+}
+
+
+DESCRIPCIÓN DE LA ESTRUCTURA DE DATOS Y REPRESENTACIÓN GRÁFICA:
+- "$top": Indica la posición vertical arriba respecto a su contenedor.
+- "$bottom": Indica la posición vertical debajo respecto a su contenedor.
+- "$header": Es la cabecera del documento que se situa en la parte superior de la página.
+- "$left": Apartado izquierdo de la cabecera que contiene los apartados configurables "@tempo" y "@signature".
+- "@tempo": Campo númerico configurable de tempo en unidades 'BPM' de 10 a 300. En la representación se mostrará el sufijo 'BPM' tras el número. Fuente grande.
+- "@signature": Campo que indica la división de figuras, se puede escoger entre "2/4", "3/4" o "4/4". Fuente grande.
+- "$center": Apartado central de la cabecera que contiene los apartados "@name" y "@author".
+- "@name": Campo de texto editable para el nombre de la canción. Fuente grande.
+- "@name": Campo de texto editable para el nombre del autor de la canción. Fuente pequeña.
+- "$right": Apartado central de la cabecera que contiene el apartado "@tone".
+- "@tone": Campo de texto editable para el tono de la canción. Un solo caracter de la colección [C,D,E,F,G,A,B] con la opción de modificar el tono a sostenido añadiendo el caracter '#' o bemol con el caracter 'b'.
+- "@body": Cuerpo del documento que se situa debajo de "$header" y contiene objetos de secciones de la canción. Su menú debe permitir añadir secciones. 
+Cada parte tiene un identificador de texto "@id" configurable, "@b_color" un color de fondo configurable, "@f_color" un color de fuente configurable, y uno o mas objetos "@compass": 
+- "@compass": Representa un compas dentro de la sección al que se pueden añadir y quitar "@chords" acordes.
+- "@chords": Contenedor para acordes "@chord". Se deben poder poner y quitar acordes.
+- "@chord": Representa un acorde mediante un solo caracter de la colección [C,D,E,F,G,A,B].
+- "@alt": Representa la alteración del acorde si es bemol "flat" o sostenido "sharp". Esto se usará para añadir el caracter '#' para los sostenidos y 'b' para los bemoles en la representación de "@chord".
+- "@div": Indica el tiempo que ocupa el acorde dentro del compás, con los valores de 1 a 8 siendo 1 redonda y 8 corchea que se representará con el simbolo musical correspondiente sobre el caracter de "@chord".
+- "$structure": Apartado que se situa debajo de "@body" y contiene una representación gráfica de la secuencia de las secciones mediante figuras cuadradas o cuadradas con las esquinas redondeadeas según indica el campo "@shape".
+- "@id": Referencia a la sección a representar mediante el mismo texto representado en los campos de los objetos "@id" dentro de las secciones en "@body" si se edita este campo altera también el de la sección.
+- "@b_color": Contiene el color de fondo de la sección que se hereda de la sección correspondeinte en "@body".
+- "@f_color": Contiene el color de fuente de la sección que se hereda de la sección correspondeinte en "@body".
+- "@shape": Forma del contenedor de la sección "S" para un cuadrado y "C" para un cuadrado con las esquinas redondeadas. Este objeto grafico debe tener el contorno visible.
+- "$notes": Apartado de notas por líneas configurables. Se debe poder anadir quitar y editar líneas.
+- "settings": Apartado de configuraciones sin representación gráfica, a no ser que se abra un diálogo modal de configuración.
+- "b_color_deafult": Color por defecto del fondo para todos los objetos con configuración de color.
+- "f_color_deafult": Color por defecto de la fuente para todos los objetos con configuración de color.
+- "shape_default": Forma por defecto de la representación de las secciones.
+- "page_orientation": Orientación de la página "V" para vertical o "H" para horizontal.
+
+NOTAS DE IMPLEMENTACIÓN:
+- La aplicación se construirá utilizando Vite y Vue.
+- Cada objeto de la aplicación se codificará en un archivo independiente.
+- Los objetos cuyo nombre empiezan por el caracter '$' son objetos gráficos estructurales.
+- Los objetos cuyo nombre empiezan por el caracter '@' son objetos gráficos que permiten editar su contenido mediante un diálogo modal.
+- Los diálogos modales de configuración se invocan mediante un botón icono 'lapiz' en la esquina superior derecha del objeto.
+- Los objetos configurables utilizan una fuente monospaced moderna.
+
+
+
