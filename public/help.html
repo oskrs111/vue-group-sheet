@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayuda - Editor de Partituras</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-top: 1.5em;
+        }
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .toc {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .toc li {
+            margin-bottom: 8px;
+        }
+        .toc a {
+            text-decoration: none;
+            color: #1976d2;
+            font-weight: 500;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        code {
+            background: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #d63384;
+        }
+        .icon {
+            font-family: 'Material Icons';
+            font-size: 18px;
+            vertical-align: middle;
+            color: #666;
+        }
+        .note {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+        img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .back-to-top {
+            display: block;
+            text-align: right;
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #999;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Manual de Usuario</h1>
+
+    <div class="toc">
+        <h3>Índice</h3>
+        <ul>
+            <li><a href="#introduccion">1. Introducción</a></li>
+            <li><a href="#interfaz">2. Interfaz Principal</a></li>
+            <li><a href="#crear-cancion">3. Crear y Editar Canciones</a>
+                <ul>
+                    <li><a href="#cabecera">Cabecera (Título, Tono, Tempo)</a></li>
+                    <li><a href="#estructura">Estructura y Secciones</a></li>
+                    <li><a href="#acordes-letra">Acordes y Letra</a></li>
+                </ul>
+            </li>
+            <li><a href="#colecciones">4. Colecciones</a>
+                <ul>
+                    <li><a href="#crear-coleccion">Crear y Gestionar</a></li>
+                    <li><a href="#exportar-importar">Exportar e Importar (JSON)</a></li>
+                    <li><a href="#exportar-pdf">Exportar a PDF</a></li>
+                </ul>
+            </li>
+            <li><a href="#ajustes">5. Ajustes y Configuración</a></li>
+        </ul>
+    </div>
+
+    <div id="introduccion" class="section">
+        <h2>1. Introducción</h2>
+        <p>Bienvenido al editor de partituras para grupos. Esta herramienta te permite crear, organizar y exportar partituras de manera sencilla y profesional. Está diseñada para facilitar la gestión de repertorios y la creación de documentos listos para imprimir o compartir.</p>
+    </div>
+
+    <div id="interfaz" class="section">
+        <h2>2. Interfaz Principal</h2>
+        <p>La pantalla se divide en tres áreas principales:</p>
+        <ul>
+            <li><strong>Barra Superior:</strong> Contiene herramientas globales como Guardar, Abrir, Exportar PDF, Imprimir y Ajustes.</li>
+            <li><strong>Área Central (Partitura):</strong> Es el lienzo donde editas tu canción. Muestra el título, autor, tono, tempo y las secciones musicales.</li>
+            <li><strong>Panel Lateral (Colecciones):</strong> Situado a la derecha, permite organizar tus canciones en listas o repertorios.</li>
+        </ul>
+        <a href="#" class="back-to-top">Volver al índice</a>
+    </div>
+
+    <div id="crear-cancion" class="section">
+        <h2>3. Crear y Editar Canciones</h2>
+        
+        <h3 id="cabecera">Cabecera</h3>
+        <p>Haz clic directamente sobre los elementos de la cabecera para editarlos:</p>
+        <ul>
+            <li><strong>Título y Autor:</strong> Escribe el nombre de la canción y el artista.</li>
+            <li><strong>Tono (Key):</strong> Selecciona la tonalidad principal.</li>
+            <li><strong>Tempo (BPM):</strong> Ajusta la velocidad de la canción.</li>
+            <li><strong>Compás (Signature):</strong> Define el compás (ej. 4/4, 6/8).</li>
+        </ul>
+
+        <h3 id="estructura">Estructura y Secciones</h3>
+        <p>Las canciones se dividen en secciones (Intro, Verso, Coro, etc.).</p>
+        <ul>
+            <li><strong>Añadir Sección:</strong> Usa el botón <strong>+</strong> al final de la partitura.</li>
+            <li><strong>Tipo de Sección:</strong> Haz clic en el nombre de la sección (ej. "Intro") para cambiar su tipo y color.</li>
+            <li><strong>Compases:</strong> Dentro de cada sección, puedes añadir compases. Cada compás puede dividirse en 2, 3 o 4 partes para acomodar varios acordes.</li>
+        </ul>
+
+        <h3 id="acordes-letra">Acordes y Letra</h3>
+        <p>En cada división del compás puedes escribir:</p>
+        <ul>
+            <li><strong>Acorde:</strong> En la parte superior (ej. C, Am7).</li>
+            <li><strong>Letra:</strong> Debajo del acorde, para indicar en qué sílaba cae el cambio.</li>
+        </ul>
+        <div class="note">
+            <strong>Tip:</strong> Usa las herramientas de copiar y pegar secciones para agilizar la escritura de partes repetidas.
+        </div>
+        <a href="#" class="back-to-top">Volver al índice</a>
+    </div>
+
+    <div id="colecciones" class="section">
+        <h2>4. Colecciones</h2>
+        <p>Las colecciones te permiten agrupar canciones para crear repertorios (ej. "Concierto Verano", "Misa Domingo").</p>
+
+        <h3 id="crear-coleccion">Crear y Gestionar</h3>
+        <p>En el panel derecho:</p>
+        <ul>
+            <li><strong>Crear:</strong> Pulsa "Crear Colección" y dale un nombre.</li>
+            <li><strong>Editar:</strong> Usa el icono de lápiz para cambiar el nombre o reordenar las canciones.</li>
+            <li><strong>Añadir canciones:</strong> En el modo edición, busca tus canciones guardadas y añádelas a la lista.</li>
+        </ul>
+
+        <h3 id="exportar-importar">Exportar e Importar (JSON)</h3>
+        <p>Puedes hacer copias de seguridad o compartir colecciones con otros miembros del grupo.</p>
+        <ul>
+            <li><strong>Exportar:</strong> Pulsa el icono de descarga (flecha abajo) en una colección. Se descargará un archivo <code>.json</code> que contiene la colección y todas las canciones incluidas.</li>
+            <li><strong>Importar:</strong> Pulsa el icono de subida (flecha arriba) en la cabecera del panel. Selecciona un archivo <code>.json</code>.
+                <ul>
+                    <li>Si una canción ya existe y la versión importada es más nueva, el sistema te preguntará si quieres actualizarla.</li>
+                    <li>Si el nombre de la colección ya existe, se creará una copia con un número (ej. "Repertorio (1)").</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3 id="exportar-pdf">Exportar a PDF</h3>
+        <p>Pulsa el icono de PDF en una colección para generar un único archivo que contiene:</p>
+        <ol>
+            <li>Una <strong>portada</strong> con el nombre de la colección y la fecha.</li>
+            <li>Todas las <strong>canciones</strong> seguidas, cada una en su propia página.</li>
+        </ol>
+        <a href="#" class="back-to-top">Volver al índice</a>
+    </div>
+
+    <div id="ajustes" class="section">
+        <h2>5. Ajustes y Configuración</h2>
+        <p>En el menú de ajustes (icono de engranaje) puedes personalizar la apariencia:</p>
+        <ul>
+            <li><strong>Fuente:</strong> Cambia la tipografía de la partitura.</li>
+            <li><strong>Colores:</strong> Define colores por defecto para las secciones.</li>
+            <li><strong>Zoom:</strong> Ajusta el tamaño de visualización.</li>
+        </ul>
+        <a href="#" class="back-to-top">Volver al índice</a>
+    </div>
+
+</body>
+</html>

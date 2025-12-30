@@ -24,6 +24,10 @@
       <span class="material-icons">settings</span>
       <span class="btn-label">Ajustes</span>
     </button>
+    <button @click="openHelp" title="Ayuda" class="toolbar-btn">
+      <span class="material-icons">help_outline</span>
+      <span class="btn-label">Ayuda</span>
+    </button>
     
     <!-- Modal Guardar Como -->
     <Teleport to="#modal-container">
@@ -258,5 +262,9 @@ const print = () => {
 
 const openSettings = () => {
   showSettings.value = true
+}
+
+const openHelp = () => {
+  window.open('/help.html', '_blank')
 }
 </script>
