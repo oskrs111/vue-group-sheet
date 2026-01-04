@@ -16,6 +16,10 @@
       <span class="material-icons">picture_as_pdf</span>
       <span class="btn-label">PDF</span>
     </button>
+    <button @click="exportEPUB" title="Exportar EPUB" class="toolbar-btn">
+      <span class="material-icons">book</span>
+      <span class="btn-label">EPUB</span>
+    </button>
     <button @click="print" title="Imprimir" class="toolbar-btn">
       <span class="material-icons">print</span>
       <span class="btn-label">Imprimir</span>
@@ -91,7 +95,7 @@
     </Teleport>
     
     <Teleport to="#modal-container">
-      <SettingsModal v-if="showSettings" @close="showSettings = false" />
+      <SettingsModal v-if="showSettings" @close="showSettings = false"></SettingsModal>
     </Teleport>
   </div>
 </template>
@@ -256,15 +260,23 @@ const exportPDF = () => {
     })
 }
 
-const print = () => {
-  window.print()
-}
-
-const openSettings = () => {
-  showSettings.value = true
-}
-
-const openHelp = () => {
-  window.open('/help.html', '_blank')
+const exportEPUB = () => {
+  // Serializar el estado actual
+  const songData = {
+    header: store.header,
+    body: store.body,
+    structure: store.structure,
+    notes: store.notes,
+    settings: store.settings
+  }
+  
+  // Guardar en localStorage para transferir a la nueva pestaña
+  localStorage.setItem('epub_preview_data', JSON.stringify(songData))
+  
+  // Abrir nueva pestaña con el hash #epub
+  window.open('/#epub', '_blank')
 }
 </script>
+
+
+

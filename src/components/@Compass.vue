@@ -12,7 +12,7 @@
       </button>
     </div>
     
-    <div class="chords-display" v-if="!isRepeatCompass">
+    <div class="chords-display" v-if="!isRepeatCompass && !isSpaceCompass">
       <ChordComponent 
         v-for="(chord, index) in compass.chords"
         :key="index"
@@ -20,8 +20,12 @@
       />
     </div>
     
-    <div class="repeat-symbol" v-else>
+    <div class="repeat-symbol" v-else-if="isRepeatCompass">
       %
+    </div>
+    
+    <div class="space-symbol" v-else-if="isSpaceCompass">
+      <!-- Espacio vacío -->
     </div>
     
     <Teleport to="#modal-container">
@@ -49,6 +53,15 @@
                   @change="handleCompassTypeChange"
                 />
                 <span>Repetición (%)</span>
+              </label>
+              <label class="radio-option">
+                <input 
+                  type="radio" 
+                  v-model="compassType" 
+                  value="space"
+                  @change="handleCompassTypeChange"
+                />
+                <span>Espacio</span>
               </label>
             </div>
           </div>
@@ -164,7 +177,11 @@ const isRepeatCompass = computed(() => {
   return props.compass.chords.length === 1 && props.compass.chords[0].chord === 'R'
 })
 
-const compassType = ref(isRepeatCompass.value ? 'repeat' : 'normal')
+const isSpaceCompass = computed(() => {
+  return props.compass.chords.length === 1 && props.compass.chords[0].chord === 'S'
+})
+
+const compassType = ref(isRepeatCompass.value ? 'repeat' : (isSpaceCompass.value ? 'space' : 'normal'))
 
 const validateChord = (index) => {
   const chord = localChords.value[index]
@@ -191,8 +208,13 @@ const validateChord = (index) => {
 const handleCompassTypeChange = () => {
   if (compassType.value === 'repeat') {
     localChords.value = [{ chord: 'R' }]
+  } else if (compassType.value === 'space') {
+    localChords.value = [{ chord: 'S' }]
   } else {
-    localChords.value = [{ chord: 'C', div: 1 }]
+    // Si viene de otro tipo y no tiene acordes normales, reiniciar a C
+    if (localChords.value[0].chord === 'R' || localChords.value[0].chord === 'S') {
+      localChords.value = [{ chord: 'C', div: 1 }]
+    }
   }
   chordErrors.value = {}
 }
@@ -235,6 +257,11 @@ const copyCompass = () => {
   min-width: 70px;
   position: relative;
   border-radius: 0;
+}
+
+/* Estilo para el compás tipo espacio */
+.compass-box:has(.space-symbol) {
+  border-color: transparent;
 }
 
 .compass-header {
@@ -334,6 +361,10 @@ const copyCompass = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.space-symbol {
+  min-height: 48px; /* Altura equivalente para mantener alineación */
 }
 
 .modal-compass-edit {

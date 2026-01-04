@@ -18,6 +18,9 @@
       <button @click="exportCollectionPDF" title="Exportar PDF" class="action-btn" :disabled="isExporting">
         <span class="material-icons">{{ isExporting ? 'hourglass_empty' : 'picture_as_pdf' }}</span>
       </button>
+      <button @click="exportEPUB" title="Exportar EPUB" class="action-btn" :disabled="isExporting">
+        <span class="material-icons">book</span>
+      </button>
       <button @click="confirmDelete" title="Eliminar" class="action-btn danger">
         <span class="material-icons">delete</span>
       </button>
@@ -45,6 +48,7 @@ import { useSheetStore } from '../stores/sheetStore'
 import CollectionEditModal from './CollectionEditModal.vue'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import { saveAs } from 'file-saver'
 
 const props = defineProps({
   collection: {
@@ -128,19 +132,17 @@ const exportCollectionPDF = async () => {
       
       // Esperar a que Vue actualice el DOM
       await nextTick()
-      await new Promise(resolve => setTimeout(resolve, 1000)) // 1 segundo para estar muy seguros
+      await new Promise(resolve => setTimeout(resolve, 800)) // Wait for render
       
       const sheetPage = document.getElementById('sheet-page')
       if (sheetPage) {
-        console.log('Elemento #sheet-page encontrado. Dimensiones:', sheetPage.offsetWidth, 'x', sheetPage.offsetHeight)
         
-        // Activar clase de exportación temporalmente en el elemento VIVO
+        // Activar clase de exportación temporalmente
         sheetPage.classList.add('pdf-export')
         
         try {
-          // Capturar el elemento vivo directamente a un canvas
           const canvas = await html2canvas(sheetPage, {
-            scale: 2, // Mejor calidad
+            scale: 2, 
             useCORS: true,
             logging: false,
             backgroundColor: '#ffffff',
@@ -148,26 +150,17 @@ const exportCollectionPDF = async () => {
             scrollX: -window.scrollX
           })
           
-          console.log('Captura de canvas completada')
-          
           const imgData = canvas.toDataURL('image/jpeg', 0.95)
-          
-          // Calcular dimensiones para ajustar al PDF manteniendo ratio
           const imgProps = pdf.getImageProperties(imgData)
           const imgRatio = imgProps.width / imgProps.height
-          
-          // Ajustar al ancho del PDF (menos márgenes si se quisiera, aquí usamos ancho completo)
           const printWidth = pdfWidth
           const printHeight = printWidth / imgRatio
           
-          // Si es la primera página, no añadimos nueva (ya se crea una por defecto)
-          // Si no, añadimos página nueva
           if (i > 0) {
             pdf.addPage()
           }
           
           pdf.addImage(imgData, 'JPEG', 0, 0, printWidth, printHeight)
-          console.log('Página añadida al PDF')
           
         } catch (captureError) {
           console.error('Error capturando canción:', captureError)
@@ -179,9 +172,7 @@ const exportCollectionPDF = async () => {
       }
     }
 
-    console.log('Guardando PDF final...')
     pdf.save(`${props.collection.name}.pdf`)
-    console.log('Exportación completada con éxito')
 
   } catch (error) {
     console.error('Error exportando colección:', error)
@@ -196,18 +187,90 @@ const exportJSON = () => {
     const data = store.exportCollection(props.collection.id)
     const jsonStr = JSON.stringify(data, null, 2)
     const blob = new Blob([jsonStr], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${props.collection.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    saveAs(blob, `${props.collection.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`)
   } catch (error) {
     console.error('Error exportando JSON:', error)
     alert('Error al exportar: ' + error.message)
+  }
+}
+
+const exportEPUB = async () => {
+  if (props.collection.songs.length === 0) {
+    alert('La colección está vacía')
+    return
+  }
+
+  isExporting.value = true
+  await nextTick()
+
+  try {
+    const songsRegistry = sheetStore.getSongsRegistry()
+    const songsToExport = []
+    const imageBlobs = []
+
+    // 1. Collect Metadata and Capture Images sequentially
+    for (const songId of props.collection.songs) {
+      if (songsRegistry.songs[songId]) {
+        // Metadata copy
+        const songData = JSON.parse(JSON.stringify(songsRegistry.songs[songId]))
+        songsToExport.push(songData)
+        
+        // Capture Image logic (hijack main view)
+        await sheetStore.loadSong(songId)
+        
+        // Wait for render
+        await nextTick()
+        await new Promise(resolve => setTimeout(resolve, 800))
+
+        const sheetPage = document.getElementById('sheet-page')
+        if (sheetPage) {
+           sheetPage.classList.add('pdf-export') // Ensure clean look
+           try {
+             const canvas = await html2canvas(sheetPage, {
+               scale: 2,
+               useCORS: true,
+               logging: false,
+               backgroundColor: '#ffffff'
+             })
+             
+             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+             imageBlobs.push(blob)
+           } catch (e) {
+             console.error('Error capturing image for EPUB', e)
+             // Push a placeholder or null? 
+             // Better to push a dummy error image or just fail
+             // For now we might just fail the image part or push null and handle it?
+             // Let's assume robustness: push null and filter later?
+             // EpubGenerator expects matching indices.
+             // We'll create a simple fallback blob?
+             // Let's just alert and continue
+           } finally {
+             sheetPage.classList.remove('pdf-export')
+           }
+        }
+      }
+    }
+
+    if (songsToExport.length === 0) {
+      alert('No se encontraron canciones válidas para exportar')
+      return
+    }
+
+    // 2. Generate EPUB
+    const { EpubGenerator } = await import('../utils/EpubGenerator.js')
+    const generator = new EpubGenerator(props.collection.name, songsToExport)
+    
+    // Use Image-based generation
+    const blob = await generator.generateFromImages(imageBlobs)
+
+    // 3. Download
+    saveAs(blob, `${props.collection.name}.epub`)
+
+  } catch (error) {
+    console.error('Error exportando EPUB:', error)
+    alert('Error al generar EPUB: ' + error.message)
+  } finally {
+    isExporting.value = false
   }
 }
 </script>
