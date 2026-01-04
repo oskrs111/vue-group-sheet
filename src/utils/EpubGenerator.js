@@ -126,6 +126,13 @@ export class EpubGenerator {
       year: 'numeric', month: 'long', day: 'numeric'
     })
 
+    // Generate song list HTML
+    const songListHtml = this.songs.map(song => {
+      const name = song.header?.center?.top?.name || 'Sin Título'
+      const author = song.header?.center?.bottom?.author || 'Desconocido'
+      return `<li><strong>${name}</strong> - ${author}</li>`
+    }).join('\n')
+
     return `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -138,8 +145,9 @@ export class EpubGenerator {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh; /* Changed to min-height for flow */
       text-align: center;
+      padding: 20px;
     }
     .cover-title {
       font-size: 3em;
@@ -152,6 +160,17 @@ export class EpubGenerator {
     }
     .cover-count {
       font-style: italic;
+      margin-bottom: 40px;
+    }
+    .song-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      text-align: center;
+    }
+    .song-list li {
+      margin-bottom: 5px;
+      font-size: 1.1em;
     }
   </style>
 </head>
@@ -160,6 +179,10 @@ export class EpubGenerator {
     <h1 class="cover-title">${this.collectionName}</h1>
     <p class="cover-info">Exportado el ${dateStr}</p>
     <p class="cover-count">${this.songs.length} canciones</p>
+    
+    <ul class="song-list">
+      ${songListHtml}
+    </ul>
   </div>
 </body>
 </html>`

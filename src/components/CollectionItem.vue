@@ -85,6 +85,17 @@ const exportCollectionPDF = async () => {
   try {
     const songsRegistry = sheetStore.getSongsRegistry()
     
+    // Recopilar metadatos de todas las canciones primero
+    const coverList = []
+    for (const songId of props.collection.songs) {
+      if (songsRegistry.songs[songId]) {
+        const s = songsRegistry.songs[songId]
+        const name = s.header?.center?.top?.name || 'Sin nombre'
+        const author = s.header?.center?.bottom?.author || 'Desconocido'
+        coverList.push(`${name} - ${author}`)
+      }
+    }
+
     // Inicializar documento PDF (A4, Portrait, mm)
     const pdf = new jsPDF({
       orientation: 'portrait',
@@ -97,19 +108,38 @@ const exportCollectionPDF = async () => {
     const pdfHeight = pdf.internal.pageSize.getHeight()
     
     // --- PORTADA ---
+    let yPos = pdfHeight / 3 - 20
+    
     pdf.setFont("helvetica", "bold")
     pdf.setFontSize(24)
-    pdf.text(props.collection.name, pdfWidth / 2, pdfHeight / 3, { align: "center" })
-    
+    pdf.text(props.collection.name, pdfWidth / 2, yPos, { align: "center" })
+    yPos += 15
+
     pdf.setFont("helvetica", "normal")
     pdf.setFontSize(12)
     const dateStr = new Date().toLocaleDateString('es-ES', { 
       year: 'numeric', month: 'long', day: 'numeric' 
     })
-    pdf.text(`Exportado el ${dateStr}`, pdfWidth / 2, (pdfHeight / 3) + 15, { align: "center" })
+    pdf.text(`Exportado el ${dateStr}`, pdfWidth / 2, yPos, { align: "center" })
+    yPos += 10
     
     pdf.setFontSize(10)
-    pdf.text(`${props.collection.songs.length} canciones`, pdfWidth / 2, (pdfHeight / 3) + 25, { align: "center" })
+    pdf.text(`${props.collection.songs.length} canciones`, pdfWidth / 2, yPos, { align: "center" })
+    yPos += 20
+
+    // LISTA DE CANCIONES (TOC)
+    pdf.setFontSize(11)
+    pdf.setFont("helvetica", "normal")
+    
+    coverList.forEach((item, index) => {
+      // Simple pagination check for cover? 
+      // For now assume it fits or user accepts overflow on simple covers.
+      // If we go past page, we stop (simple MVP)
+      if (yPos < pdfHeight - 20) {
+        pdf.text(item, pdfWidth / 2, yPos, { align: "center" })
+        yPos += 7
+      }
+    })
     
     pdf.addPage()
     // --- FIN PORTADA ---
