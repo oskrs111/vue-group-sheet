@@ -105,6 +105,8 @@ import { ref, computed } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import SettingsModal from './SettingsModal.vue'
 import html2pdf from 'html2pdf.js'
+import html2canvas from 'html2canvas'
+import { saveAs as saveFile } from 'file-saver'
 
 const store = useSheetStore()
 const showSettings = ref(false)
@@ -112,6 +114,14 @@ const showSaveDialog = ref(false)
 const showLoadDialog = ref(false)
 const selectedSongId = ref(null)
 const songName = ref('')
+
+const openSettings = () => {
+  showSettings.value = true
+}
+
+const openHelp = () => {
+  alert('Ayuda no implementada aún')
+}
 
 const songsList = computed(() => store.getSongsList())
 
@@ -215,66 +225,197 @@ const formatDate = (dateString) => {
   })
 }
 
-const exportPDF = () => {
-  const element = document.getElementById('sheet-page')
 
-  if (!element) {
-    alert('No se encontró el contenido de la página para exportar')
-    return
-  }
 
-  // Activar estilos específicos solo sobre el contenedor de la página
-  element.classList.add('pdf-export')
-
-  const opt = {
-    margin: 0,
-    filename: `${store.header.center.top.name || 'cancion'}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 3,
-      useCORS: true,
-      logging: false,
-      letterRendering: true,
-      allowTaint: false,
-      backgroundColor: '#ffffff'
-    },
-    jsPDF: {
-      unit: 'mm',
-      format: 'a4',
-      orientation: store.settings.page_orientation === 'V' ? 'portrait' : 'landscape',
-      compress: true
-    }
-  }
-
-  html2pdf()
-    .set(opt)
-    .from(element)
-    .save()
-    .then(() => {
-      element.classList.remove('pdf-export')
-    })
-    .catch((error) => {
-      console.error('Error generating PDF:', error)
-      element.classList.remove('pdf-export')
-      alert('Error al generar el PDF: ' + error.message)
-    })
+const formatDateForFileName = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day}_${hours}-${minutes}`
 }
 
-const exportEPUB = () => {
-  // Serializar el estado actual
-  const songData = {
-    header: store.header,
-    body: store.body,
-    structure: store.structure,
-    notes: store.notes,
-    settings: store.settings
-  }
-  
-  // Guardar en localStorage para transferir a la nueva pestaña
-  localStorage.setItem('epub_preview_data', JSON.stringify(songData))
-  
-  // Abrir nueva pestaña con el hash #epub
-  window.open('/#epub', '_blank')
+const getExportFileName = () => {
+    const name = (store.header.center.top.name || 'cancion').replace(/[^a-z0-9áéíóúñ_\- ]/gi, '').trim()
+    const author = (store.header.center.bottom.author || '').replace(/[^a-z0-9áéíóúñ_\- ]/gi, '').trim()
+    const dateTime = formatDateForFileName(new Date())
+    
+    if (author) {
+        return `${name}-${author}_${dateTime}`
+    }
+    return `${name}_${dateTime}`
+}
+
+// Rewriting exportPDF to use explicit html2canvas + jsPDF
+const exportPDF = async () => {
+    const sheetPage = document.getElementById('sheet-page')
+    if (!sheetPage) {
+        alert('No se encontró el contenido de la página para exportar')
+        return
+    }
+
+    try {
+        const fileName = getExportFileName()
+        sheetPage.classList.add('pdf-export')
+        
+        // Setup PDF
+        const pdf = new html2pdf.Worker
+        const opt = {
+             margin: 0,
+             filename: `${fileName}.pdf`,
+             image: { type: 'jpeg', quality: 0.98 },
+             html2canvas: { scale: 3, useCORS: true, logging: false, backgroundColor: '#ffffff', scrollY: -window.scrollY },
+             jsPDF: { unit: 'mm', format: 'a4', orientation: store.settings.page_orientation === 'V' ? 'portrait' : 'landscape', compress: true }
+        }
+
+    // Generate Worker
+        const worker = html2pdf().set(opt).from(sheetPage).toPdf()
+        
+        // Wait for first page to be added to PDF
+        await worker.get('pdf').then(async (doc) => {
+             // Now check for lyrics
+             const lyricsPage = document.getElementById('lyrics-page')
+             
+             if (lyricsPage) {
+                 lyricsPage.classList.add('pdf-export')
+                 try {
+                     const canvas = await html2canvas(lyricsPage, {
+                        scale: 3,
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff',
+                        scrollY: -window.scrollY
+                     })
+                     
+                     const imgData = canvas.toDataURL('image/jpeg', 0.98)
+                     
+                     // Get dimensions from the PDF document context
+                     const pageSize = doc.internal.pageSize
+                     const pageWidth = pageSize.getWidth()
+                     const pageHeight = pageSize.getHeight() 
+                     
+                     const imgProps = doc.getImageProperties(imgData)
+                     const imgRatio = imgProps.width / imgProps.height
+                     
+                     // Calculate width-based dimensions first (Match Page Width)
+                     let printWidth = pageWidth
+                     let printHeight = printWidth / imgRatio
+                     
+                     // Check if height overflows page
+                     if (printHeight > pageHeight) {
+                        // Scale to fit height instead
+                        printHeight = pageHeight
+                        printWidth = printHeight * imgRatio
+                     }
+
+                     // Calculate Centering (if width is less than page width)
+                     const xOffset = (pageWidth - printWidth) / 2
+                     const yOffset = 0 // Top alignment
+
+                     doc.addPage()
+                     doc.addImage(imgData, 'JPEG', xOffset, yOffset, printWidth, printHeight)
+                 } catch (e) {
+                     console.error("Error capturing lyrics:", e)
+                 } finally {
+                     lyricsPage.classList.remove('pdf-export')
+                 }
+             }
+             
+             // Manual save after modification
+             doc.save(`${fileName}.pdf`)
+        })
+
+    } catch (error) {
+        console.error('Error generating PDF:', error)
+        alert('Error al generar el PDF: ' + error.message)
+    } finally {
+        sheetPage.classList.remove('pdf-export')
+    }
+}
+
+
+
+const exportEPUB = async () => {
+    try {
+        const sheetPage = document.getElementById('sheet-page')
+        if (!sheetPage) {
+            alert('No se encontró el contenido de la página para exportar')
+            return
+        }
+
+        const songsToExport = []
+        const imageBlobs = []
+        
+        // Prepare song data
+        const songData = {
+            header: store.header,
+            body: store.body,
+            structure: store.structure,
+            notes: store.notes,
+            settings: store.settings
+        }
+
+        // 1. Capture Sheet
+        sheetPage.classList.add('pdf-export')
+        try {
+            const canvas = await html2canvas(sheetPage, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                scrollY: -window.scrollY
+            })
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+            
+            songsToExport.push(songData)
+            imageBlobs.push(blob)
+        } finally {
+            sheetPage.classList.remove('pdf-export')
+        }
+
+        // 2. Capture Lyrics if present
+        const lyricsPage = document.getElementById('lyrics-page')
+        if (lyricsPage) {
+            lyricsPage.classList.add('pdf-export')
+            try {
+                const canvas = await html2canvas(lyricsPage, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    scrollY: -window.scrollY
+                })
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+                
+                // Clone data but append (Letra) to name
+                const lyricData = JSON.parse(JSON.stringify(songData))
+                if (lyricData.header?.center?.top) {
+                    lyricData.header.center.top.name = (lyricData.header.center.top.name || '') + ' (Letra)'
+                }
+                
+                songsToExport.push(lyricData)
+                imageBlobs.push(blob)
+            } finally {
+                lyricsPage.classList.remove('pdf-export')
+            }
+        }
+
+        // 3. Generate EPUB
+        const { EpubGenerator } = await import('../utils/EpubGenerator.js')
+        const fileName = getExportFileName()
+        // Pass simple name to generator logic if needed, but filename for save
+        const generator = new EpubGenerator(store.header.center.top.name || 'cancion', songsToExport)
+        
+        const blob = await generator.generateFromImages(imageBlobs)
+        
+        // 4. Download
+        saveFile(blob, `${fileName}.epub`)
+
+    } catch (error) {
+        console.error('Error exportando EPUB:', error)
+        alert('Error al generar EPUB: ' + error.message)
+    }
 }
 </script>
 

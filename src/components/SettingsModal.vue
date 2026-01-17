@@ -39,6 +39,12 @@
             Mostrar apartado de notas
           </label>
         </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" v-model="localSettings.show_lyrics" />
+            Mostrar página de letras
+          </label>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="secondary" @click="$emit('close')">Cancelar</button>

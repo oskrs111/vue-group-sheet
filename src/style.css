@@ -62,6 +62,11 @@ textarea {
 .pdf-export {
   /* Para PDF quitamos solo la sombra, sin alterar posición ni tamaño */
   box-shadow: none !important;
+  /* Prevent extra blank page by un-forcing the A4 height */
+  min-height: auto !important;
+  height: auto !important;
+  /* Fix vertical overflow just in case */
+  overflow: visible !important;
 }
 
 .pdf-export .section-wrapper {
@@ -71,7 +76,7 @@ textarea {
 
 #page-wrapper {
   position: relative;
-  margin-top: 60px;
+  margin-top: 0;
   margin-left: 0;
   width: 100%;
 }
@@ -98,7 +103,7 @@ textarea {
   margin: 0 auto;
   background: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 10mm;
+  padding: 20px;
   position: relative;
 }
 
@@ -614,14 +619,15 @@ textarea {
 }
 
 .section-actions-container {
-  /* Reserva espacio fijo para la barra de acciones de sección,
-     aunque no haya ninguna sección seleccionada */
-  position: absolute;
+  /* Barra de acciones pegajosa en la parte superior */
+  position: sticky;
   top: 0;
   left: 0;
   height: 56px;
   width: 100%;
   z-index: 900;
+  background-color: #f0f0f0;
+  /* Ensure background is opaque so content doesn't show through */
 }
 
 .page-wrapper {
@@ -765,6 +771,181 @@ textarea {
   print-color-adjust: exact;
 }
 
+.pdf-export .structure-item {
+  border: 2px solid #000000 !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Lyrics Page Styles */
+.lyrics-page {
+  background: white;
+  padding: 20px;
+  /* Match sheet-page padding usually */
+  min-height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+}
+
+.lyrics-header {
+  text-align: right;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+}
+
+.lyrics-header h4 {
+  margin: 0;
+  font-family: var(--sheet-font-family, serif);
+  color: #666;
+}
+
+.lyrics-wrapper {
+  display: flex;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.lyrics-id-container {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 35px;
+  font-weight: bold;
+  border: 2px solid #333;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.lyrics-footer {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  right: 2px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.lyrics-footer span {
+  font-size: 10px;
+  font-weight: normal;
+  user-select: none;
+}
+
+
+.lyrics-text-container {
+  flex: 1;
+  min-height: 60px;
+  background: #fafafa;
+  position: relative;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  height: auto;
+  align-self: stretch;
+  margin-left: 5px;
+}
+
+
+.lyrics-text-display {
+  flex: 1;
+}
+
+.lyrics-pre {
+  white-space: pre-wrap;
+  font-family: inherit;
+  margin: 0;
+  font-size: 0.9em;
+  color: #333;
+}
+
+.lyrics-view {
+  display: flex;
+  gap: 5px;
+  padding: 3px;
+  background: #fafafa;
+  border-radius: 5px;
+  position: relative;
+}
+
+.lyrics-edit-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: transparent;
+  padding: 5px;
+  align-self: flex-start;
+  transition: color 0.2s;
+}
+
+.lyrics-edit-btn:hover {
+  color: #1976d2;
+}
+
+.lyrics-edit {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.lyrics-textarea {
+  width: 100%;
+  height: 100px;
+  /* Minimum height */
+  flex: 1;
+  padding: 15px;
+  border: none;
+  resize: vertical;
+  background: white;
+  font-family: inherit;
+  font-size: 1.1em;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.lyrics-textarea:focus {
+  background: #fff;
+}
+
+.lyrics-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 5px;
+  background: #f0f0f0;
+  border-top: 1px solid #e0e0e0;
+}
+
+.lyrics-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.lyrics-action-btn.save {
+  color: #4CAF50;
+}
+
+.lyrics-action-btn.save:hover {
+  background: #e8f5e9;
+}
+
+.lyrics-action-btn.cancel {
+  color: #f44336;
+}
+
+.lyrics-action-btn.cancel:hover {
+  background: #ffebee;
+}
+
+
+/* PDF Export Fixes */
 .pdf-export .structure-item {
   border: 2px solid #000000 !important;
   -webkit-print-color-adjust: exact;

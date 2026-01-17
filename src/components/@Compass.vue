@@ -69,8 +69,19 @@
           <div v-if="compassType === 'normal'" class="chords-container">
             <div v-for="(chord, idx) in localChords" :key="idx" class="chord-editor">
               <div class="form-group">
-                <label>Acorde {{ idx + 1 }}:</label>
-                <div class="input-with-help">
+                <div class="chord-label-row">
+                  <label>Acorde {{ idx + 1 }}:</label>
+                  <label class="checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      :checked="chord.chord === 'REST'" 
+                      @change="toggleRest(idx, $event)"
+                    />
+                    <span>Silencio</span>
+                  </label>
+                </div>
+                
+                <div v-if="chord.chord !== 'REST'" class="input-with-help">
                   <input 
                     type="text" 
                     v-model="chord.chord"
@@ -82,6 +93,10 @@
                     <span class="material-icons">help_outline</span>
                   </button>
                 </div>
+                <div v-else class="rest-placeholder">
+                  Silencio musical
+                </div>
+                
                 <small v-if="chordErrors[idx]" class="error-text">
                   {{ chordErrors[idx] }}
                 </small>
@@ -92,6 +107,10 @@
                   <label class="radio-option">
                     <input type="radio" v-model.number="chord.div" :value="1" />
                     <span>𝅝 Redonda</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" v-model.number="chord.div" :value="5" />
+                    <span>𝅗𝅥. Blanca p.</span>
                   </label>
                   <label class="radio-option">
                     <input type="radio" v-model.number="chord.div" :value="2" />
@@ -171,7 +190,7 @@ const localChords = ref(JSON.parse(JSON.stringify(props.compass.chords)))
 const chordErrors = ref({})
 
 // Caracteres permitidos para el acorde
-const allowedChars = /^[CDEFGABMmb#7913/\-+o]*$/
+const allowedChars = /^[CDEFGABMmb#7913sus24altdimag/\-+o]*$/
 
 const isRepeatCompass = computed(() => {
   return props.compass.chords.length === 1 && props.compass.chords[0].chord === 'R'
@@ -183,15 +202,27 @@ const isSpaceCompass = computed(() => {
 
 const compassType = ref(isRepeatCompass.value ? 'repeat' : (isSpaceCompass.value ? 'space' : 'normal'))
 
+const toggleRest = (index, event) => {
+  const isChecked = event.target.checked
+  if (isChecked) {
+    localChords.value[index].chord = 'REST'
+    delete chordErrors.value[index]
+  } else {
+    localChords.value[index].chord = 'C'
+  }
+}
+
 const validateChord = (index) => {
   const chord = localChords.value[index]
   const chordString = chord.chord || ''
+  
+  if (chordString === 'REST') return
   
   // Validar caracteres permitidos
   if (!allowedChars.test(chordString)) {
     chordErrors.value[index] = 'Caracteres no válidos detectados'
     // Eliminar caracteres no permitidos
-    chord.chord = chordString.replace(/[^CDEFGABMmb#7913/\-+o]/g, '')
+    chord.chord = chordString.replace(/[^CDEFGABMmb#7913sus24altdimag/\-+o]/g, '')
     return
   }
   
@@ -254,7 +285,7 @@ const copyCompass = () => {
 .compass-box {
   border: 1px solid #666;
   padding: 5px;
-  min-width: 70px;
+  min-width: 50px;
   position: relative;
   border-radius: 0;
 }
@@ -272,6 +303,7 @@ const copyCompass = () => {
   display: flex;
   justify-content: space-between;
   pointer-events: none;
+  flex-flow: wrap;
 }
 
 .compass-edit-btn {

@@ -18,6 +18,9 @@
         <span class="material-icons">close</span>
       </button>
     </div>
+    <div class="structure-footer">
+      <span class="">{{ index + 1 }}</span>
+    </div>
     
     <Teleport to="#modal-container">
       <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
@@ -101,18 +104,18 @@ const confirmDelete = () => {
 <style scoped>
 .structure-item-wrapper {
   position: relative;
-  width: 81px;
-  height: 81px;
+  width: 61px;
+  height: 61px;
 }
 
 .structure-item {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border: 2px solid #333;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 50px;
+  font-size: 35px;
   font-weight: bold;
 }
 
@@ -129,6 +132,23 @@ const confirmDelete = () => {
   justify-content: space-between;
   pointer-events: none;
 }
+
+.structure-footer {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  right: 2px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.structure-footer span {
+  font-size: 10px;
+  font-weight: normal;
+  user-select: none;
+}
+
 
 .structure-edit-btn {
   background: transparent;

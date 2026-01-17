@@ -12,7 +12,7 @@
       <span class="material-icons">edit</span>
       <span class="btn-label">Editar Sección</span>
     </button>
-    <button @click="copySection" class="action-btn" :disabled="!hasCopiedSection" title="Copiar sección">
+    <button @click="copySection" class="action-btn" title="Copiar sección">
       <span class="material-icons">content_copy</span>
       <span class="btn-label">Copiar Sección</span>
     </button>

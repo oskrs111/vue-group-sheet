@@ -8,6 +8,7 @@ const defaultSettings = {
   page_orientation: 'V',
   font_family: 'Libre Baskerville',
   show_notes: false,
+  show_lyrics: false,
   zoom_sections: 100,
   zoom_structure: 100
 }
@@ -209,7 +210,8 @@ export const useSheetStore = defineStore('sheet', {
           id: firstSection.id,
           b_color: firstSection.b_color,
           f_color: firstSection.f_color,
-          shape: this.settings.shape_default
+          shape: this.settings.shape_default,
+          lyric: ''
         })
         this.saveToLocalStorage()
       }
@@ -220,6 +222,10 @@ export const useSheetStore = defineStore('sheet', {
       const currentItem = JSON.parse(JSON.stringify(this.structure[index]))
       const newData = JSON.parse(JSON.stringify(data))
       this.structure[index] = { ...currentItem, ...newData }
+      // Ensure lyric is preserved if not in data, or updated if in data
+      if (data.lyric !== undefined) {
+        this.structure[index].lyric = data.lyric
+      }
       this.saveToLocalStorage()
     },
 
@@ -266,9 +272,22 @@ export const useSheetStore = defineStore('sheet', {
       }
 
       // Formato nuevo
-      if (parsed && parsed.version === 1 && parsed.songs) {
+      if (parsed && (parsed.version === 1 || parsed.version === 2) && parsed.songs) {
         if (!parsed.collections) {
           parsed.collections = {}
+        }
+        // Auto-upgrade in memory if needed
+        if (parsed.version === 1) {
+          parsed.version = 2
+          Object.values(parsed.songs).forEach(song => {
+            if (song.structure) {
+              song.structure = song.structure.map(item => ({
+                ...item,
+                lyric: item.lyric !== undefined ? item.lyric : ''
+              }))
+            }
+          })
+          // We don't save immediately here, but it will be saved on next write
         }
         return parsed
       }
@@ -297,14 +316,28 @@ export const useSheetStore = defineStore('sheet', {
         })
       }
 
-      const registry = { version: 1, songs, collections: {} }
+      const registry = { version: 2, songs, collections: {} }
       localStorage.setItem('groupSheetSongs', JSON.stringify(registry))
       return registry
     },
 
     saveSongsRegistry(registry) {
       if (!registry.version) {
-        registry.version = 1
+        registry.version = 2
+      } else if (registry.version === 1) {
+        // Upgrade from v1 to v2
+        registry.version = 2
+        // Iterate all songs and add 'lyric' to structure items if missing
+        if (registry.songs) {
+          Object.values(registry.songs).forEach(song => {
+            if (song.structure) {
+              song.structure = song.structure.map(item => ({
+                ...item,
+                lyric: item.lyric !== undefined ? item.lyric : '' // Base64 empty
+              }))
+            }
+          })
+        }
       }
       if (!registry.collections) {
         registry.collections = {}

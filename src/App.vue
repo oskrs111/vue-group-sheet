@@ -27,6 +27,11 @@
           <StructureComponent />
           <NotesComponent v-if="store.settings.show_notes" />
         </div>
+        <LyricsPage 
+          v-if="store.settings.show_lyrics" 
+          :class="pageClass" 
+          :style="{ '--sheet-font-family': fontFamily }"
+        />
       </div>
     </div>
     <CollectionContainer />
@@ -101,6 +106,7 @@ import NotesComponent from './components/$Notes.vue'
 import SectionActions from './components/SectionActions.vue'
 import CollectionContainer from './components/CollectionContainer.vue'
 import EpubPage from './components/EpubPage.vue'
+import LyricsPage from './components/LyricsPage.vue'
 import html2canvas from 'html2canvas'
 import { EpubGenerator } from './utils/EpubGenerator'
 import { saveAs } from 'file-saver'
@@ -146,16 +152,66 @@ const generateAndDownloadEpub = async () => {
       backgroundColor: '#ffffff'
     })
 
-    // 2. Convert to blob
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+    // 2. Capture Logic with visual toggling
     
+    // Elements to toggle
+    const lyricsSection = document.querySelector('.epub-lyrics')
+    const mainContent = document.querySelectorAll('.epub-header, .epub-body, .epub-structure, .epub-notes')
+    
+    let mainBlob = null
+    let lyricsBlob = null
+    
+    // A. Capture Main Sheet (Lyrics hidden)
+    if (lyricsSection) lyricsSection.style.display = 'none'
+    
+    const canvasMain = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff'
+    })
+    mainBlob = await new Promise(resolve => canvasMain.toBlob(resolve, 'image/jpeg', 0.9))
+    
+    const imageBlobs = [mainBlob]
+    
+    // B. Capture Lyrics (Main hidden)
+    if (lyricsSection) {
+       // Restore lyrics, hide main
+       lyricsSection.style.display = 'block' // or ''
+       mainContent.forEach(el => el.style.display = 'none')
+       
+       try {
+         // Wait a tick for layout update
+         await nextTick()
+         
+         const canvasLyrics = await html2canvas(element, {
+             scale: 2,
+             useCORS: true,
+             logging: false,
+             backgroundColor: '#ffffff'
+         })
+         lyricsBlob = await new Promise(resolve => canvasLyrics.toBlob(resolve, 'image/jpeg', 0.9))
+         imageBlobs.push(lyricsBlob)
+         
+       } catch (e) {
+          console.error('Error capturing epub lyrics', e)
+       } finally {
+          // Restore State
+          mainContent.forEach(el => el.style.display = '')
+          lyricsSection.style.display = ''
+       }
+    } else {
+       // Just restore lyrics display if it was hidden (though it failed check?)
+       // if it existed but we are here, we should restore just in case
+        if (lyricsSection) lyricsSection.style.display = ''
+    }
+
     // 3. Generate EPUB
-    // Wrap single song in array as generator expects
     const songs = [epubData.value] 
     const generator = new EpubGenerator(epubData.value.header.center.top.name, songs)
     
     // Use the new image-based method
-    const epubBlob = await generator.generateFromImages([blob])
+    const epubBlob = await generator.generateFromImages(imageBlobs)
     
     // 4. Download
     saveAs(epubBlob, `${epubData.value.header.center.top.name || 'sheet'}.epub`)
@@ -165,6 +221,11 @@ const generateAndDownloadEpub = async () => {
     alert('Error generating EPUB: ' + error.message)
   } finally {
     isGenerating.value = false
+    // Safety restore in case of error mid-flow
+    const lyricsSection = document.querySelector('.epub-lyrics')
+    const mainContent = document.querySelectorAll('.epub-header, .epub-body, .epub-structure, .epub-notes')
+    if (lyricsSection) lyricsSection.style.display = ''
+    if (mainContent) mainContent.forEach(el => el.style.display = '')
   }
 }
 

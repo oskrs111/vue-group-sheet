@@ -97,6 +97,21 @@
           </div>
         </div>
       </footer>
+
+      <!-- Lyrics -->
+      <section class="epub-lyrics" v-if="sheetData.settings.show_lyrics && hasLyrics">
+        <h3>Letra</h3>
+        <div class="lyrics-list">
+          <div 
+            v-for="(item, index) in sheetData.structure" 
+            :key="index" 
+            class="lyric-line-wrapper"
+          >
+             <div class="lyric-id" :style="{ color: item.f_color }">{{ item.id }}</div>
+             <div class="lyric-text">{{ getLyricText(item.lyric) || '...' }}</div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -152,6 +167,20 @@ const getDurationSymbol = (chord) => {
     case 3: return '♩'
     case 4: return '♩'
     default: return '♩'
+  }
+}
+
+// Lyrics Helpers
+const hasLyrics = computed(() => {
+  return props.sheetData.structure && props.sheetData.structure.some(item => item.lyric && item.lyric.length > 0)
+})
+
+const getLyricText = (b64) => {
+  if (!b64) return ''
+  try {
+    return decodeURIComponent(escape(window.atob(b64)))
+  } catch (e) {
+    return ''
   }
 }
 </script>
@@ -326,6 +355,41 @@ const getDurationSymbol = (chord) => {
 .note-line {
   padding: 5px;
   background-color: #f9f9f9;
+}
+
+/* Lyrics */
+.epub-lyrics {
+  margin-top: 20px;
+  border-top: 2px solid #eee;
+  padding-top: 10px;
+  page-break-inside: avoid;
+}
+
+.lyrics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lyric-line-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px;
+  background-color: #fff;
+}
+
+.lyric-id {
+  font-weight: bold;
+  font-size: 1.5em;
+  width: 40px;
+  text-align: center;
+}
+
+.lyric-text {
+  font-size: 1.2em;
+  white-space: pre-wrap;
+  flex: 1;
 }
 
 /* Page Orientation (if relevant for EPUB, mostly for container width) */

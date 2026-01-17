@@ -73,6 +73,21 @@ const confirmDelete = () => {
   }
 }
 
+const formatDateForFileName = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day}_${hours}-${minutes}`
+}
+
+const getExportFileName = () => {
+    const name = (props.collection.name || 'coleccion').replace(/[^a-z0-9áéíóúñ_\- ]/gi, '').trim()
+    const dateTime = formatDateForFileName(new Date())
+    return `${name}_${dateTime}`
+}
+
 const exportCollectionPDF = async () => {
   if (props.collection.songs.length === 0) {
     alert('La colección está vacía')
@@ -197,12 +212,42 @@ const exportCollectionPDF = async () => {
         } finally {
           sheetPage.classList.remove('pdf-export')
         }
-      } else {
-        console.error('ERROR: No se encontró el elemento #sheet-page')
+      }
+
+      // 4. Capture Lyrics if present
+      const lyricsPage = document.getElementById('lyrics-page')
+      if (lyricsPage) {
+        // Activar estilos de exportación también en la página de letras
+        lyricsPage.classList.add('pdf-export')
+        try {
+           const canvas = await html2canvas(lyricsPage, {
+            scale: 2, 
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            scrollY: -window.scrollY,
+            scrollX: -window.scrollX
+          })
+          
+          const imgData = canvas.toDataURL('image/jpeg', 0.95)
+          const imgProps = pdf.getImageProperties(imgData)
+          const imgRatio = imgProps.width / imgProps.height
+          const printWidth = pdfWidth
+          const printHeight = printWidth / imgRatio
+          
+          pdf.addPage()
+          pdf.addImage(imgData, 'JPEG', 0, 0, printWidth, printHeight)
+
+        } catch (e) {
+          console.error('Error capturing lyrics:', e)
+        } finally {
+          lyricsPage.classList.remove('pdf-export')
+        }
       }
     }
 
-    pdf.save(`${props.collection.name}.pdf`)
+    const fileName = getExportFileName()
+    pdf.save(`${fileName}.pdf`)
 
   } catch (error) {
     console.error('Error exportando colección:', error)
@@ -217,7 +262,8 @@ const exportJSON = () => {
     const data = store.exportCollection(props.collection.id)
     const jsonStr = JSON.stringify(data, null, 2)
     const blob = new Blob([jsonStr], { type: 'application/json' })
-    saveAs(blob, `${props.collection.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`)
+    const fileName = getExportFileName()
+    saveAs(blob, `${fileName}.json`)
   } catch (error) {
     console.error('Error exportando JSON:', error)
     alert('Error al exportar: ' + error.message)
@@ -243,7 +289,6 @@ const exportEPUB = async () => {
       if (songsRegistry.songs[songId]) {
         // Metadata copy
         const songData = JSON.parse(JSON.stringify(songsRegistry.songs[songId]))
-        songsToExport.push(songData)
         
         // Capture Image logic (hijack main view)
         await sheetStore.loadSong(songId)
@@ -256,6 +301,7 @@ const exportEPUB = async () => {
         if (sheetPage) {
            sheetPage.classList.add('pdf-export') // Ensure clean look
            try {
+             // 1. Capture Sheet
              const canvas = await html2canvas(sheetPage, {
                scale: 2,
                useCORS: true,
@@ -264,18 +310,46 @@ const exportEPUB = async () => {
              })
              
              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+             
+             // Add Sheet to lists
+             songsToExport.push(songData)
              imageBlobs.push(blob)
+
            } catch (e) {
              console.error('Error capturing image for EPUB', e)
-             // Push a placeholder or null? 
-             // Better to push a dummy error image or just fail
-             // For now we might just fail the image part or push null and handle it?
-             // Let's assume robustness: push null and filter later?
-             // EpubGenerator expects matching indices.
-             // We'll create a simple fallback blob?
-             // Let's just alert and continue
            } finally {
              sheetPage.classList.remove('pdf-export')
+           }
+        }
+
+        // 2. Capture Lyrics if present
+        const lyricsPage = document.getElementById('lyrics-page')
+        if (lyricsPage) {
+           lyricsPage.classList.add('pdf-export')
+           try {
+             const canvas = await html2canvas(lyricsPage, {
+               scale: 2,
+               useCORS: true,
+               logging: false,
+               backgroundColor: '#ffffff'
+             })
+             
+             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+             
+             // Add Lyrics to lists as a separate "song" entry
+             // Clone data but append (Letra) to name
+             const lyricData = JSON.parse(JSON.stringify(songData))
+             if (lyricData.header?.center?.top) {
+                lyricData.header.center.top.name = (lyricData.header.center.top.name || '') + ' (Letra)'
+             }
+             
+             songsToExport.push(lyricData)
+             imageBlobs.push(blob)
+             
+           } catch (e) {
+             console.error('Error capturing lyrics for EPUB', e)
+           } finally {
+             lyricsPage.classList.remove('pdf-export')
            }
         }
       }

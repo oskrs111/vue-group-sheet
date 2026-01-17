@@ -149,10 +149,11 @@ onBeforeUnmount(() => {
 <style scoped>
 .section-wrapper {
   display: flex;
-  gap: 16px;
+  gap: 0px;
   margin-bottom: 12px;
   align-items: flex-start;
-  border: 2px solid #cccccca4;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
 }
 
 .selected {
@@ -160,19 +161,38 @@ onBeforeUnmount(() => {
 }
 
 .section-id-container {
-  min-width: 80px;
+  min-width: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 14px;
+  position: relative;
 }
 
 .section-id {
-  font-size: 50px;
+  font-size: 35px;
   font-weight: bold;
   line-height: 1;
   color: var(--section-f-color, #000000);
 }
+
+.section-footer {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  right: 2px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.section-footer span {
+  font-size: 10px;
+  font-weight: normal;
+  user-select: none;
+  color: var(--section-f-color, #000000);
+}
+
 
 .section-container {
   padding: 5px;
