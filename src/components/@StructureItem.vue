@@ -44,11 +44,11 @@
           </div>
           <div class="form-group">
             <label>Color de Fondo:</label>
-            <input type="color" v-model="localData.b_color" />
+            <ColorPickerWithHistory v-model="localData.b_color" />
           </div>
           <div class="form-group">
             <label>Color de Fuente:</label>
-            <input type="color" v-model="localData.f_color" />
+            <ColorPickerWithHistory v-model="localData.f_color" />
           </div>
         </div>
         <div class="modal-footer">
@@ -79,6 +79,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
+import ColorPickerWithHistory from './ColorPickerWithHistory.vue'
 
 const props = defineProps({
   item: Object,

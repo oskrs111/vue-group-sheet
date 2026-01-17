@@ -28,7 +28,7 @@
         <!-- Right Side: Content -->
         <div class="lyrics-text-container">
           <!-- View Mode -->
-          <div v-if="editingIndex !== index" class="lyrics-view">
+          <div class="lyrics-view">
             <div class="lyrics-text-display">
               <pre class="lyrics-pre">{{ getLyricText(item.lyric) || '(Sin letra)' }}</pre>
             </div>
@@ -36,27 +36,30 @@
               <span class="material-icons">edit</span>
             </button>
           </div>
-
-          <!-- Edit Mode -->
-          <div v-else class="lyrics-edit">
-            <textarea 
-              v-model="editingText" 
-              class="lyrics-textarea"
-              placeholder="Escribe la letra aquí..."
-              ref="editTextarea"
-            ></textarea>
-            <div class="lyrics-edit-actions">
-              <button class="lyrics-action-btn cancel" @click="cancelEditing">
-                <span class="material-icons">close</span>
-              </button>
-              <button class="lyrics-action-btn save" @click="saveLyric(index)">
-                <span class="material-icons">check</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
+    
+    <!-- Lyrics Edit Modal -->
+    <Teleport to="#modal-container">
+      <div v-if="editingIndex !== -1" class="modal-overlay" @click.self="cancelEditing">
+        <div class="modal-content lyrics-edit-modal">
+          <div class="modal-header">Editar Letra - {{ store.structure[editingIndex]?.id }}</div>
+          <div class="modal-body lyrics-modal-body">
+            <textarea 
+              v-model="editingText" 
+              class="lyrics-modal-textarea"
+              placeholder="Escribe la letra aquí..."
+              ref="editTextarea"
+            ></textarea>
+          </div>
+          <div class="modal-footer">
+            <button class="secondary" @click="cancelEditing">Cancelar</button>
+            <button class="primary" @click="saveLyric(editingIndex)">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 

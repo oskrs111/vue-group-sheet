@@ -39,11 +39,11 @@
             </div>
             <div class="form-group">
               <label>Color de Fondo:</label>
-              <input type="color" v-model="localSectionData.b_color" />
+              <ColorPickerWithHistory v-model="localSectionData.b_color" />
             </div>
             <div class="form-group">
               <label>Color de Fuente:</label>
-              <input type="color" v-model="localSectionData.f_color" />
+              <ColorPickerWithHistory v-model="localSectionData.f_color" />
             </div>
           </div>
           <div class="modal-footer">
@@ -60,6 +60,7 @@
 import { ref, defineExpose } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import SectionComponent from './@Section.vue'
+import ColorPickerWithHistory from './ColorPickerWithHistory.vue'
 
 const store = useSheetStore()
 const selectedSectionIndex = ref(-1)

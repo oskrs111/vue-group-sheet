@@ -888,13 +888,13 @@ textarea {
 
 .lyrics-edit {
   display: flex;
-  height: 100%;
   flex-direction: column;
+  min-height: 100px;
 }
 
 .lyrics-textarea {
   width: 100%;
-  height: 100px;
+  min-height: 100px;
   /* Minimum height */
   flex: 1;
   padding: 15px;
@@ -942,6 +942,43 @@ textarea {
 
 .lyrics-action-btn.cancel:hover {
   background: #ffebee;
+}
+
+/* Lyrics Edit Modal */
+.lyrics-edit-modal {
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.lyrics-modal-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+  max-height: calc(90vh - 200px);
+  overflow: hidden;
+}
+
+.lyrics-modal-textarea {
+  width: 100%;
+  flex: 1;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  resize: vertical;
+  background: white;
+  font-family: inherit;
+  font-size: 1.1em;
+  outline: none;
+  box-sizing: border-box;
+  min-height: 300px;
+}
+
+.lyrics-modal-textarea:focus {
+  border-color: #1976d2;
 }
 
 

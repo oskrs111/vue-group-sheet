@@ -12,11 +12,11 @@
         </div>
         <div class="form-group">
           <label>Color de fondo por defecto:</label>
-          <input type="color" v-model="localSettings.b_color_default" />
+          <ColorPickerWithHistory v-model="localSettings.b_color_default" />
         </div>
         <div class="form-group">
           <label>Color de fuente por defecto:</label>
-          <input type="color" v-model="localSettings.f_color_default" />
+          <ColorPickerWithHistory v-model="localSettings.f_color_default" />
         </div>
         <div class="form-group">
           <label>Forma por defecto:</label>
@@ -57,6 +57,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
+import ColorPickerWithHistory from './ColorPickerWithHistory.vue'
 
 const emit = defineEmits(['close'])
 const store = useSheetStore()
