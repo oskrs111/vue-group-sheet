@@ -38,6 +38,10 @@
               <input type="text" v-model="localSectionData.id" maxlength="3" />
             </div>
             <div class="form-group">
+              <label>Repeticiones:</label>
+              <input type="number" v-model.number="localSectionData.turns" min="1" max="32" />
+            </div>
+            <div class="form-group">
               <label>Color de Fondo:</label>
               <ColorPickerWithHistory v-model="localSectionData.b_color" />
             </div>
@@ -71,7 +75,9 @@ const editSection = (section) => {
   const index = store.body.findIndex(s => s.id === section.id)
   if (index !== -1) {
     selectedSectionIndex.value = index
-    localSectionData.value = JSON.parse(JSON.stringify(section))
+    const data = JSON.parse(JSON.stringify(section))
+    if (data.turns === undefined) data.turns = 1
+    localSectionData.value = data
     showEditModal.value = true
   }
 }

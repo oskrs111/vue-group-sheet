@@ -228,7 +228,7 @@ textarea {
   border-bottom: 1px solid #e0e0e0;
   position: sticky;
   top: 0;
-  z-index: 999;
+  /*z-index: 999;*/
   flex-wrap: wrap;
   align-items: center;
 }
@@ -691,7 +691,6 @@ textarea {
   text-align: center;
   line-height: 1.2;
   font-weight: 500;
-  white-space: nowrap;
 }
 
 .toolbar button:hover {

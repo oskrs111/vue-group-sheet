@@ -22,55 +22,16 @@
         />
       </div>
     </div>
-    
-    <Teleport to="#modal-container">
-      <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
-        <div class="modal-content">
-        <div class="modal-header">Editar Sección {{ section.id }}</div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>ID de Sección:</label>
-            <input type="text" v-model="localData.id" maxlength="3" />
-          </div>
-          <div class="form-group">
-            <label>Color de Fondo:</label>
-            <ColorPickerWithHistory v-model="localData.b_color" />
-          </div>
-          <div class="form-group">
-            <label>Color de Fuente:</label>
-            <ColorPickerWithHistory v-model="localData.f_color" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="secondary" @click="showEditModal = false">Cancelar</button>
-          <button class="primary" @click="save">Guardar</button>
-        </div>
-        </div>
-      </div>
-    </Teleport>
-    
-    <Teleport to="#modal-container">
-      <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
-        <div class="modal-content">
-        <div class="modal-header">Confirmar Eliminación</div>
-        <div class="modal-body">
-          <p>¿Está seguro de que desea eliminar la sección {{ section.id }}?</p>
-        </div>
-        <div class="modal-footer">
-          <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
-          <button class="primary" @click="confirmDelete">Eliminar</button>
-        </div>
-        </div>
-      </div>
-    </Teleport>
+    <div class="section-turn-container" v-if="section.turns > 1">
+      <span class="section-turn" :style="{ '--section-f-color': section.f_color }">x {{ section.turns }}</span>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onMounted, onBeforeUnmount } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import CompassComponent from './@Compass.vue'
-import ColorPickerWithHistory from './ColorPickerWithHistory.vue'
 
 const props = defineProps({
   section: Object,
@@ -79,44 +40,7 @@ const props = defineProps({
 })
 
 const store = useSheetStore()
-const showEditModal = ref(false)
-const showDeleteModal = ref(false)
-const localData = ref(JSON.parse(JSON.stringify(props.section)))
 const isSelected = computed(() => store.selectedSectionId === props.section.id)
-
-const hasCopiedSection = computed(() => store.copiedSection !== null)
-const isFirst = computed(() => props.index === 0)
-const isLast = computed(() => props.index === props.totalSections - 1)
-
-const save = () => {
-  store.updateSection(props.index, localData.value)
-  showEditModal.value = false
-}
-
-const addCompass = () => {
-  store.addCompass(props.index)
-}
-
-const confirmDelete = () => {
-  store.deleteSection(props.index)
-  showDeleteModal.value = false
-}
-
-const copySection = () => {
-  store.copySection(props.index)
-}
-
-const pasteSection = () => {
-  store.pasteSection(props.index)
-}
-
-const moveSectionUp = () => {
-  store.moveSectionUp(props.index)
-}
-
-const moveSectionDown = () => {
-  store.moveSectionDown(props.index)
-}
 
 const selectSection = (event) => {
   // Don't trigger selection if clicking on a button or link
@@ -216,6 +140,12 @@ onBeforeUnmount(() => {
   gap: 4px;
   align-items: center;
   flex-direction: row;
+}
+
+.section-turn{
+  padding: 3px;
+  font-size: 20px;
+  font-weight: bold;
 }
 
 .action-btn {

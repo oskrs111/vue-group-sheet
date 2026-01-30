@@ -85,6 +85,7 @@ export const useSheetStore = defineStore('sheet', {
         id: newId,
         b_color: this.settings.b_color_default,
         f_color: this.settings.f_color_default,
+        turns: 1,
         compass: [
           {
             chords: [
@@ -272,7 +273,7 @@ export const useSheetStore = defineStore('sheet', {
       }
 
       // Formato nuevo
-      if (parsed && (parsed.version === 1 || parsed.version === 2) && parsed.songs) {
+      if (parsed && (parsed.version === 1 || parsed.version === 2 || parsed.version === 3) && parsed.songs) {
         if (!parsed.collections) {
           parsed.collections = {}
         }
@@ -288,6 +289,18 @@ export const useSheetStore = defineStore('sheet', {
             }
           })
           // We don't save immediately here, but it will be saved on next write
+        }
+        if (parsed.version === 2) {
+          parsed.version = 3
+          // Set turns = 1 for all sections if missing
+          Object.values(parsed.songs).forEach(song => {
+            if (song.body) {
+              song.body = song.body.map(section => ({
+                ...section,
+                turns: section.turns !== undefined ? section.turns : 1
+              }))
+            }
+          })
         }
         return parsed
       }
@@ -316,7 +329,7 @@ export const useSheetStore = defineStore('sheet', {
         })
       }
 
-      const registry = { version: 2, songs, collections: {} }
+      const registry = { version: 3, songs, collections: {} }
       localStorage.setItem('groupSheetSongs', JSON.stringify(registry))
       return registry
     },
@@ -339,6 +352,22 @@ export const useSheetStore = defineStore('sheet', {
           })
         }
       }
+
+      if (registry.version === 2) {
+        // Upgrade from v2 to v3
+        registry.version = 3
+        if (registry.songs) {
+          Object.values(registry.songs).forEach(song => {
+            if (song.body) {
+              song.body = song.body.map(section => ({
+                ...section,
+                turns: section.turns !== undefined ? section.turns : 1
+              }))
+            }
+          })
+        }
+      }
+
       if (!registry.collections) {
         registry.collections = {}
       }
@@ -356,7 +385,14 @@ export const useSheetStore = defineStore('sheet', {
       const existingSong = registry.songs[this.currentSongId] || {}
       const createdAt = existingSong.createdAt || now
 
-      registry.songs[this.currentSongId] = {
+      registry.songs[this.currentSongId] = this.constructSongObject(createdAt, now)
+
+      registry.lastSongId = this.currentSongId
+      this.saveSongsRegistry(registry)
+    },
+
+    constructSongObject(createdAt, updatedAt) {
+      return {
         id: this.currentSongId,
         name: this.header.center.top.name || 'Nueva Canción',
         header: this.header,
@@ -364,12 +400,27 @@ export const useSheetStore = defineStore('sheet', {
         structure: this.structure,
         notes: this.notes,
         settings: this.settings,
-        createdAt,
-        updatedAt: now
+        createdAt: createdAt || new Date().toISOString(),
+        updatedAt: updatedAt || new Date().toISOString()
+      }
+    },
+
+    importJSONSong(songData, overwrite = false) {
+      const registry = this.getSongsRegistry()
+      if (!registry.songs) registry.songs = {}
+
+      if (registry.songs[songData.id] && !overwrite) {
+        return { success: false, reason: 'exists' }
       }
 
-      registry.lastSongId = this.currentSongId
+      // Ensure minimal structure
+      if (!songData.id || !songData.header || !songData.body) {
+        throw new Error('Formato de canción inválido')
+      }
+
+      registry.songs[songData.id] = songData
       this.saveSongsRegistry(registry)
+      return { success: true }
     },
 
     migrateDivValues(body) {
@@ -511,6 +562,7 @@ export const useSheetStore = defineStore('sheet', {
           id: 'A',
           b_color: this.settings.b_color_default,
           f_color: this.settings.f_color_default,
+          turns: 1,
           compass: [
             {
               chords: [

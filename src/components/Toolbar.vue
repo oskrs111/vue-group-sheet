@@ -24,6 +24,21 @@
       <span class="material-icons">print</span>
       <span class="btn-label">Imprimir</span>
     </button>
+    <button @click="exportJSON" title="Exportar Canción" class="toolbar-btn">
+      <span class="material-icons">file_upload</span>
+      <span class="btn-label">Exportar Canción</span>
+    </button>
+    <button @click="triggerImportJSON" title="Importar Canción" class="toolbar-btn">
+      <span class="material-icons">file_download</span>
+      <span class="btn-label">Importar Canción</span>
+      <input 
+        type="file" 
+        ref="fileInput" 
+        style="display: none" 
+        accept=".json"
+        @change="handleImportJSON"
+      />
+    </button>
     <button @click="openSettings" title="Configuración" class="toolbar-btn">
       <span class="material-icons">settings</span>
       <span class="btn-label">Ajustes</span>
@@ -107,6 +122,7 @@ import SettingsModal from './SettingsModal.vue'
 import html2pdf from 'html2pdf.js'
 import html2canvas from 'html2canvas'
 import { saveAs as saveFile } from 'file-saver'
+import md5 from 'md5'
 
 const store = useSheetStore()
 const showSettings = ref(false)
@@ -114,6 +130,7 @@ const showSaveDialog = ref(false)
 const showLoadDialog = ref(false)
 const selectedSongId = ref(null)
 const songName = ref('')
+const fileInput = ref(null)
 
 const openSettings = () => {
   showSettings.value = true
@@ -415,6 +432,102 @@ const exportEPUB = async () => {
     } catch (error) {
         console.error('Error exportando EPUB:', error)
         alert('Error al generar EPUB: ' + error.message)
+    }
+}
+
+const exportJSON = () => {
+  try {
+    const fileName = getExportFileName()
+    const now = new Date().toISOString()
+    
+    // Si no hay ID (canción nueva no guardada), generamos uno temporal para el archivo
+    let exportId = store.currentSongId
+    if (!exportId) {
+        exportId = md5(now)
+    }
+
+    const songData = {
+        id: exportId,
+        name: store.header.center.top.name || 'Nueva Canción',
+        header: store.header,
+        body: store.body,
+        structure: store.structure,
+        notes: store.notes,
+        settings: store.settings,
+        createdAt: now, 
+        updatedAt: now
+    }
+    
+    // Si la canción ya existe en el registro, intentamos obtener sus fechas reales
+    if (store.currentSongId) {
+        const existing = store.getSongsRegistry().songs[store.currentSongId]
+        if (existing) {
+            songData.createdAt = existing.createdAt
+            songData.updatedAt = now
+        }
+    }
+
+    const blob = new Blob([JSON.stringify(songData, null, 2)], { type: 'application/json' })
+    saveFile(blob, `${fileName}.json`)
+  } catch (error) {
+    console.error('Error exportando JSON:', error)
+    alert('Error al exportar JSON: ' + error.message)
+  }
+}
+
+const triggerImportJSON = () => {
+    if (fileInput.value) {
+        fileInput.value.value = '' // Reset
+        fileInput.value.click()
+    }
+}
+
+const handleImportJSON = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+        try {
+            const songData = JSON.parse(e.target.result)
+            processImport(songData)
+        } catch (error) {
+            alert('El archivo no es un JSON válido')
+        }
+    }
+    reader.readAsText(file)
+}
+
+const processImport = (songData, overwrite = false) => {
+    try {
+        // Acceder directamente al registro a través de métodos que sabemos que existen
+        const registry = store.getSongsRegistry()
+        if (!registry.songs) registry.songs = {}
+
+        if (registry.songs[songData.id] && !overwrite) {
+            if (confirm(`La canción "${songData.name}" ya existe. ¿Deseas sobrescribirla?`)) {
+                processImport(songData, true)
+            }
+            return
+        }
+
+        // Validación mínima
+        if (!songData.id || !songData.header || !songData.body) {
+             throw new Error('Formato de canción inválido')
+        }
+
+        // Guardar
+        registry.songs[songData.id] = songData
+        store.saveSongsRegistry(registry)
+        
+        alert('Canción importada correctamente')
+        if (store.currentSongId === songData.id) {
+            store.loadSong(songData.id)
+        }
+
+    } catch (error) {
+        console.error('Error importing:', error)
+        alert('Error al importar: ' + error.message)
     }
 }
 </script>
