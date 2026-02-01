@@ -52,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 
 const store = useSheetStore()
@@ -125,6 +125,30 @@ const confirmDelete = () => {
     showDeleteModal.value = false
   }
 }
+
+// Shortcuts
+const handleKeyDown = (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+    // Check if user is typing in an input
+    const tagName = document.activeElement.tagName.toLowerCase()
+    if (tagName === 'input' || tagName === 'textarea') {
+      return
+    }
+
+    if (hasCopiedCompass.value && selectedSectionIndex.value !== -1) {
+      e.preventDefault() // Prevent pasting elsewhere if possible
+      pasteCompass()
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <style scoped>

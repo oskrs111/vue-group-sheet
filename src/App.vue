@@ -19,12 +19,13 @@
     <div id="main" class="main-container">
       <div class="section-actions-container">
         <SectionActions @edit="handleEditSection" />
+        <StructureActions @edit-request="handleEditStructureRequest" />
       </div>
       <div id="page-wrapper" class="page-wrapper">
         <div :class="pageClass" id="sheet-page" :style="{ '--sheet-font-family': fontFamily }">
           <HeaderComponent />
           <BodyComponent ref="bodyComponent" />
-          <StructureComponent />
+          <StructureComponent ref="structureComponent" />
           <NotesComponent v-if="store.settings.show_notes" />
         </div>
         <LyricsPage 
@@ -93,6 +94,16 @@
   display: flex;
   justify-content: center;
 }
+
+.section-actions-container {
+ display: flex;
+ flex-wrap: wrap; /* Allow wrapping if needed */
+ width: 100%;
+ position: sticky;
+ top: 0;
+ z-index: 90;
+ background-color: #f5f5f5; /* Match toolbar bg */
+}
 </style>
 
 <script setup>
@@ -104,6 +115,7 @@ import BodyComponent from './components/@Body.vue'
 import StructureComponent from './components/$Structure.vue'
 import NotesComponent from './components/$Notes.vue'
 import SectionActions from './components/SectionActions.vue'
+import StructureActions from './components/StructureActions.vue'
 import CollectionContainer from './components/CollectionContainer.vue'
 import EpubPage from './components/EpubPage.vue'
 import LyricsPage from './components/LyricsPage.vue'
@@ -113,6 +125,7 @@ import { saveAs } from 'file-saver'
 
 const store = useSheetStore()
 const bodyComponent = ref(null)
+const structureComponent = ref(null)
 const isEpubMode = ref(false)
 const epubData = ref(null)
 const isGenerating = ref(false)
@@ -128,6 +141,12 @@ const fontFamily = computed(() => {
 const handleEditSection = (section) => {
   if (bodyComponent.value) {
     bodyComponent.value.editSection(section)
+  }
+}
+
+const handleEditStructureRequest = (index) => {
+  if (structureComponent.value) {
+    structureComponent.value.triggerEditItem(index)
   }
 }
 

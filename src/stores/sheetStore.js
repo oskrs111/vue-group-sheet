@@ -50,10 +50,67 @@ export const useSheetStore = defineStore('sheet', {
     settings: { ...defaultSettings },
     copiedSection: null,
     copiedCompass: null,
-    selectedSectionId: null
+    selectedSectionId: null,
+    selectedStructureIndex: null
   }),
 
   actions: {
+    setSelectedStructureIndex(index) {
+      this.selectedStructureIndex = index
+      if (index !== null) {
+        this.selectedSectionId = null
+      }
+    },
+
+    moveStructureItem(fromIndex, toIndex) {
+      if (toIndex < 0 || toIndex >= this.structure.length) return
+
+      const item = this.structure[fromIndex]
+      this.structure.splice(fromIndex, 1)
+      this.structure.splice(toIndex, 0, item)
+
+      // Update selection if needed
+      if (this.selectedStructureIndex === fromIndex) {
+        this.selectedStructureIndex = toIndex
+      } else if (this.selectedStructureIndex === toIndex) {
+        this.selectedStructureIndex = fromIndex // Swapped logic roughly
+      }
+
+      this.saveToLocalStorage()
+    },
+
+    addStructureItemAt(index, side) { // side: 'left' (before) or 'right' (after)
+      if (this.body.length === 0) return
+
+      const firstSection = this.body[0]
+      const newItem = {
+        id: firstSection.id,
+        b_color: firstSection.b_color,
+        f_color: firstSection.f_color,
+        shape: this.settings.shape_default,
+        lyric: '',
+        isBreak: false
+      }
+
+      const insertIndex = side === 'left' ? index : index + 1
+      this.structure.splice(insertIndex, 0, newItem)
+
+      // Select the new item
+      this.selectedStructureIndex = insertIndex
+
+      this.saveToLocalStorage()
+    },
+
+    deleteStructureItem(index) {
+      this.structure.splice(index, 1)
+      if (this.selectedStructureIndex === index) {
+        this.selectedStructureIndex = null
+      } else if (this.selectedStructureIndex > index) {
+        this.selectedStructureIndex--
+      }
+      this.saveToLocalStorage()
+    },
+
     updateTempo(value) {
       this.header.left.top.tempo = value
       this.saveToLocalStorage()
@@ -212,7 +269,12 @@ export const useSheetStore = defineStore('sheet', {
           b_color: firstSection.b_color,
           f_color: firstSection.f_color,
           shape: this.settings.shape_default,
-          lyric: ''
+          id: firstSection.id,
+          b_color: firstSection.b_color,
+          f_color: firstSection.f_color,
+          shape: this.settings.shape_default,
+          lyric: '',
+          isBreak: false
         })
         this.saveToLocalStorage()
       }
@@ -273,7 +335,7 @@ export const useSheetStore = defineStore('sheet', {
       }
 
       // Formato nuevo
-      if (parsed && (parsed.version === 1 || parsed.version === 2 || parsed.version === 3) && parsed.songs) {
+      if (parsed && (parsed.version === 1 || parsed.version === 2 || parsed.version === 3 || parsed.version === 4) && parsed.songs) {
         if (!parsed.collections) {
           parsed.collections = {}
         }
@@ -298,6 +360,18 @@ export const useSheetStore = defineStore('sheet', {
               song.body = song.body.map(section => ({
                 ...section,
                 turns: section.turns !== undefined ? section.turns : 1
+              }))
+            }
+          })
+        }
+        if (parsed.version === 3) {
+          parsed.version = 4
+          // Initialize isBreak for structure items
+          Object.values(parsed.songs).forEach(song => {
+            if (song.structure) {
+              song.structure = song.structure.map(item => ({
+                ...item,
+                isBreak: item.isBreak !== undefined ? item.isBreak : false
               }))
             }
           })
@@ -329,7 +403,7 @@ export const useSheetStore = defineStore('sheet', {
         })
       }
 
-      const registry = { version: 3, songs, collections: {} }
+      const registry = { version: 4, songs, collections: {} }
       localStorage.setItem('groupSheetSongs', JSON.stringify(registry))
       return registry
     },
@@ -362,6 +436,21 @@ export const useSheetStore = defineStore('sheet', {
               song.body = song.body.map(section => ({
                 ...section,
                 turns: section.turns !== undefined ? section.turns : 1
+              }))
+            }
+          })
+        }
+      }
+
+      if (registry.version === 3) {
+        // Upgrade from v3 to v4
+        registry.version = 4
+        if (registry.songs) {
+          Object.values(registry.songs).forEach(song => {
+            if (song.structure) {
+              song.structure = song.structure.map(item => ({
+                ...item,
+                isBreak: item.isBreak !== undefined ? item.isBreak : false
               }))
             }
           })
@@ -590,6 +679,9 @@ export const useSheetStore = defineStore('sheet', {
 
     setSelectedSection(sectionId) {
       this.selectedSectionId = sectionId
+      if (sectionId !== null) {
+        this.selectedStructureIndex = null
+      }
       this.saveToLocalStorage()
     }
   }

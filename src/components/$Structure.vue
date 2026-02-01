@@ -1,5 +1,5 @@
 <template>
-  <div class="structure-container">
+  <div class="structure-container" @click.self="store.setSelectedStructureIndex(null)">
     <div class="structure-header">
       <h3>Estructura</h3>
       <div class="header-controls">
@@ -23,16 +23,19 @@
         :key="index"
         :item="item"
         :index="index"
+        ref="itemRefs"
       />
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import StructureItemComponent from './@StructureItem.vue'
 
 const store = useSheetStore()
+const itemRefs = ref([])
 
 const addStructureItem = () => {
   store.addStructureItem()
@@ -47,6 +50,14 @@ const decreaseZoom = () => {
   const newZoom = Math.max(store.settings.zoom_structure - 10, 50)
   store.updateSettings({ zoom_structure: newZoom })
 }
+
+const triggerEditItem = (index) => {
+  if (itemRefs.value[index]) {
+    itemRefs.value[index].openEditModal()
+  }
+}
+
+defineExpose({ triggerEditItem })
 </script>
 
 <style scoped>
@@ -114,7 +125,7 @@ const decreaseZoom = () => {
 .structure-items {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  width: fit-content;
+  gap: 4px;
+  width: 100%;
 }
 </style>

@@ -14,7 +14,7 @@
             <input 
               type="text" 
               v-model="localTone" 
-              maxlength="2"
+              maxlength="4"
               placeholder="C, D#, Eb, etc."
             />
             <small>Nota: C, D, E, F, G, A, B + opcional # o b</small>

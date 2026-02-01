@@ -73,18 +73,26 @@
       <aside class="epub-structure" v-if="sheetData.structure && sheetData.structure.length > 0">
         <h3>Estructura</h3>
         <div class="structure-items">
-          <div 
-            v-for="(item, index) in sheetData.structure" 
-            :key="index"
-            class="structure-item"
-            :style="{ 
-              backgroundColor: item.b_color, 
-              color: item.f_color,
-              borderRadius: item.shape === 'C' ? '50%' : '0'
-            }"
-          >
-            <span class="item-id">{{ item.id }}</span>
-          </div>
+          <template v-for="(item, index) in sheetData.structure" :key="index">
+            <!-- Standard Item -->
+            <div 
+              v-if="!item.isBreak"
+              class="structure-item"
+              :style="{ 
+                backgroundColor: item.b_color, 
+                color: item.f_color,
+                borderRadius: item.shape === 'C' ? '50%' : '0'
+              }"
+            >
+              <span class="item-id">{{ item.id }}</span>
+            </div>
+
+            <!-- Break Item: Filler + Force Line -->
+            <template v-else>
+              <div class="structure-break-filler"></div>
+              <div class="structure-break-force"></div>
+            </template>
+          </template>
         </div>
       </aside>
 
@@ -102,14 +110,15 @@
       <section class="epub-lyrics" v-if="sheetData.settings.show_lyrics && hasLyrics">
         <h3>Letra</h3>
         <div class="lyrics-list">
-          <div 
-            v-for="(item, index) in sheetData.structure" 
-            :key="index" 
-            class="lyric-line-wrapper"
-          >
+          <template v-for="(item, index) in sheetData.structure" :key="index">
+            <div 
+              v-if="!item.isBreak"
+              class="lyric-line-wrapper"
+            >
              <div class="lyric-id" :style="{ color: item.f_color }">{{ item.id }}</div>
              <div class="lyric-text">{{ getLyricText(item.lyric) || '...' }}</div>
           </div>
+      </template>
         </div>
       </section>
     </div>
@@ -336,6 +345,17 @@ const getLyricText = (b64) => {
   font-size: 1.5em;
   font-weight: bold;
   border: 2px solid #333;
+}
+
+.structure-break-filler {
+  flex-grow: 1;
+  min-width: 0;
+  height: 50px;
+}
+
+.structure-break-force {
+  width: 100%;
+  height: 0;
 }
 
 /* Notes */

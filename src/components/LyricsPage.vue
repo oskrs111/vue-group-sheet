@@ -5,11 +5,11 @@
     </div>
     
     <div class="lyrics-content">
-      <div 
-        v-for="(item, index) in store.structure" 
-        :key="index"
-        class="lyrics-wrapper"
-      >
+      <template v-for="(item, index) in store.structure" :key="index">
+        <div 
+          v-if="!item.isBreak"
+          class="lyrics-wrapper"
+        >
         <!-- Left Side: Structure ID -->
         <div 
           class="lyrics-id-container"
@@ -38,6 +38,7 @@
           </div>
         </div>
       </div>
+      </template>
     </div>
     
     <!-- Lyrics Edit Modal -->

@@ -1,7 +1,13 @@
 <template>
-  <div class="structure-item-wrapper">
+  <!-- Standard Structure Item -->
+  <div 
+    v-if="!item.isBreak" 
+    class="structure-item-wrapper"
+    @click.stop="selectItem"
+  >
     <div 
-      class="structure-item editable-container"
+      class="structure-item"
+      :class="{ 'is-selected': isSelected }"
       :style="{ 
         backgroundColor: item.b_color, 
         color: item.f_color,
@@ -10,74 +16,103 @@
     >
       <span class="item-id">{{ item.id }}</span>
     </div>
-    <div class="structure-header">
-      <button @click="showEditModal = true" class="structure-edit-btn">
-        <span class="material-icons">edit</span>
-      </button>
-      <button @click="showDeleteModal = true" class="delete-btn-small">
-        <span class="material-icons">close</span>
-      </button>
-    </div>
+    
     <div class="structure-footer">
       <span class="">{{ index + 1 }}</span>
     </div>
     
+    <!-- Edit Modal (Triggered by Parent via ref) -->
     <Teleport to="#modal-container">
-      <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
+      <div v-if="showEditModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
         <div class="modal-header">Editar Elemento de Estructura</div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Sección:</label>
-            <select v-model="localData.id">
-              <option v-for="section in store.body" :key="section.id" :value="section.id">
-                {{ section.id }}
-              </option>
+            <label>Tipo:</label>
+            <select v-model="localData.isBreak">
+              <option :value="false">Sección</option>
+              <option :value="true">Salto de Línea</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Forma:</label>
-            <select v-model="localData.shape">
-              <option value="S">Cuadrado</option>
-              <option value="C">Redondeado</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Color de Fondo:</label>
-            <ColorPickerWithHistory v-model="localData.b_color" />
-          </div>
-          <div class="form-group">
-            <label>Color de Fuente:</label>
-            <ColorPickerWithHistory v-model="localData.f_color" />
+
+          <div v-if="!localData.isBreak">
+            <div class="form-group">
+              <label>Sección:</label>
+              <select v-model="localData.id">
+                <option v-for="section in store.body" :key="section.id" :value="section.id">
+                  {{ section.id }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Forma:</label>
+              <select v-model="localData.shape">
+                <option value="S">Cuadrado</option>
+                <option value="C">Redondeado</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Color de Fondo:</label>
+              <ColorPickerWithHistory v-model="localData.b_color" />
+            </div>
+            <div class="form-group">
+              <label>Color de Fuente:</label>
+              <ColorPickerWithHistory v-model="localData.f_color" />
+            </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="secondary" @click="showEditModal = false">Cancelar</button>
+          <button class="secondary" @click="closeModal">Cancelar</button>
           <button class="primary" @click="save">Guardar</button>
         </div>
         </div>
       </div>
     </Teleport>
-    
-    <Teleport to="#modal-container">
-      <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+  </div>
+
+  <!-- BREAK MODE: Filler + Force Line Break (Fragment) -->
+  <template v-else>
+    <!-- Filler: Takes remaining space -->
+    <div 
+      class="structure-break-filler" 
+      :class="{ 'is-selected': isSelected }"
+      @click.stop="selectItem"
+    >
+      <div class="break-display">
+        <span class="break-label">Salto de Línea</span>
+      </div>
+
+      <!-- Re-use Modals for Break Item -->
+      <Teleport to="#modal-container">
+      <div v-if="showEditModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
-        <div class="modal-header">Confirmar Eliminación</div>
+        <div class="modal-header">Editar Elemento de Estructura</div>
         <div class="modal-body">
-          <p>¿Está seguro de que desea eliminar este elemento?</p>
+          <div class="form-group">
+            <label>Tipo:</label>
+            <select v-model="localData.isBreak">
+              <option :value="false">Sección</option>
+              <option :value="true">Salto de Línea</option>
+            </select>
+          </div>
+          <!-- Break specific settings if any -->
         </div>
         <div class="modal-footer">
-          <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
-          <button class="primary" @click="confirmDelete">Eliminar</button>
+          <button class="secondary" @click="closeModal">Cancelar</button>
+          <button class="primary" @click="save">Guardar</button>
         </div>
         </div>
       </div>
     </Teleport>
-  </div>
+    </div>
+
+    <!-- Force Break: Forces new line -->
+    <div class="structure-break-force"></div>
+  </template>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import ColorPickerWithHistory from './ColorPickerWithHistory.vue'
 
@@ -88,18 +123,37 @@ const props = defineProps({
 
 const store = useSheetStore()
 const showEditModal = ref(false)
-const showDeleteModal = ref(false)
+// ShowDeleteModal is now handled by parent via store action + modal
+
 const localData = ref(JSON.parse(JSON.stringify(props.item)))
+
+// Update localData when props change (e.g. after save)
+watch(() => props.item, (newVal) => {
+  localData.value = JSON.parse(JSON.stringify(newVal))
+}, { deep: true })
+
+const isSelected = computed(() => store.selectedStructureIndex === props.index)
+
+const selectItem = () => {
+  store.setSelectedStructureIndex(props.index)
+}
+
+const openEditModal = () => {
+  localData.value = JSON.parse(JSON.stringify(props.item))
+  showEditModal.value = true
+}
+
+const closeModal = () => {
+  showEditModal.value = false
+}
 
 const save = () => {
   store.updateStructureItem(props.index, localData.value)
   showEditModal.value = false
 }
 
-const confirmDelete = () => {
-  store.deleteStructureItem(props.index)
-  showDeleteModal.value = false
-}
+// Expose openEditModal to parent
+defineExpose({ openEditModal })
 </script>
 
 <style scoped>
@@ -118,8 +172,15 @@ const confirmDelete = () => {
   justify-content: center;
   font-size: 35px;
   font-weight: bold;
+  cursor: pointer;
 }
 
+.structure-item.is-selected {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.5);
+}
+
+/* Base Styles */
 .item-id {
   user-select: none;
 }
@@ -134,6 +195,48 @@ const confirmDelete = () => {
   pointer-events: none;
 }
 
+.structure-header.relative-controls {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  width: 50px;
+}
+
+/* Break Implementation */
+.structure-break-filler {
+  flex-grow: 1;
+  min-width: 0; /* Allows standard flex behavior */
+  height: 61px; /* Match standard item height */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Push controls to right */
+  position: relative;
+  cursor: pointer;
+}
+
+.structure-break-filler.is-selected {
+  box-shadow: inset 0 0 0 2px #1976d2;
+  background-color: rgba(25, 118, 210, 0.1);
+}
+
+.structure-break-force {
+  width: 100%;
+  height: 0;
+}
+
+.break-display {
+  padding-right: 10px;
+}
+
+.break-label {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Footer for standard items */
 .structure-footer {
   position: absolute;
   bottom: 2px;
@@ -149,50 +252,17 @@ const confirmDelete = () => {
   font-weight: normal;
   user-select: none;
 }
-
-
-.structure-edit-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 2px;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
+@media print {
+  .break-display, .break-controls, .structure-edit-btn, .delete-btn-small {
+    display: none !important;
+  }
 }
 
-.structure-item-wrapper:hover .structure-edit-btn {
-  opacity: 0.6;
-}
-
-.structure-edit-btn:hover {
-  opacity: 1 !important;
-  color: #1976d2;
-}
-
-.structure-header .delete-btn-small {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 2px;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: auto;
-}
-
-.structure-item-wrapper:hover .structure-header .delete-btn-small {
-  opacity: 0.6;
-}
-
-.structure-header .delete-btn-small:hover {
-  opacity: 1 !important;
-  color: red;
+/* Also hide when specific class is applied during export if simple print media query fails */
+.pdf-export .break-display,
+.pdf-export .break-controls,
+.pdf-export .structure-edit-btn,
+.pdf-export .delete-btn-small {
+  display: none !important;
 }
 </style>
