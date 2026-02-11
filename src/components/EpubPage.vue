@@ -35,34 +35,38 @@
             
             <div class="section-content">
               <div class="compass-container">
-                <div 
-                  v-for="(compass, cIndex) in section.compass" 
-                  :key="cIndex"
-                  class="epub-compass"
-                  :class="{ 'space-compass': isSpaceCompass(compass) }"
-                >
-                  <!-- Repeat Symbol -->
-                  <div v-if="isRepeatCompass(compass)" class="repeat-symbol">%</div>
-
-                  <!-- Space Symbol (Empty) -->
-                  <div v-else-if="isSpaceCompass(compass)" class="space-symbol"></div>
-                  
-                  <!-- Chords -->
-                  <div v-else class="chords-display">
-                    <div v-for="(chord, chIndex) in compass.chords" :key="chIndex" class="epub-chord">
-                      <div class="duration-symbol">{{ getDurationSymbol(chord) }}</div>
-                      <div class="chord-note">
-                        <span 
-                          v-for="(char, charIndex) in getChordChars(chord)" 
-                          :key="charIndex"
-                          :class="{ 'large-char': isLargeChar(chord, charIndex) }"
-                        >
-                          {{ char }}
-                        </span>
+                <template v-for="(compass, cIndex) in section.compass" :key="cIndex">
+                  <!-- Normal/Repeat Compass -->
+                  <div 
+                    v-if="!isSpaceCompass(compass)"
+                    class="epub-compass"
+                  >
+                    <!-- Repeat Symbol -->
+                    <div v-if="isRepeatCompass(compass)" class="repeat-symbol">%</div>
+                    
+                    <!-- Chords -->
+                    <div v-else class="chords-display">
+                      <div v-for="(chord, chIndex) in compass.chords" :key="chIndex" class="epub-chord">
+                        <div class="duration-symbol">{{ getDurationSymbol(chord) }}</div>
+                        <div class="chord-note">
+                          <span 
+                            v-for="(char, charIndex) in getChordChars(chord)" 
+                            :key="charIndex"
+                            :class="{ 'large-char': isLargeChar(chord, charIndex) }"
+                          >
+                            {{ char }}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+
+                  <!-- Break Compass -->
+                  <template v-else>
+                    <div class="epub-break-filler"></div>
+                    <div class="epub-break-force"></div>
+                  </template>
+                </template>
               </div>
             </div>
           </section>
@@ -415,5 +419,17 @@ const getLyricText = (b64) => {
 /* Page Orientation (if relevant for EPUB, mostly for container width) */
 .page-vertical { max-width: 210mm; margin: 0 auto; }
 .page-horizontal { max-width: 297mm; margin: 0 auto; }
+
+/* EPUB Compass Break Styles */
+.epub-break-filler {
+  flex-grow: 1;
+  min-width: 0;
+  height: 50px; /* Match typical compass height */
+}
+
+.epub-break-force {
+  width: 100%;
+  height: 0;
+}
 
 </style>

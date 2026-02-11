@@ -1,18 +1,24 @@
 <template>
-  <div class="compass-box editable-container">
+  <!-- Normal or Repeat Compass -->
+  <div 
+    v-if="!isSpaceCompass" 
+    class="compass-box editable-container"
+    :class="{ 'selected': isCompassSelected }"
+    @click.stop="selectCompass"
+  >
     <div class="compass-header">
-      <button @click="showEditModal = true" class="compass-edit-btn">
+      <button @click.stop="showEditModal = true" class="compass-edit-btn">
         <span class="material-icons">edit</span>
       </button>
-      <button @click="copyCompass" class="compass-copy-btn" title="Copiar compás">
+      <button @click.stop="copyCompass" class="compass-copy-btn" title="Copiar compás">
         <span class="material-icons">content_copy</span>
       </button>
-      <button @click="showDeleteModal = true" class="delete-btn-small">
+      <button @click.stop="showDeleteModal = true" class="delete-btn-small">
         <span class="material-icons">close</span>
       </button>
     </div>
     
-    <div class="chords-display" v-if="!isRepeatCompass && !isSpaceCompass">
+    <div class="chords-display" v-if="!isRepeatCompass">
       <ChordComponent 
         v-for="(chord, index) in compass.chords"
         :key="index"
@@ -23,152 +29,174 @@
     <div class="repeat-symbol" v-else-if="isRepeatCompass">
       %
     </div>
-    
-    <div class="space-symbol" v-else-if="isSpaceCompass">
-      <!-- Espacio vacío -->
+  </div>
+
+  <!-- Break Compass -->
+  <template v-else>
+    <div 
+      class="compass-break-filler" 
+      :class="{ 'selected': isCompassSelected }"
+      @click.stop="selectCompass"
+      @dblclick.stop="showEditModal = true"
+    >
+      <div class="break-display">
+        <span class="break-label">Salto de Línea</span>
+      </div>
+      
+      <!-- Hidden Controls for Break (appear on hover/click?) or just click to edit -->
+       <div class="compass-header static-visible">
+          <button @click.stop="showEditModal = true" class="compass-edit-btn">
+            <span class="material-icons">edit</span>
+          </button>
+          <button @click.stop="showDeleteModal = true" class="delete-btn-small">
+            <span class="material-icons">close</span>
+          </button>
+       </div>
     </div>
-    
-    <Teleport to="#modal-container">
-      <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
-        <div class="modal-content modal-compass-edit">
-        <div class="modal-header">Editar Compás</div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Tipo de Compás:</label>
-            <div class="radio-group">
-              <label class="radio-option">
-                <input 
-                  type="radio" 
-                  v-model="compassType" 
-                  value="normal"
-                  @change="handleCompassTypeChange"
-                />
-                <span>Normal</span>
-              </label>
-              <label class="radio-option">
-                <input 
-                  type="radio" 
-                  v-model="compassType" 
-                  value="repeat"
-                  @change="handleCompassTypeChange"
-                />
-                <span>Repetición (%)</span>
-              </label>
-              <label class="radio-option">
-                <input 
-                  type="radio" 
-                  v-model="compassType" 
-                  value="space"
-                  @change="handleCompassTypeChange"
-                />
-                <span>Espacio</span>
-              </label>
-            </div>
+    <div class="compass-break-force"></div>
+  </template>
+
+  <!-- Shared Modals -->
+  <Teleport to="#modal-container">
+    <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
+      <div class="modal-content modal-compass-edit">
+      <div class="modal-header">Editar Compás</div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Tipo de Compás:</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input 
+                type="radio" 
+                v-model="compassType" 
+                value="normal"
+                @change="handleCompassTypeChange"
+              />
+              <span>Normal</span>
+            </label>
+            <label class="radio-option">
+              <input 
+                type="radio" 
+                v-model="compassType" 
+                value="repeat"
+                @change="handleCompassTypeChange"
+              />
+              <span>Repetición (%)</span>
+            </label>
+            <label class="radio-option">
+              <input 
+                type="radio" 
+                v-model="compassType" 
+                value="space"
+                @change="handleCompassTypeChange"
+              />
+              <span>Salto de línea</span>
+            </label>
           </div>
-          
-          <div v-if="compassType === 'normal'" class="chords-container">
-            <div v-for="(chord, idx) in localChords" :key="idx" class="chord-editor">
-              <div class="form-group">
-                <div class="chord-label-row">
-                  <label>Acorde {{ idx + 1 }}:</label>
-                  <label class="checkbox-label">
-                    <input 
-                      type="checkbox" 
-                      :checked="chord.chord === 'REST'" 
-                      @change="toggleRest(idx, $event)"
-                    />
-                    <span>Silencio</span>
-                  </label>
-                </div>
-                
-                <div v-if="chord.chord !== 'REST'" class="input-with-help">
+        </div>
+        
+        <div v-if="compassType === 'normal'" class="chords-container">
+          <div v-for="(chord, idx) in localChords" :key="idx" class="chord-editor">
+            <div class="form-group">
+              <div class="chord-label-row">
+                <label>Acorde {{ idx + 1 }}:</label>
+                <label class="checkbox-label">
                   <input 
-                    type="text" 
-                    v-model="chord.chord"
-                    @input="validateChord(idx)"
-                    placeholder="Ej: C, Dm"
-                    class="chord-input"
+                    type="checkbox" 
+                    :checked="chord.chord === 'REST'" 
+                    @change="toggleRest(idx, $event)"
                   />
-                  <button class="help-btn" @click="showHelpModal = true" title="Ver caracteres permitidos">
-                    <span class="material-icons">help_outline</span>
-                  </button>
-                </div>
-                <div v-else class="rest-placeholder">
-                  Silencio musical
-                </div>
-                
-                <small v-if="chordErrors[idx]" class="error-text">
-                  {{ chordErrors[idx] }}
-                </small>
+                  <span>Silencio</span>
+                </label>
               </div>
-              <div class="form-group">
-                <label>Duración:</label>
-                <div class="radio-group duration-radio-group">
-                  <label class="radio-option">
-                    <input type="radio" v-model.number="chord.div" :value="1" />
-                    <span>𝅝 Redonda</span>
-                  </label>
-                  <label class="radio-option">
-                    <input type="radio" v-model.number="chord.div" :value="5" />
-                    <span>𝅗𝅥. Blanca p.</span>
-                  </label>
-                  <label class="radio-option">
-                    <input type="radio" v-model.number="chord.div" :value="2" />
-                    <span>𝅗𝅥 Blanca</span>
-                  </label>
-                  <label class="radio-option">
-                    <input type="radio" v-model.number="chord.div" :value="3" />
-                    <span>♩ Negra</span>
-                  </label>
-                </div>
+              
+              <div v-if="chord.chord !== 'REST'" class="input-with-help">
+                <input 
+                  type="text" 
+                  v-model="chord.chord"
+                  @input="validateChord(idx)"
+                  placeholder="Ej: C, Dm"
+                  class="chord-input"
+                />
+                <button class="help-btn" @click="showHelpModal = true" title="Ver caracteres permitidos">
+                  <span class="material-icons">help_outline</span>
+                </button>
               </div>
-              <button @click="removeChord(idx)" class="delete-btn-small" title="Eliminar acorde">
-                <span class="material-icons">close</span>
-              </button>
+              <div v-else class="rest-placeholder">
+                Silencio musical
+              </div>
+              
+              <small v-if="chordErrors[idx]" class="error-text">
+                {{ chordErrors[idx] }}
+              </small>
             </div>
-            <button @click="addChord" class="add-btn" title="Añadir acorde">
-              <span class="material-icons">add</span>
+            <div class="form-group">
+              <label>Duración:</label>
+              <div class="radio-group duration-radio-group">
+                <label class="radio-option">
+                  <input type="radio" v-model.number="chord.div" :value="1" />
+                  <span>𝅝 Redonda</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" v-model.number="chord.div" :value="5" />
+                  <span>𝅗𝅥. Blanca p.</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" v-model.number="chord.div" :value="2" />
+                  <span>𝅗𝅥 Blanca</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" v-model.number="chord.div" :value="3" />
+                  <span>♩ Negra</span>
+                </label>
+              </div>
+            </div>
+            <button @click="removeChord(idx)" class="delete-btn-small" title="Eliminar acorde">
+              <span class="material-icons">close</span>
             </button>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button class="secondary" @click="showEditModal = false">Cancelar</button>
-          <button class="primary" @click="save">Guardar</button>
-        </div>
-      </div>
-      </div>
-    </Teleport>
-    
-    <Teleport to="#modal-container">
-      <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
-      <div class="modal-content">
-        <div class="modal-header">Confirmar Eliminación</div>
-        <div class="modal-body">
-          <p>¿Está seguro de que desea eliminar este compás?</p>
-        </div>
-        <div class="modal-footer">
-          <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
-          <button class="primary" @click="confirmDelete">Eliminar</button>
+          <button @click="addChord" class="add-btn" title="Añadir acorde">
+            <span class="material-icons">add</span>
+          </button>
         </div>
       </div>
+      <div class="modal-footer">
+        <button class="secondary" @click="showEditModal = false">Cancelar</button>
+        <button class="primary" @click="save">Guardar</button>
       </div>
-    </Teleport>
+    </div>
+    </div>
+  </Teleport>
+  
+  <Teleport to="#modal-container">
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+    <div class="modal-content">
+      <div class="modal-header">Confirmar Eliminación</div>
+      <div class="modal-body">
+        <p>¿Está seguro de que desea eliminar este compás?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
+        <button class="primary" @click="confirmDelete">Eliminar</button>
+      </div>
+    </div>
+    </div>
+  </Teleport>
 
-    <Teleport to="#modal-container">
-      <div v-if="showHelpModal" class="modal-overlay" @click.self="showHelpModal = false">
-        <div class="modal-content">
-          <div class="modal-header">Caracteres Permitidos</div>
-          <div class="modal-body">
-            <p>Los siguientes caracteres están permitidos para formar acordes:</p>
-            <p class="allowed-chars">C, D, E, F, G, A, B, M, m, b, #, 7, 9, 1, 3, /, -, +, o</p>
-          </div>
-          <div class="modal-footer">
-            <button class="primary" @click="showHelpModal = false">Entendido</button>
-          </div>
+  <Teleport to="#modal-container">
+    <div v-if="showHelpModal" class="modal-overlay" @click.self="showHelpModal = false">
+      <div class="modal-content">
+        <div class="modal-header">Caracteres Permitidos</div>
+        <div class="modal-body">
+          <p>Los siguientes caracteres están permitidos para formar acordes:</p>
+          <p class="allowed-chars">C, D, E, F, G, A, B, M, m, b, #, 7, 9, 1, 3, /, -, +, o</p>
+        </div>
+        <div class="modal-footer">
+          <button class="primary" @click="showHelpModal = false">Entendido</button>
         </div>
       </div>
-    </Teleport>
-  </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -199,6 +227,16 @@ const isRepeatCompass = computed(() => {
 const isSpaceCompass = computed(() => {
   return props.compass.chords.length === 1 && props.compass.chords[0].chord === 'S'
 })
+
+const isCompassSelected = computed(() => {
+  return store.selectedCompass 
+    && store.selectedCompass.sIndex === props.sectionIndex 
+    && store.selectedCompass.cIndex === props.compassIndex
+})
+
+const selectCompass = () => {
+  store.setSelectedCompass(props.sectionIndex, props.compassIndex)
+}
 
 const compassType = ref(isRepeatCompass.value ? 'repeat' : (isSpaceCompass.value ? 'space' : 'normal'))
 
@@ -288,11 +326,13 @@ const copyCompass = () => {
   min-width: 50px;
   position: relative;
   border-radius: 0;
+  cursor: pointer;
 }
 
-/* Estilo para el compás tipo espacio */
-.compass-box:has(.space-symbol) {
-  border-color: transparent;
+.selected {
+  border-color: #1976d2 !important;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.5);
+  background-color: rgba(25, 118, 210, 0.1);
 }
 
 .compass-header {
@@ -304,6 +344,10 @@ const copyCompass = () => {
   justify-content: space-between;
   pointer-events: none;
   flex-flow: wrap;
+}
+
+.static-visible {
+  pointer-events: auto;
 }
 
 .compass-edit-btn {
@@ -321,7 +365,8 @@ const copyCompass = () => {
   pointer-events: auto;
 }
 
-.compass-box:hover .compass-edit-btn {
+.compass-box:hover .compass-edit-btn,
+.compass-break-filler:hover .compass-edit-btn {
   opacity: 0.6;
 }
 
@@ -366,7 +411,8 @@ const copyCompass = () => {
   pointer-events: auto;
 }
 
-.compass-box:hover .compass-header .delete-btn-small {
+.compass-box:hover .compass-header .delete-btn-small,
+.compass-break-filler:hover .delete-btn-small {
   opacity: 0.6;
 }
 
@@ -395,10 +441,41 @@ const copyCompass = () => {
   justify-content: center;
 }
 
-.space-symbol {
-  min-height: 48px; /* Altura equivalente para mantener alineación */
+/* Break Implementation Styles */
+.compass-break-filler {
+  flex-grow: 1;
+  min-width: 0;
+  height: 50px; /* Match approximately compass-box height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  border: 1px dashed #ccc;
+  background-color: #f9f9f9;
 }
 
+.compass-break-filler:hover {
+  background-color: #f0f0f0;
+}
+
+.compass-break-force {
+  width: 100%;
+  height: 0;
+}
+
+.break-display {
+  padding: 10px;
+}
+
+.break-label {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Modals */
 .modal-compass-edit {
   max-width: 90vw;
   max-height: 90vh;

@@ -40,6 +40,18 @@
       </div>
       </template>
     </div>
+
+    <!-- Export Footer -->
+    <div v-if="store.exportFooterData" class="export-footer">
+      <div class="footer-left">
+        {{ store.exportFooterData.current }} / {{ store.exportFooterData.total }}
+      </div>
+      <div class="footer-right">
+        <span v-if="store.exportFooterData.nextTitle">
+          SIGUIENTE: {{ store.exportFooterData.nextTitle }} - {{ store.exportFooterData.nextAuthor }}
+        </span>
+      </div>
+    </div>
     
     <!-- Lyrics Edit Modal -->
     <Teleport to="#modal-container">
@@ -119,3 +131,37 @@ const saveLyric = (index) => {
   editingText.value = ''
 }
 </script>
+
+<style scoped>
+/* Export Footer Styles */
+.export-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 2px solid #333;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.footer-left {
+  font-weight: bold;
+}
+
+.footer-right {
+  font-style: italic;
+  text-align: right;
+}
+
+.lyrics-page.pdf-export {
+  width: 210mm !important;
+  min-height: 297mm !important;
+  padding: 15mm !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: white !important;
+}
+</style>

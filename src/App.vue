@@ -27,6 +27,18 @@
           <BodyComponent ref="bodyComponent" />
           <StructureComponent ref="structureComponent" />
           <NotesComponent v-if="store.settings.show_notes" />
+          
+          <!-- Export Footer -->
+          <div v-if="store.exportFooterData" class="export-footer">
+            <div class="footer-left">
+              {{ store.exportFooterData.current }} / {{ store.exportFooterData.total }}
+            </div>
+            <div class="footer-right">
+              <span v-if="store.exportFooterData.nextTitle">
+                SIGUIENTE: {{ store.exportFooterData.nextTitle }} - {{ store.exportFooterData.nextAuthor }}
+              </span>
+            </div>
+          </div>
         </div>
         <LyricsPage 
           v-if="store.settings.show_lyrics" 
@@ -103,6 +115,40 @@
  top: 0;
  z-index: 90;
  background-color: #f5f5f5; /* Match toolbar bg */
+}
+/* Export Footer Styles */
+.export-footer {
+  margin-top: auto; /* Push to bottom of flex container */
+  padding-top: 10px;
+  border-top: 2px solid #333;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 12px;
+  font-family: var(--sheet-font-family);
+}
+
+.footer-left {
+  font-weight: bold;
+}
+
+.footer-right {
+  font-style: italic;
+  text-align: right;
+}
+
+/* PDF Export A4 Enrures */
+#sheet-page.pdf-export {
+  width: 210mm !important;
+  min-height: 297mm !important; /* A4 Height */
+  padding: 15mm !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: white !important;
+  position: relative !important;
+  box-shadow: none !important;
 }
 </style>
 

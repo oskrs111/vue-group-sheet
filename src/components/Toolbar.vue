@@ -273,7 +273,17 @@ const exportPDF = async () => {
     }
 
     try {
-        const fileName = getExportFileName()
+        let fileName = getExportFileName()
+        let includeLyrics = false
+
+        // Check if lyrics are available/enabled and ask user
+        if (store.settings.show_lyrics) {
+            if (confirm('¿Incluir las letras en la exportación?')) {
+                includeLyrics = true
+                fileName += '_LETRAS'
+            }
+        }
+
         sheetPage.classList.add('pdf-export')
         
         // Setup PDF
@@ -291,51 +301,53 @@ const exportPDF = async () => {
         
         // Wait for first page to be added to PDF
         await worker.get('pdf').then(async (doc) => {
-             // Now check for lyrics
-             const lyricsPage = document.getElementById('lyrics-page')
-             
-             if (lyricsPage) {
-                 lyricsPage.classList.add('pdf-export')
-                 try {
-                     const canvas = await html2canvas(lyricsPage, {
-                        scale: 3,
-                        useCORS: true,
-                        logging: false,
-                        backgroundColor: '#ffffff',
-                        scrollY: -window.scrollY
-                     })
-                     
-                     const imgData = canvas.toDataURL('image/jpeg', 0.98)
-                     
-                     // Get dimensions from the PDF document context
-                     const pageSize = doc.internal.pageSize
-                     const pageWidth = pageSize.getWidth()
-                     const pageHeight = pageSize.getHeight() 
-                     
-                     const imgProps = doc.getImageProperties(imgData)
-                     const imgRatio = imgProps.width / imgProps.height
-                     
-                     // Calculate width-based dimensions first (Match Page Width)
-                     let printWidth = pageWidth
-                     let printHeight = printWidth / imgRatio
-                     
-                     // Check if height overflows page
-                     if (printHeight > pageHeight) {
-                        // Scale to fit height instead
-                        printHeight = pageHeight
-                        printWidth = printHeight * imgRatio
+             // Now check for lyrics ONLY if user agreed
+             if (includeLyrics) {
+                 const lyricsPage = document.getElementById('lyrics-page')
+                 
+                 if (lyricsPage) {
+                     lyricsPage.classList.add('pdf-export')
+                     try {
+                         const canvas = await html2canvas(lyricsPage, {
+                            scale: 3,
+                            useCORS: true,
+                            logging: false,
+                            backgroundColor: '#ffffff',
+                            scrollY: -window.scrollY
+                         })
+                         
+                         const imgData = canvas.toDataURL('image/jpeg', 0.98)
+                         
+                         // Get dimensions from the PDF document context
+                         const pageSize = doc.internal.pageSize
+                         const pageWidth = pageSize.getWidth()
+                         const pageHeight = pageSize.getHeight() 
+                         
+                         const imgProps = doc.getImageProperties(imgData)
+                         const imgRatio = imgProps.width / imgProps.height
+                         
+                         // Calculate width-based dimensions first (Match Page Width)
+                         let printWidth = pageWidth
+                         let printHeight = printWidth / imgRatio
+                         
+                         // Check if height overflows page
+                         if (printHeight > pageHeight) {
+                            // Scale to fit height instead
+                            printHeight = pageHeight
+                            printWidth = printHeight * imgRatio
+                         }
+    
+                         // Calculate Centering (if width is less than page width)
+                         const xOffset = (pageWidth - printWidth) / 2
+                         const yOffset = 0 // Top alignment
+    
+                         doc.addPage()
+                         doc.addImage(imgData, 'JPEG', xOffset, yOffset, printWidth, printHeight)
+                     } catch (e) {
+                         console.error("Error capturing lyrics:", e)
+                     } finally {
+                         lyricsPage.classList.remove('pdf-export')
                      }
-
-                     // Calculate Centering (if width is less than page width)
-                     const xOffset = (pageWidth - printWidth) / 2
-                     const yOffset = 0 // Top alignment
-
-                     doc.addPage()
-                     doc.addImage(imgData, 'JPEG', xOffset, yOffset, printWidth, printHeight)
-                 } catch (e) {
-                     console.error("Error capturing lyrics:", e)
-                 } finally {
-                     lyricsPage.classList.remove('pdf-export')
                  }
              }
              
@@ -359,6 +371,17 @@ const exportEPUB = async () => {
         if (!sheetPage) {
             alert('No se encontró el contenido de la página para exportar')
             return
+        }
+
+        let fileName = getExportFileName()
+        let includeLyrics = false
+
+        // Check if lyrics are available/enabled and ask user
+        if (store.settings.show_lyrics) {
+            if (confirm('¿Incluir las letras en la exportación?')) {
+                includeLyrics = true
+                fileName += '_LETRAS'
+            }
         }
 
         const songsToExport = []
@@ -391,36 +414,37 @@ const exportEPUB = async () => {
             sheetPage.classList.remove('pdf-export')
         }
 
-        // 2. Capture Lyrics if present
-        const lyricsPage = document.getElementById('lyrics-page')
-        if (lyricsPage) {
-            lyricsPage.classList.add('pdf-export')
-            try {
-                const canvas = await html2canvas(lyricsPage, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff',
-                    scrollY: -window.scrollY
-                })
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
-                
-                // Clone data but append (Letra) to name
-                const lyricData = JSON.parse(JSON.stringify(songData))
-                if (lyricData.header?.center?.top) {
-                    lyricData.header.center.top.name = (lyricData.header.center.top.name || '') + ' (Letra)'
+        // 2. Capture Lyrics if present AND user wants them
+        if (includeLyrics) {
+            const lyricsPage = document.getElementById('lyrics-page')
+            if (lyricsPage) {
+                lyricsPage.classList.add('pdf-export')
+                try {
+                    const canvas = await html2canvas(lyricsPage, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff',
+                        scrollY: -window.scrollY
+                    })
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+                    
+                    // Clone data but append (Letra) to name
+                    const lyricData = JSON.parse(JSON.stringify(songData))
+                    if (lyricData.header?.center?.top) {
+                        lyricData.header.center.top.name = (lyricData.header.center.top.name || '') + ' (Letra)'
+                    }
+                    
+                    songsToExport.push(lyricData)
+                    imageBlobs.push(blob)
+                } finally {
+                    lyricsPage.classList.remove('pdf-export')
                 }
-                
-                songsToExport.push(lyricData)
-                imageBlobs.push(blob)
-            } finally {
-                lyricsPage.classList.remove('pdf-export')
             }
         }
 
         // 3. Generate EPUB
         const { EpubGenerator } = await import('../utils/EpubGenerator.js')
-        const fileName = getExportFileName()
         // Pass simple name to generator logic if needed, but filename for save
         const generator = new EpubGenerator(store.header.center.top.name || 'cancion', songsToExport)
         

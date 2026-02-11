@@ -51,14 +51,21 @@ export const useSheetStore = defineStore('sheet', {
     copiedSection: null,
     copiedCompass: null,
     selectedSectionId: null,
-    selectedStructureIndex: null
+    selectedStructureIndex: null,
+    selectedCompass: null,
+    exportFooterData: null
   }),
 
   actions: {
+    updateExportFooter(data) {
+      this.exportFooterData = data
+    },
+
     setSelectedStructureIndex(index) {
       this.selectedStructureIndex = index
       if (index !== null) {
         this.selectedSectionId = null
+        this.selectedCompass = null
       }
     },
 
@@ -97,6 +104,8 @@ export const useSheetStore = defineStore('sheet', {
 
       // Select the new item
       this.selectedStructureIndex = insertIndex
+      this.selectedSectionId = null
+      this.selectedCompass = null
 
       this.saveToLocalStorage()
     },
@@ -137,9 +146,28 @@ export const useSheetStore = defineStore('sheet', {
     },
 
     addSection() {
-      const newId = String.fromCharCode(65 + this.body.length)
+      const existingIds = this.body.map(s => s.id)
+      let candidate = ''
+      let counter = 0
+
+      // Buscar el primer ID disponible: A, B, C... Z, A1, B1...
+      while (true) {
+        if (counter < 26) {
+          candidate = String.fromCharCode(65 + counter)
+        } else {
+          const char = String.fromCharCode(65 + (counter % 26))
+          const num = Math.floor(counter / 26)
+          candidate = char + num
+        }
+
+        if (!existingIds.includes(candidate)) {
+          break
+        }
+        counter++
+      }
+
       this.body.push({
-        id: newId,
+        id: candidate,
         b_color: this.settings.b_color_default,
         f_color: this.settings.f_color_default,
         turns: 1,
@@ -155,6 +183,16 @@ export const useSheetStore = defineStore('sheet', {
     },
 
     updateSection(index, data) {
+      // Validar unicidad del ID si se está cambiando
+      if (data.id && data.id !== this.body[index].id) {
+        const idExists = this.body.some((s, i) => i !== index && s.id === data.id)
+        if (idExists) {
+          console.warn(`ID ${data.id} ya existe. Cancelando actualización de ID.`)
+          // Eliminamos el ID de la data para que no se actualice, pero permitimos el resto
+          delete data.id
+        }
+      }
+
       // Crear copia profunda para evitar referencias compartidas
       const currentSection = JSON.parse(JSON.stringify(this.body[index]))
       const newData = JSON.parse(JSON.stringify(data))
@@ -162,7 +200,11 @@ export const useSheetStore = defineStore('sheet', {
 
       // Update structure references
       this.structure.forEach(item => {
-        if (item.id === this.body[index].id) {
+        if (item.id === currentSection.id) { // Use original ID to find items
+          // If ID changed, update it
+          if (newData.id) {
+            item.id = newData.id
+          }
           item.b_color = data.b_color || item.b_color
           item.f_color = data.f_color || item.f_color
         }
@@ -175,6 +217,17 @@ export const useSheetStore = defineStore('sheet', {
       this.body.splice(index, 1)
       // Remove from structure
       this.structure = this.structure.filter(item => item.id !== sectionId)
+
+      // Clear selections if necessary
+      if (this.selectedSectionId === sectionId) {
+        this.selectedSectionId = null
+      }
+      if (this.selectedCompass && this.selectedCompass.sIndex === index) {
+        this.selectedCompass = null
+      } else if (this.selectedCompass && this.selectedCompass.sIndex > index) {
+        this.selectedCompass.sIndex--;
+      }
+
       this.saveToLocalStorage()
     },
 
@@ -238,6 +291,11 @@ export const useSheetStore = defineStore('sheet', {
 
     deleteCompass(sectionIndex, compassIndex) {
       this.body[sectionIndex].compass.splice(compassIndex, 1)
+      if (this.selectedCompass && this.selectedCompass.sIndex === sectionIndex && this.selectedCompass.cIndex === compassIndex) {
+        this.selectedCompass = null
+      } else if (this.selectedCompass && this.selectedCompass.sIndex === sectionIndex && this.selectedCompass.cIndex > compassIndex) {
+        this.selectedCompass.cIndex--;
+      }
       this.saveToLocalStorage()
     },
 
@@ -265,10 +323,6 @@ export const useSheetStore = defineStore('sheet', {
       if (this.body.length > 0) {
         const firstSection = this.body[0]
         this.structure.push({
-          id: firstSection.id,
-          b_color: firstSection.b_color,
-          f_color: firstSection.f_color,
-          shape: this.settings.shape_default,
           id: firstSection.id,
           b_color: firstSection.b_color,
           f_color: firstSection.f_color,
@@ -681,8 +735,20 @@ export const useSheetStore = defineStore('sheet', {
       this.selectedSectionId = sectionId
       if (sectionId !== null) {
         this.selectedStructureIndex = null
+        this.selectedCompass = null
       }
       this.saveToLocalStorage()
+    },
+
+    setSelectedCompass(sectionIndex, compassIndex) {
+      if (this.selectedCompass && this.selectedCompass.sIndex === sectionIndex && this.selectedCompass.cIndex === compassIndex) {
+        // Deselect if already selected
+        this.selectedCompass = null
+      } else {
+        this.selectedCompass = { sIndex: sectionIndex, cIndex: compassIndex }
+        this.selectedSectionId = null
+        this.selectedStructureIndex = null
+      }
     }
   }
 })

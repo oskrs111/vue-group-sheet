@@ -159,8 +159,18 @@ const exportCollectionPDF = async () => {
     pdf.addPage()
     // --- FIN PORTADA ---
     
+    // --- FIN PORTADA ---
+    
+    // --- FIN PORTADA ---
+    
     console.log('Iniciando exportación de colección:', props.collection.name)
     
+    // Preguntar por letras una sola vez al inicio
+    let includeLyrics = false
+    if (confirm('¿Incluir las letras (si están disponibles) en la exportación?')) {
+        includeLyrics = true
+    }
+
     for (let i = 0; i < props.collection.songs.length; i++) {
       const songId = props.collection.songs[i]
       console.log(`Procesando canción ${i + 1}/${props.collection.songs.length} (ID: ${songId})`)
@@ -174,6 +184,19 @@ const exportCollectionPDF = async () => {
       // Cargar canción en el store
       await sheetStore.loadSong(songId)
       console.log('Canción cargada:', sheetStore.header.center.top.name)
+      
+      // Preparar datos del footer
+      const nextSongId = i + 1 < props.collection.songs.length ? props.collection.songs[i + 1] : null
+      const nextSongData = nextSongId ? songsRegistry.songs[nextSongId] : null
+      
+      const footerData = {
+        current: i + 1,
+        total: props.collection.songs.length,
+        nextTitle: nextSongData ? (nextSongData.header?.center?.top?.name || 'Sin nombre') : null,
+        nextAuthor: nextSongData ? (nextSongData.header?.center?.bottom?.author || '') : null
+      }
+      
+      sheetStore.updateExportFooter(footerData)
       
       // Esperar a que Vue actualice el DOM
       await nextTick()
@@ -214,44 +237,54 @@ const exportCollectionPDF = async () => {
         }
       }
 
-      // 4. Capture Lyrics if present
-      const lyricsPage = document.getElementById('lyrics-page')
-      if (lyricsPage) {
-        // Activar estilos de exportación también en la página de letras
-        lyricsPage.classList.add('pdf-export')
-        try {
-           const canvas = await html2canvas(lyricsPage, {
-            scale: 2, 
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff',
-            scrollY: -window.scrollY,
-            scrollX: -window.scrollX
-          })
-          
-          const imgData = canvas.toDataURL('image/jpeg', 0.95)
-          const imgProps = pdf.getImageProperties(imgData)
-          const imgRatio = imgProps.width / imgProps.height
-          const printWidth = pdfWidth
-          const printHeight = printWidth / imgRatio
-          
-          pdf.addPage()
-          pdf.addImage(imgData, 'JPEG', 0, 0, printWidth, printHeight)
-
-        } catch (e) {
-          console.error('Error capturing lyrics:', e)
-        } finally {
-          lyricsPage.classList.remove('pdf-export')
+      // 4. Capture Lyrics if present AND user wants them
+      if (includeLyrics) {
+        const lyricsPage = document.getElementById('lyrics-page')
+        if (lyricsPage) {
+          // Activar estilos de exportación también en la página de letras
+          lyricsPage.classList.add('pdf-export')
+          try {
+             const canvas = await html2canvas(lyricsPage, {
+              scale: 2, 
+              useCORS: true,
+              logging: false,
+              backgroundColor: '#ffffff',
+              scrollY: -window.scrollY,
+              scrollX: -window.scrollX
+            })
+            
+            const imgData = canvas.toDataURL('image/jpeg', 0.95)
+            const imgProps = pdf.getImageProperties(imgData)
+            const imgRatio = imgProps.width / imgProps.height
+            const printWidth = pdfWidth
+            const printHeight = printWidth / imgRatio
+            
+            pdf.addPage()
+            pdf.addImage(imgData, 'JPEG', 0, 0, printWidth, printHeight)
+  
+          } catch (e) {
+            console.error('Error capturing lyrics:', e)
+          } finally {
+            lyricsPage.classList.remove('pdf-export')
+          }
         }
       }
     }
+    
+    // Limpiar footer al finalizar
+    sheetStore.updateExportFooter(null)
 
-    const fileName = getExportFileName()
+    let fileName = getExportFileName()
+    if (includeLyrics) {
+        fileName += '_LETRAS'
+    }
     pdf.save(`${fileName}.pdf`)
 
   } catch (error) {
     console.error('Error exportando colección:', error)
     alert('Error al generar el PDF: ' + error.message)
+    // Asegurar limpieza en caso de error
+    sheetStore.updateExportFooter(null)
   } finally {
     isExporting.value = false
   }
@@ -283,6 +316,12 @@ const exportEPUB = async () => {
     const songsRegistry = sheetStore.getSongsRegistry()
     const songsToExport = []
     const imageBlobs = []
+
+    // Preguntar por letras una sola vez al inicio
+    let includeLyrics = false
+    if (confirm('¿Incluir las letras (si están disponibles) en la exportación?')) {
+        includeLyrics = true
+    }
 
     // 1. Collect Metadata and Capture Images sequentially
     for (const songId of props.collection.songs) {
@@ -322,35 +361,37 @@ const exportEPUB = async () => {
            }
         }
 
-        // 2. Capture Lyrics if present
-        const lyricsPage = document.getElementById('lyrics-page')
-        if (lyricsPage) {
-           lyricsPage.classList.add('pdf-export')
-           try {
-             const canvas = await html2canvas(lyricsPage, {
-               scale: 2,
-               useCORS: true,
-               logging: false,
-               backgroundColor: '#ffffff'
-             })
-             
-             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
-             
-             // Add Lyrics to lists as a separate "song" entry
-             // Clone data but append (Letra) to name
-             const lyricData = JSON.parse(JSON.stringify(songData))
-             if (lyricData.header?.center?.top) {
-                lyricData.header.center.top.name = (lyricData.header.center.top.name || '') + ' (Letra)'
-             }
-             
-             songsToExport.push(lyricData)
-             imageBlobs.push(blob)
-             
-           } catch (e) {
-             console.error('Error capturing lyrics for EPUB', e)
-           } finally {
-             lyricsPage.classList.remove('pdf-export')
-           }
+        // 2. Capture Lyrics if present AND user wants them
+        if (includeLyrics) {
+            const lyricsPage = document.getElementById('lyrics-page')
+            if (lyricsPage) {
+               lyricsPage.classList.add('pdf-export')
+               try {
+                 const canvas = await html2canvas(lyricsPage, {
+                   scale: 2,
+                   useCORS: true,
+                   logging: false,
+                   backgroundColor: '#ffffff'
+                 })
+                 
+                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+                 
+                 // Add Lyrics to lists as a separate "song" entry
+                 // Clone data but append (Letra) to name
+                 const lyricData = JSON.parse(JSON.stringify(songData))
+                 if (lyricData.header?.center?.top) {
+                    lyricData.header.center.top.name = (lyricData.header.center.top.name || '') + ' (Letra)'
+                 }
+                 
+                 songsToExport.push(lyricData)
+                 imageBlobs.push(blob)
+                 
+               } catch (e) {
+                 console.error('Error capturing lyrics for EPUB', e)
+               } finally {
+                 lyricsPage.classList.remove('pdf-export')
+               }
+            }
         }
       }
     }
@@ -368,7 +409,11 @@ const exportEPUB = async () => {
     const blob = await generator.generateFromImages(imageBlobs)
 
     // 3. Download
-    saveAs(blob, `${props.collection.name}.epub`)
+    let fileName = `${props.collection.name}`
+    if (includeLyrics) {
+        fileName += '_LETRAS'
+    }
+    saveAs(blob, `${fileName}.epub`)
 
   } catch (error) {
     console.error('Error exportando EPUB:', error)
