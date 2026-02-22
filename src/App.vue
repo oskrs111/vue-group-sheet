@@ -13,6 +13,30 @@
     </div>
   </div>
   <div v-else id="app-layout">
+
+    <!-- Splash Screen -->
+    <Teleport to="body">
+      <Transition name="splash-fade">
+        <div v-if="showSplash" class="splash-overlay">
+          <!-- Neon background blobs -->
+          <div class="splash-blob splash-blob-1"></div>
+          <div class="splash-blob splash-blob-2"></div>
+          <div class="splash-blob splash-blob-3"></div>
+
+          <div class="splash-card">
+            <div class="splash-title-row">
+              <h1 class="splash-title">Group Sheet Editor</h1>
+              <span class="splash-badge">Alpha Release</span>
+            </div>
+            <p class="splash-author">by Oscar Sanz</p>
+            <a class="splash-link" href="https://github.com/oskrs111" target="_blank" rel="noopener">github.com/oskrs111</a>
+            <div class="splash-progress-track">
+              <div class="splash-progress-bar"></div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
     <div id="toolbar" class="toolbar-container">
       <Toolbar />
     </div>
@@ -172,6 +196,154 @@
   position: relative !important;
   box-shadow: none !important;
 }
+
+/* ===================== */
+/* === SPLASH SCREEN === */
+/* ===================== */
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ui-bg-base);
+  overflow: hidden;
+}
+
+/* Neon ambient blobs */
+.splash-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: blobPulse 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.splash-blob-1 {
+  width: 380px; height: 380px;
+  background: #3b82f6;
+  top: -80px; left: -80px;
+  animation-delay: 0s;
+}
+.splash-blob-2 {
+  width: 300px; height: 300px;
+  background: #6366f1;
+  bottom: -60px; right: -60px;
+  animation-delay: -2s;
+}
+.splash-blob-3 {
+  width: 200px; height: 200px;
+  background: #38bdf8;
+  top: 50%; left: 55%;
+  animation-delay: -4s;
+}
+
+@keyframes blobPulse {
+  from { transform: scale(1) translate(0, 0); }
+  to   { transform: scale(1.15) translate(20px, -20px); }
+}
+
+.splash-card {
+  position: relative;
+  background: rgba(24, 24, 27, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  box-shadow:
+    0 0 40px rgba(59, 130, 246, 0.2),
+    0 25px 50px rgba(0, 0, 0, 0.6);
+  min-width: 440px;
+  animation: splashCardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes splashCardIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.splash-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.splash-title {
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--ui-text-primary);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.5px;
+  text-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+}
+
+.splash-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: var(--ui-accent-hover);
+  border-radius: 9999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.splash-author {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ui-text-secondary);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+}
+
+.splash-link {
+  font-size: 0.8rem;
+  color: var(--ui-accent);
+  text-decoration: none;
+  transition: color 0.2s;
+  font-family: 'Geist', monospace, sans-serif;
+}
+.splash-link:hover { color: var(--ui-accent-hover); text-decoration: underline; }
+
+.splash-progress-track {
+  margin-top: 20px;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.splash-progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--ui-accent), #38bdf8);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+  animation: splashProgress 5s linear forwards;
+}
+
+@keyframes splashProgress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* Fade-out transition */
+.splash-fade-leave-active {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.splash-fade-leave-to {
+  opacity: 0;
+  transform: scale(1.03);
+}
 </style>
 
 <script setup>
@@ -198,6 +370,7 @@ const sheetPageRef = ref(null)
 const isEpubMode = ref(false)
 const epubData = ref(null)
 const isGenerating = ref(false)
+const showSplash = ref(false)
 const isSheetOverflowing = ref(false)
 
 // 297mm en pixels reales en monitores a 96DPI suele rondar los 1122.5px.
@@ -339,6 +512,12 @@ onMounted(() => {
       console.error('Error loading EPUB data', e)
     }
   } else {
+    // Mostrar splash screen 5 segundos
+    showSplash.value = true
+    setTimeout(() => {
+      showSplash.value = false
+    }, 5000)
+
     store.initializeApp()
     
     // Configurar ResizeObserver para vigilar altura del A4
