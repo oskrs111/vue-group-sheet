@@ -186,7 +186,7 @@
 /* PDF Export A4 Enrures */
 #sheet-page.pdf-export {
   width: 210mm !important;
-  min-height: 297mm !important; /* A4 Height */
+  min-height: auto !important; /* Permitir que el contenido dicte la altura, evitando páginas extra */
   padding: 15mm !important;
   margin: 0 !important;
   box-sizing: border-box !important;
@@ -195,6 +195,9 @@
   background: white !important;
   position: relative !important;
   box-shadow: none !important;
+  outline: 0 !important;
+  outline-width: 0 !important;
+  overflow: hidden !important; /* Cortar cualquier micro-desbordamiento que genere páginas en blanco */
 }
 
 /* ===================== */
@@ -373,10 +376,9 @@ const isGenerating = ref(false)
 const showSplash = ref(false)
 const isSheetOverflowing = ref(false)
 
-// 297mm en pixels reales en monitores a 96DPI suele rondar los 1122.5px.
-// Como CSS lo redondea flotantemente, añadimos un pequeño offset de tolerancia global (5px).
-const MAX_A4_HEIGHT_PX = 1127.5 
-
+// 297mm (1122.5px) + 20px padding superior + 20px padding inferior = 1162.5px.
+// Añadimos una tolerancia de 5px para evitar falsos positivos por redondeo de píxeles: 1167.5px.
+const MAX_A4_HEIGHT_PX = 1167.5 
 let resizeObserver = null
 
 const pageClass = computed(() => {

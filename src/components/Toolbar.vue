@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import SettingsModal from './SettingsModal.vue'
 import html2pdf from 'html2pdf.js'
@@ -303,9 +303,23 @@ const exportPDF = async () => {
         }
 
         sheetPage.classList.add('pdf-export')
+        // Quitar indicadores visuales A4 para evitar que box-shadow/outline agrande el canvas
+        const hadInBounds = sheetPage.classList.contains('in-bounds')
+        const hadOutOfBounds = sheetPage.classList.contains('out-of-bounds')
+        sheetPage.classList.remove('in-bounds', 'out-of-bounds')
+
+        // Forzar min-height/outline/box-shadow a 0 via inline style (mayor prioridad que cualquier CSS).
+        const prevMinHeight = sheetPage.style.minHeight
+        const prevOutline = sheetPage.style.outline
+        const prevBoxShadow = sheetPage.style.boxShadow
+        sheetPage.style.minHeight = 'auto'
+        sheetPage.style.outline = 'none'
+        sheetPage.style.boxShadow = 'none'
+
+        // Esperar un tick para que el DOM refleje el nuevo tamaño antes de capturar
+        await nextTick()
         
         // Setup PDF
-        const pdf = new html2pdf.Worker
         const opt = {
              margin: 0,
              filename: `${fileName}.pdf`,
@@ -378,6 +392,12 @@ const exportPDF = async () => {
         alert('Error al generar el PDF: ' + error.message)
     } finally {
         sheetPage.classList.remove('pdf-export')
+        sheetPage.style.minHeight = prevMinHeight
+        sheetPage.style.outline = prevOutline
+        sheetPage.style.boxShadow = prevBoxShadow
+        // Restaurar indicadores visuales A4
+        if (hadInBounds) sheetPage.classList.add('in-bounds')
+        if (hadOutOfBounds) sheetPage.classList.add('out-of-bounds')
     }
 }
 

@@ -93,9 +93,8 @@ const lyricsPageRef = ref(null)
 
 const isLyricsOverflowing = ref(false)
 
-// 297mm en pixels reales en monitores a 96DPI suele rondar los 1122.5px.
-// Como CSS lo redondea flotantemente, añadimos un pequeño offset de tolerancia global (5px).
-const MAX_A4_HEIGHT_PX = 1127.5 
+// 297mm (1122.5px) + 40px de padding total + margen de error = 1167.5px
+const MAX_A4_HEIGHT_PX = 1167.5 
 let resizeObserver = null
 
 // Base64 Helpers for Unicode support

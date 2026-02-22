@@ -76,7 +76,7 @@ defineExpose({ triggerEditItem })
 .structure-header h3 {
   font-size: 20px;
   font-weight: bold;
-  color: var(--ui-text-primary);
+  color: var(--ui-text-secondary);
 }
 
 .header-controls {
