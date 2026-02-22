@@ -566,6 +566,44 @@ export const useSheetStore = defineStore('sheet', {
       return { success: true }
     },
 
+    exportCompleteDatabase() {
+      // Devuelve explícitamente el registro general
+      return this.getSongsRegistry()
+    },
+
+    importCompleteDatabase(registryData, merge = false) {
+      // Validar si el JSON tiene aspecto de una base de datos de GroupSheet (contiene version y songs o collections)
+      if (!registryData || typeof registryData !== 'object') {
+        throw new Error('El archivo no tiene el formato correcto de base de datos')
+      }
+
+      // Una base de datos debe tener version y songs
+      if (registryData.version === undefined || !registryData.songs) {
+        throw new Error('El archivo no parece ser un backup válido de Vue Group Sheet')
+      }
+
+      const currentRegistry = this.getSongsRegistry()
+
+      if (merge) {
+        // Combinar datos: sobrescribir conflictos pero mantener lo no existente local
+        const mergedSongs = { ...currentRegistry.songs, ...registryData.songs }
+        const mergedCollections = { ...(currentRegistry.collections || {}), ...(registryData.collections || {}) }
+
+        currentRegistry.songs = mergedSongs
+        currentRegistry.collections = mergedCollections
+        // Respetamos la versión del importante si es mayor
+        currentRegistry.version = Math.max(currentRegistry.version || 1, registryData.version || 1)
+        this.saveSongsRegistry(currentRegistry)
+      } else {
+        // Reemplazo total destructivo
+        this.saveSongsRegistry(registryData)
+        // Redirigir a una canción nueva después de purgar para evitar que el store quede colgado en una id fantasma
+        this.newFile()
+      }
+
+      return { success: true }
+    },
+
     migrateDivValues(body) {
       // Convert old div values: 4 (old negra) -> 3 (new negra), 8 (corchea) -> 3 (negra)
       return body.map(section => ({

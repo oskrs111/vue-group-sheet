@@ -43,7 +43,7 @@
                   <span class="material-icons">expand_more</span>
                 </button>
               </div>
-              <span class="song-name">{{ song.name }}</span>
+              <span class="song-name" @click="loadSong(song.id)" title="Cargar canción">{{ song.name }}</span>
               <button @click="removeSong(song.id)" class="remove-btn" title="Quitar">
                 <span class="material-icons">close</span>
               </button>
@@ -116,6 +116,21 @@ const moveDown = (index) => {
     store.moveSongInCollection(props.collection.id, index, index + 1)
   }
 }
+
+const loadSong = (songId) => {
+  const song = allSongs.value.find(s => s.id === songId)
+  if (!song) return
+
+  const name = song.name || 'sin nombre'
+  if (confirm(`¿Cargar la canción "${name}"? Se perderán los cambios no guardados.`)) {
+    try {
+      sheetStore.loadSong(songId)
+      emit('close')
+    } catch (error) {
+      alert('Error al cargar: ' + error.message)
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -130,8 +145,8 @@ const moveDown = (index) => {
   align-items: center;
   margin: 20px 0 10px;
   font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #eee;
+  color: var(--ui-text-primary);
+  border-bottom: 1px solid var(--ui-border);
   padding-bottom: 5px;
 }
 
@@ -141,15 +156,20 @@ const moveDown = (index) => {
   gap: 4px;
   background: transparent;
   border: none;
-  color: #1976d2;
+  color: var(--ui-accent);
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
+  transition: opacity 0.2s;
+}
+.add-song-toggle:hover {
+  opacity: 0.8;
 }
 
 .add-song-selector {
-  background: #f5f5f5;
-  border-radius: 4px;
+  background: var(--ui-bg-surface);
+  border-radius: 12px;
+  border: 1px solid var(--ui-border);
   padding: 10px;
   margin-bottom: 15px;
   max-height: 150px;
@@ -165,13 +185,19 @@ const moveDown = (index) => {
 }
 
 .small-btn {
-  padding: 2px 8px;
+  padding: 4px 12px;
   font-size: 11px;
-  background: #e3f2fd;
-  color: #1976d2;
-  border: 1px solid #1976d2;
-  border-radius: 3px;
+  background: var(--ui-accent);
+  color: #ffffff;
+  border: 1px solid transparent;
+  border-radius: 9999px;
   cursor: pointer;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s;
+}
+
+.small-btn:hover {
+  background: var(--ui-accent-hover);
 }
 
 .current-songs-list {
@@ -183,11 +209,15 @@ const moveDown = (index) => {
 .collection-song-item {
   display: flex;
   align-items: center;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  background: var(--ui-bg-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
   padding: 8px;
   gap: 10px;
+  transition: background 0.2s;
+}
+.collection-song-item:hover {
+  background: var(--ui-bg-hover);
 }
 
 .song-drag-handle {
@@ -201,7 +231,11 @@ const moveDown = (index) => {
   cursor: pointer;
   padding: 0;
   line-height: 1;
-  color: #888;
+  color: var(--ui-text-secondary);
+  transition: color 0.2s;
+}
+.move-btn:hover:not(:disabled) {
+  color: var(--ui-text-primary);
 }
 
 .move-btn:disabled {
@@ -216,18 +250,31 @@ const moveDown = (index) => {
 .song-name {
   flex: 1;
   font-size: 14px;
+  cursor: pointer;
+  color: var(--ui-accent);
+  transition: color 0.2s;
+}
+
+.song-name:hover {
+  text-decoration: underline;
+  color: var(--ui-accent-hover);
 }
 
 .remove-btn {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #d32f2f;
+  color: var(--ui-danger);
+  transition: color 0.2s;
+}
+
+.remove-btn:hover {
+  color: var(--ui-danger-hover);
 }
 
 .empty-list, .no-songs {
   text-align: center;
-  color: #999;
+  color: var(--ui-text-secondary);
   font-size: 13px;
   padding: 10px;
 }

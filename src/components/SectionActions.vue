@@ -156,8 +156,8 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   padding: 8px 16px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
+  background: var(--ui-bg-surface);
+  border-bottom: 1px solid var(--ui-border);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -165,35 +165,40 @@ onUnmounted(() => {
 }
 
 .action-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  gap: 6px;
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid var(--ui-border);
+  color: var(--ui-text-primary);
+  border-radius: 9999px;
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  text-decoration: none;
 }
 
-.action-btn:hover {
-  background: #f0f0f0;
-  border-color: #bdbdbd;
+.action-btn:hover:not(:disabled) {
+  background: var(--ui-bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+  filter: brightness(1.1);
 }
 
 .action-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .action-btn.danger {
-  color: #d32f2f;
-  border-color: #d32f2f;
+  color: var(--ui-danger);
+  border-color: var(--ui-danger);
 }
 
-.action-btn.danger:hover {
-  background: #ffebee;
+.action-btn.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--ui-danger-hover);
+  filter: none;
 }
 
 .btn-label {

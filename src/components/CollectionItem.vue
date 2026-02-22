@@ -426,15 +426,17 @@ const exportEPUB = async () => {
 
 <style scoped>
 .collection-item {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  background: var(--ui-bg-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
   padding: 12px;
-  transition: box-shadow 0.2s;
+  transition: all 0.3s ease;
 }
 
 .collection-item:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: var(--ui-bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .collection-info {
@@ -446,12 +448,12 @@ const exportEPUB = async () => {
 .collection-name {
   font-weight: 600;
   font-size: 15px;
-  color: #333;
+  color: var(--ui-text-primary);
 }
 
 .collection-count {
   font-size: 12px;
-  color: #666;
+  color: var(--ui-text-secondary);
 }
 
 .collection-actions {
@@ -462,25 +464,28 @@ const exportEPUB = async () => {
 
 .action-btn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  color: #555;
+  padding: 6px;
+  border-radius: 9999px;
+  color: var(--ui-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .action-btn:hover {
-  background: #f0f0f0;
-  color: #1976d2;
+  background: var(--ui-bg-hover);
+  color: var(--ui-text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+  filter: brightness(1.2);
 }
 
 .action-btn.danger:hover {
-  background: #ffebee;
-  color: #d32f2f;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--ui-danger);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .action-btn .material-icons {

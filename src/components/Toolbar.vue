@@ -39,6 +39,23 @@
         @change="handleImportJSON"
       />
     </button>
+    <div style="height: 1px; background: var(--ui-border); width: 80%; margin: 8px auto;"></div>
+    <button @click="downloadCompleteBackup" title="Exportar Todo" class="toolbar-btn">
+      <span class="material-icons">cloud_download</span>
+      <span class="btn-label">Exportar Todo</span>
+    </button>
+    <button @click="triggerImportBackup" title="Restaurar Todo" class="toolbar-btn" style="color: var(--ui-danger);">
+      <span class="material-icons">cloud_upload</span>
+      <span class="btn-label" style="color: var(--ui-danger);">Restaurar Todo</span>
+      <input 
+        type="file" 
+        ref="fileInputGlobal" 
+        style="display: none" 
+        accept=".json"
+        @change="handleImportBackup"
+      />
+    </button>
+    <div style="height: 1px; background: var(--ui-border); width: 80%; margin: 8px auto;"></div>
     <button @click="openSettings" title="Configuración" class="toolbar-btn">
       <span class="material-icons">settings</span>
       <span class="btn-label">Ajustes</span>
@@ -78,7 +95,7 @@
         <div class="modal-content">
         <div class="modal-header">Cargar Canción</div>
         <div class="modal-body">
-          <div v-if="songsList.length === 0" style="padding: 20px; text-align: center; color: #666;">
+          <div v-if="songsList.length === 0" style="padding: 20px; text-align: center; color: var(--ui-text-secondary);">
             No hay canciones guardadas
           </div>
           <div v-else class="songs-list">
@@ -131,6 +148,7 @@ const showLoadDialog = ref(false)
 const selectedSongId = ref(null)
 const songName = ref('')
 const fileInput = ref(null)
+const fileInputGlobal = ref(null)
 
 const openSettings = () => {
   showSettings.value = true
@@ -553,6 +571,64 @@ const processImport = (songData, overwrite = false) => {
         console.error('Error importing:', error)
         alert('Error al importar: ' + error.message)
     }
+}
+
+// Global DB Backup/Restore
+const downloadCompleteBackup = () => {
+    try {
+        const fullDatabase = store.exportCompleteDatabase()
+        const dateTime = formatDateForFileName(new Date())
+        const fileName = `VueGroupSheet_Backup_${dateTime}.json`
+
+        const blob = new Blob([JSON.stringify(fullDatabase, null, 2)], { type: 'application/json' })
+        saveFile(blob, fileName)
+    } catch (error) {
+        console.error('Error exportando Backup:', error)
+        alert('Error al generar el Backup: ' + error.message)
+    }
+}
+
+const triggerImportBackup = () => {
+    if (fileInputGlobal.value) {
+        fileInputGlobal.value.value = ''
+        fileInputGlobal.value.click()
+    }
+}
+
+const handleImportBackup = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+        try {
+            const registryData = JSON.parse(e.target.result)
+            
+            // Confirmación Estricta Multi-Nivel
+            const mode = confirm(
+                '¡CUIDADO! Estás a punto de importar una base de datos de respaldo completa.\n\n' +
+                '¿Deseas FUSIONAR esta base con tus canciones actuales (presiona ACEPTAR) ' +
+                'o SOBRESCRIBIR y perder todo el contenido local actual (presiona CANCELAR)?'
+            )
+            
+            if (!mode) {
+                // If cancelled the merge (so wants to overwrite), let's ask for definitive confirmation
+                if (!confirm('¿ESTÁS ABSOLUTAMENTE SEGURO DE QUE QUIERES ELIMINAR TODAS TUS CANCIONES Y REEMPLAZARLAS POR LAS DEL ARCHIVO DE RESPALDO? Esta acción es irreversible.')) {
+                    return // Aborta todo
+                }
+            }
+
+            // mode: true = fusionar, false = destrutivo/sobrescribir
+            store.importCompleteDatabase(registryData, mode)
+            
+            alert(mode ? 'Base de datos fusionada con éxito.' : 'Base de datos restaurada desde cero con éxito.')
+
+        } catch (error) {
+            console.error('Error parsing backup:', error)
+            alert('El archivo no pudo leerse correctamente o no es un JSON estructurado.')
+        }
+    }
+    reader.readAsText(file)
 }
 </script>
 

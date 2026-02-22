@@ -7,6 +7,26 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Loopra AI Dark Glassmorphism Theme Variables */
+  --ui-bg-base: #030712;
+  --ui-bg-surface: rgba(24, 24, 27, 0.6);
+  --ui-bg-elevated: rgba(24, 24, 27, 0.85);
+  --ui-bg-hover: rgba(255, 255, 255, 0.05);
+  --ui-bg-active: rgba(255, 255, 255, 0.1);
+  --ui-border: rgba(255, 255, 255, 0.1);
+  --ui-border-focus: #38bdf8;
+  --ui-text-primary: #ffffff;
+  --ui-text-secondary: #a1a1aa;
+  --ui-accent: #3b82f6;
+  --ui-accent-hover: #60a5fa;
+  --ui-danger: #ef4444;
+  --ui-danger-hover: #dc2626;
+  --ui-bg-input: #f5f5f5;
+
+  --ui-glow-primary: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
 /* Material Icons */
 .material-icons {
   font-family: 'Material Icons';
@@ -31,8 +51,9 @@ input,
 select,
 button,
 textarea {
-  font-family: 'Montserrat', sans-serif;
-  background-color: #f0f0f0;
+  font-family: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--ui-bg-base);
+  color: var(--ui-text-primary);
   padding: 0;
   margin: 0;
 }
@@ -81,16 +102,17 @@ textarea {
   width: 100%;
 }
 
-.toolbar-container {
+.toolbar-container-top {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  background: #f8f9fa;
+  background: var(--ui-bg-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 10px;
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: none;
+  border-bottom: 1px solid var(--ui-border);
   height: 60px;
   display: flex;
   align-items: center;
@@ -114,6 +136,23 @@ textarea {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   padding: 20mm;
   position: relative;
+}
+
+/* AISLAMIENTO DEL CANVAS A4 */
+.page-vertical,
+.page-horizontal {
+  /* Forzamos explícitamente el color negro base de la impresión en las páginas A4 */
+  color: #000000;
+}
+
+.page-vertical input,
+.page-vertical textarea,
+.page-vertical select,
+.page-horizontal input,
+.page-horizontal textarea,
+.page-horizontal select {
+  color: #000000 !important;
+  background-color: transparent;
 }
 
 /* Edit button */
@@ -181,10 +220,10 @@ textarea {
 }
 
 .add-btn {
-  background: #1976d2;
+  background: var(--ui-accent);
   color: white;
   border: none;
-  border-radius: 50%;
+  border-radius: 9999px;
   cursor: pointer;
   font-family: inherit;
   width: 40px;
@@ -194,18 +233,18 @@ textarea {
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--ui-glow-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .add-btn:hover {
-  background: #1565c0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  transform: scale(1.05);
+  background: var(--ui-accent-hover);
+  box-shadow: 0 0 25px rgba(96, 165, 250, 0.6);
+  transform: translateY(-1px);
 }
 
 .add-btn:active {
-  transform: scale(0.95);
+  transform: translateY(1px);
 }
 
 /* Modal Container */
@@ -224,11 +263,12 @@ textarea {
   display: flex;
   gap: 8px;
   padding: 8px 16px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
+  background: var(--ui-bg-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--ui-border);
   position: sticky;
   top: 0;
-  /*z-index: 999;*/
   flex-wrap: wrap;
   align-items: center;
 }
@@ -236,39 +276,43 @@ textarea {
 .section-actions-toolbar .action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  gap: 6px;
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid var(--ui-border);
+  color: var(--ui-text-primary);
+  border-radius: 9999px;
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+  font-size: 13px;
+  transition: all 0.3s ease;
   text-decoration: none;
-  color: inherit;
 }
 
 .section-actions-toolbar .action-btn:hover {
-  background: #f0f0f0;
-  border-color: #bdbdbd;
+  background: var(--ui-bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+  filter: brightness(1.1);
 }
 
 .section-actions-toolbar .action-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
+  border-color: var(--ui-border);
+  background: transparent;
 }
 
 .section-actions-toolbar .action-btn.danger {
-  color: #d32f2f;
-  border-color: #d32f2f;
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.3);
 }
 
 .section-actions-toolbar .action-btn.danger:hover {
-  background: #ffebee;
+  background: rgba(255, 107, 107, 0.1);
+  border-color: #ff6b6b;
 }
 
 .section-actions-toolbar .btn-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -305,17 +349,19 @@ textarea {
 }
 
 .modal-content {
-  background: #ffffff;
+  background: var(--ui-bg-elevated);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   padding: 0;
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--ui-border);
   min-width: 400px;
   max-width: 600px;
-  box-shadow: 0 11px 15px -7px rgba(0, 0, 0, 0.2),
-    0 24px 38px 3px rgba(0, 0, 0, 0.14),
-    0 9px 46px 8px rgba(0, 0, 0, 0.12);
-  font-family: 'Montserrat', sans-serif;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
   position: relative;
-  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--ui-text-primary);
 }
 
 @keyframes slideUp {
@@ -331,94 +377,69 @@ textarea {
 }
 
 .modal-header {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
   margin: 0;
-  padding: 24px 24px 20px;
-  color: rgba(0, 0, 0, 0.87);
-  letter-spacing: 0.15px;
+  padding: 20px 24px 16px;
+  color: var(--ui-text-primary);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .modal-body {
-  padding: 0 24px 24px;
+  padding: 20px 24px;
   margin: 0;
-  background: #ffffff;
-  color: rgba(0, 0, 0, 0.6);
+  background: var(--ui-bg-elevated);
+  color: var(--ui-text-secondary);
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 8px 8px 8px 24px;
-  background: transparent;
+  padding: 16px 24px;
+  background: var(--ui-bg-surface);
+  border-top: 1px solid var(--ui-border);
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .modal-footer button {
-  padding: 10px 24px;
-  border: none;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  border-radius: 9999px;
   cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
+  font-family: inherit;
   font-weight: 500;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 1.25px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.modal-footer button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
-}
-
-.modal-footer button:active::before {
-  width: 300px;
-  height: 300px;
+  font-size: 13px;
+  transition: all 0.3s ease;
 }
 
 .modal-footer button.primary {
-  background: #1976d2;
+  background: var(--ui-accent);
   color: #ffffff;
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2),
-    0 4px 5px 0 rgba(0, 0, 0, 0.14),
-    0 1px 10px 0 rgba(0, 0, 0, 0.12);
+  border-color: var(--ui-accent);
+  box-shadow: var(--ui-glow-primary);
 }
 
 .modal-footer button.primary:hover {
-  background: #1565c0;
-  box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
-    0 6px 10px 0 rgba(0, 0, 0, 0.14),
-    0 1px 18px 0 rgba(0, 0, 0, 0.12);
-}
-
-.modal-footer button.primary:active {
-  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
-    0 8px 10px 1px rgba(0, 0, 0, 0.14),
-    0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  background: var(--ui-accent-hover);
+  border-color: var(--ui-accent-hover);
+  box-shadow: 0 0 25px rgba(96, 165, 250, 0.6);
+  transform: translateY(-1px);
 }
 
 .modal-footer button.secondary {
   background: transparent;
-  color: #1976d2;
+  color: var(--ui-text-primary);
+  border-color: var(--ui-border);
 }
 
 .modal-footer button.secondary:hover {
-  background: rgba(25, 118, 210, 0.04);
+  background: var(--ui-bg-hover);
 }
 
 .modal-footer button.secondary:active {
-  background: rgba(25, 118, 210, 0.12);
+  background: var(--ui-bg-active);
 }
 
 .form-group {
@@ -430,111 +451,118 @@ textarea {
 
 .form-group label {
   display: block;
-  margin-bottom: 1px;
+  margin-bottom: 4px;
   font-weight: 500;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
-  letter-spacing: 0.4px;
+  font-size: 13px;
+  color: var(--ui-text-secondary);
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
-  padding: 12px 16px;
-  border: 1px solid rgba(0, 0, 0, 0.23);
+  padding: 10px 12px;
+  border: 1px solid var(--ui-border);
   border-radius: 4px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 16px;
-  background: #ffffff;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  color: rgba(0, 0, 0, 0.87);
+  font-size: 14px;
+  background: var(--ui-bg-input);
+  transition: all 0.2s ease;
+  color: var(--ui-text-secondary);
 }
 
 .form-group input:hover,
 .form-group select:hover,
 .form-group textarea:hover {
-  border-color: rgba(0, 0, 0, 0.87);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #1976d2;
-  border-width: 2px;
-  padding: 11px 15px;
+  border-color: var(--ui-border-focus);
 }
 
 /* Color Picker Styles */
 .form-group input[type="color"] {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  border: 3px solid rgba(0, 0, 0, 0.23);
-  border-radius: 50%;
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  transition: all 0.2s ease;
+  background: var(--ui-bg-surface);
 }
 
 .form-group input[type="color"]:hover {
-  border-color: #1976d2;
-  border-width: 3px;
-  padding: 0;
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .form-group input[type="color"]:focus {
-  border-color: #1976d2;
-  border-width: 3px;
-  padding: 0;
-  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.2);
+  border-color: var(--ui-border-focus);
+  outline: none;
 }
 
 .form-group input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0;
-  border-radius: 50%;
+  padding: 2px;
 }
 
 .form-group input[type="color"]::-webkit-color-swatch {
-  border: none;
-  border-radius: 50%;
+  border: 1px solid var(--ui-border);
+  border-radius: 2px;
 }
 
 .form-group input[type="color"]::-moz-color-swatch {
-  border: none;
-  border-radius: 50%;
+  border: 1px solid var(--ui-border);
+  border-radius: 2px;
 }
 
-/* Songs List - Material Design */
+/* Songs List - Antigravity styled */
 .songs-list {
   max-height: 400px;
   overflow-y: auto;
   padding: 8px 0;
 }
 
+/* Scrollbar para la lista de canciones */
+.songs-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.songs-list::-webkit-scrollbar-track {
+  background: var(--ui-bg-surface);
+}
+
+.songs-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.songs-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
 .song-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 12px 16px;
+  border: 1px solid var(--ui-border);
   margin-bottom: 8px;
-  background: #ffffff;
-  border-radius: 4px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--ui-bg-surface);
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
 .song-item:hover {
-  background: #f5f5f5;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--ui-bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .song-item.selected {
-  background-color: #e3f2fd;
-  border-color: #1976d2;
-  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+  background: var(--ui-bg-active);
+  border-color: var(--ui-border-focus);
 }
 
 .song-info {
@@ -543,16 +571,14 @@ textarea {
 
 .song-name {
   font-weight: 500;
-  font-size: 16px;
-  color: rgba(0, 0, 0, 0.87);
+  font-size: 15px;
+  color: var(--ui-text-primary);
   margin-bottom: 4px;
-  letter-spacing: 0.15px;
 }
 
 .song-date {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
-  font-family: 'Montserrat', sans-serif;
+  color: var(--ui-text-secondary);
   font-weight: 400;
 }
 
@@ -563,47 +589,42 @@ textarea {
 
 .song-actions button {
   padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
+  border: 1px solid transparent;
+  border-radius: 9999px;
   cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
+  font-family: inherit;
   font-weight: 500;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
+  font-size: 12px;
+  transition: all 0.3s ease;
 }
 
 .load-btn {
-  background: #1976d2;
+  background: var(--ui-accent);
   color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-color: var(--ui-accent);
+  box-shadow: var(--ui-glow-primary);
 }
 
 .load-btn:hover {
-  background: #1565c0;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-}
-
-.load-btn:active {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: var(--ui-accent-hover);
+  border-color: var(--ui-accent-hover);
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
+  transform: translateY(-1px);
 }
 
 .delete-btn {
   background: transparent;
-  color: #d32f2f;
-  border: 1px solid rgba(211, 47, 47, 0.5);
+  color: var(--ui-danger);
+  border-color: rgba(211, 47, 47, 0.3);
 }
 
 .delete-btn:hover {
-  background: rgba(211, 47, 47, 0.04);
-  border-color: #d32f2f;
+  background: rgba(211, 47, 47, 0.1);
+  border-color: var(--ui-danger);
 }
 
 .delete-btn:active {
-  background: rgba(211, 47, 47, 0.12);
+  background: rgba(211, 47, 47, 0.2);
 }
 
 .main-container {
@@ -626,8 +647,7 @@ textarea {
   height: 56px;
   width: 100%;
   z-index: 900;
-  background-color: #f0f0f0;
-  /* Ensure background is opaque so content doesn't show through */
+  background-color: var(--ui-bg-base);
 }
 
 .page-wrapper {
@@ -641,7 +661,6 @@ textarea {
   width: 100%;
 }
 
-/* Toolbar */
 .toolbar-container {
   position: fixed;
   left: 0;
@@ -649,8 +668,10 @@ textarea {
   width: 80px;
   height: 100vh;
   z-index: 1000;
-  background: #7c7e81;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  background: var(--ui-bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid var(--ui-border);
 }
 
 .toolbar {
@@ -664,9 +685,9 @@ textarea {
 .toolbar button {
   padding: 8px;
   background: transparent;
-  color: white;
+  color: var(--ui-text-secondary);
   border: none;
-  border-radius: 4px;
+  border-radius: 12px;
   cursor: pointer;
   font-family: inherit;
   font-size: 16px;
@@ -675,26 +696,34 @@ textarea {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-height: 40px;
+  min-height: 56px;
   min-width: 64px;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .toolbar button .material-icons {
   font-size: 24px;
-  color: white;
+  color: var(--ui-text-secondary);
+  transition: color 0.3s ease;
 }
 
 .toolbar button .btn-label {
   font-size: 10px;
-  color: white;
+  color: var(--ui-text-secondary);
   text-align: center;
   line-height: 1.2;
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 .toolbar button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--ui-bg-hover);
+  color: var(--ui-text-primary);
+}
+
+.toolbar button:hover .material-icons,
+.toolbar button:hover .btn-label {
+  color: var(--ui-text-primary);
 }
 
 .toolbar button:active {
@@ -779,6 +808,7 @@ textarea {
 /* Lyrics Page Styles */
 .lyrics-page {
   background: white;
+  color: #000000;
   padding: 20px;
   /* Match sheet-page padding usually */
   min-height: 100%;
@@ -790,7 +820,7 @@ textarea {
 
 .lyrics-header {
   text-align: right;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   padding-bottom: 5px;
 }
 
@@ -900,6 +930,7 @@ textarea {
   border: none;
   resize: vertical;
   background: white;
+  color: #000000;
   font-family: inherit;
   font-size: 1.1em;
   outline: none;
@@ -969,6 +1000,7 @@ textarea {
   border-radius: 4px;
   resize: vertical;
   background: white;
+  color: #000000;
   font-family: inherit;
   font-size: 1.1em;
   outline: none;

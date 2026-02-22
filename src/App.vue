@@ -22,7 +22,15 @@
         <StructureActions @edit-request="handleEditStructureRequest" />
       </div>
       <div id="page-wrapper" class="page-wrapper">
-        <div :class="pageClass" id="sheet-page" :style="{ '--sheet-font-family': fontFamily }">
+        <div 
+          :class="[
+            pageClass, 
+            store.settings.page_orientation === 'V' ? (isSheetOverflowing ? 'out-of-bounds' : 'in-bounds') : ''
+          ]" 
+          id="sheet-page" 
+          ref="sheetPageRef"
+          :style="{ '--sheet-font-family': fontFamily }"
+        >
           <HeaderComponent />
           <BodyComponent ref="bodyComponent" />
           <StructureComponent ref="structureComponent" />
@@ -61,8 +69,22 @@
   width: 100%;
 }
 
+/* Indicadores de sobrepaso visual A4 (solo visible en interfaz web) */
+.in-bounds:not(.pdf-export) {
+  outline: 1px solid var(--ui-accent);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  outline-offset: -1px;
+}
+
+.out-of-bounds:not(.pdf-export) {
+  outline: 1px dashed var(--ui-danger);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  outline-offset: -1px;
+}
+
 #sheet-page {
   font-family: var(--sheet-font-family);
+  transition: outline 0.3s ease;
 }
 
 /* EPUB Preview Styles */
@@ -172,9 +194,17 @@ import { saveAs } from 'file-saver'
 const store = useSheetStore()
 const bodyComponent = ref(null)
 const structureComponent = ref(null)
+const sheetPageRef = ref(null)
 const isEpubMode = ref(false)
 const epubData = ref(null)
 const isGenerating = ref(false)
+const isSheetOverflowing = ref(false)
+
+// 297mm en pixels reales en monitores a 96DPI suele rondar los 1122.5px.
+// Como CSS lo redondea flotantemente, añadimos un pequeño offset de tolerancia global (5px).
+const MAX_A4_HEIGHT_PX = 1127.5 
+
+let resizeObserver = null
 
 const pageClass = computed(() => {
   return store.settings.page_orientation === 'V' ? 'page-vertical' : 'page-horizontal'
@@ -310,6 +340,19 @@ onMounted(() => {
     }
   } else {
     store.initializeApp()
+    
+    // Configurar ResizeObserver para vigilar altura del A4
+    if (sheetPageRef.value) {
+      resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+           // Evaluamos si el render actual superó el equivalente a ~297mm reales en píxeles.
+           // getBoundingClientRect().height da el tamaño real pos-transform/zoom.
+           const rect = entry.target.getBoundingClientRect()
+           isSheetOverflowing.value = rect.height > MAX_A4_HEIGHT_PX
+        }
+      })
+      resizeObserver.observe(sheetPageRef.value)
+    }
   }
 })
 </script>

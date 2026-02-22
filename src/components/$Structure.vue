@@ -17,7 +17,7 @@
         </button>
       </div>
     </div>
-    <div class="structure-items" :style="{ transform: `scale(${store.settings.zoom_structure / 100})`, transformOrigin: 'top left' }">
+    <div class="structure-items" :style="{ zoom: store.settings.zoom_structure / 100 }">
       <StructureItemComponent
         v-for="(item, index) in store.structure"
         :key="index"
@@ -76,6 +76,7 @@ defineExpose({ triggerEditItem })
 .structure-header h3 {
   font-size: 20px;
   font-weight: bold;
+  color: var(--ui-text-primary);
 }
 
 .header-controls {
@@ -89,24 +90,26 @@ defineExpose({ triggerEditItem })
   align-items: center;
   gap: 8px;
   padding: 4px 8px;
-  background: #f5f5f5;
-  border-radius: 4px;
+  background: var(--ui-bg-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 9999px;
 }
 
 .zoom-btn {
   padding: 4px;
   background: transparent;
+  color: var(--ui-text-primary);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: background 0.2s;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
 }
 
 .zoom-btn:hover {
-  background: #e0e0e0;
+  background: var(--ui-bg-hover);
 }
 
 .zoom-btn .material-icons {
@@ -118,6 +121,7 @@ defineExpose({ triggerEditItem })
   font-weight: 500;
   min-width: 45px;
   text-align: center;
+  color: var(--ui-text-primary);
 }
 
 /* add-btn usa estilos globales */

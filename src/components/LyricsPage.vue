@@ -1,5 +1,10 @@
 <template>
-  <div id="lyrics-page" class="lyrics-page">
+  <div 
+    id="lyrics-page" 
+    class="lyrics-page"
+    :class="isLyricsOverflowing ? 'out-of-bounds' : 'in-bounds'"
+    ref="lyricsPageRef"
+  >
     <div class="lyrics-header">
       <h4>{{ store.header.center.top.name || 'Sin Título' }} - {{ store.header.center.bottom.author || 'Desconocido' }}</h4>
     </div>
@@ -77,13 +82,21 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 
 const store = useSheetStore()
 const editingIndex = ref(-1)
 const editingText = ref('')
 const editTextarea = ref(null)
+const lyricsPageRef = ref(null)
+
+const isLyricsOverflowing = ref(false)
+
+// 297mm en pixels reales en monitores a 96DPI suele rondar los 1122.5px.
+// Como CSS lo redondea flotantemente, añadimos un pequeño offset de tolerancia global (5px).
+const MAX_A4_HEIGHT_PX = 1127.5 
+let resizeObserver = null
 
 // Base64 Helpers for Unicode support
 const toBase64 = (str) => {
@@ -130,9 +143,40 @@ const saveLyric = (index) => {
   editingIndex.value = -1
   editingText.value = ''
 }
+
+onMounted(() => {
+  if (lyricsPageRef.value) {
+    resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+         const rect = entry.target.getBoundingClientRect()
+         isLyricsOverflowing.value = rect.height > MAX_A4_HEIGHT_PX
+      }
+    })
+    resizeObserver.observe(lyricsPageRef.value)
+  }
+})
+
+onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+  }
+})
 </script>
 
 <style scoped>
+/* Indicadores de sobrepaso visual A4 (solo visible en interfaz web) */
+.in-bounds:not(.pdf-export) {
+  outline: 1px solid var(--ui-accent);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  outline-offset: -1px;
+}
+
+.out-of-bounds:not(.pdf-export) {
+  outline: 1px dashed var(--ui-danger);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  outline-offset: -1px;
+}
+
 /* Export Footer Styles */
 .export-footer {
   margin-top: auto;

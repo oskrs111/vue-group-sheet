@@ -186,12 +186,14 @@ onMounted(() => {
 .collections-panel {
   width: 300px;
   height: 100vh;
-  background: #f8f9fa;
-  border-left: 1px solid #e0e0e0;
+  background: var(--ui-bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-left: 1px solid var(--ui-border);
   position: fixed;
   right: 0;
   top: 0;
-  transition: width 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -207,15 +209,23 @@ onMounted(() => {
   top: 20px;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
+  border-radius: 9999px;
+  background: var(--ui-bg-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--ui-border);
+  color: var(--ui-text-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
   z-index: 101;
+  transition: all 0.3s ease;
+}
+
+.collapse-btn:hover {
+  filter: brightness(1.2);
+  border-color: var(--ui-border-focus);
 }
 
 .collections-content {
@@ -234,7 +244,7 @@ onMounted(() => {
 .collections-header h3 {
   margin: 0;
   font-weight: 600;
-  color: #333;
+  color: var(--ui-text-primary);
 }
 
 .header-actions {
@@ -244,43 +254,46 @@ onMounted(() => {
 }
 
 .icon-btn {
-  background: white;
-  border: 1px solid #ddd;
+  background: transparent;
+  border: 1px solid var(--ui-border);
   cursor: pointer;
-  color: #666;
+  color: var(--ui-text-secondary);
   width: 36px;
   height: 36px;
-  border-radius: 4px;
+  border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.3s;
 }
 
 .icon-btn:hover {
-  background-color: #f0f0f0;
-  color: #333;
-  border-color: #ccc;
+  background-color: var(--ui-bg-hover);
+  color: var(--ui-text-primary);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .add-collection-btn {
-  padding: 0 12px;
+  padding: 0 16px;
   height: 36px;
-  background: #1976d2;
+  background: var(--ui-accent);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 9999px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   font-weight: 500;
-  transition: background 0.2s;
+  box-shadow: var(--ui-glow-primary);
+  transition: all 0.3s ease;
 }
 
 .add-collection-btn:hover {
-  background: #1565c0;
+  background: var(--ui-accent-hover);
+  box-shadow: 0 0 25px rgba(96, 165, 250, 0.6);
+  transform: translateY(-1px);
 }
 
 .collections-list {
@@ -291,7 +304,7 @@ onMounted(() => {
 
 .empty-collections {
   text-align: center;
-  color: #888;
+  color: var(--ui-text-secondary);
   padding: 20px;
   font-size: 14px;
 }
