@@ -128,6 +128,7 @@
     
     <Teleport to="#modal-container">
       <SettingsModal v-if="showSettings" @close="showSettings = false"></SettingsModal>
+      <HelpModal v-if="showHelp" @close="showHelp = false" />
     </Teleport>
   </div>
 </template>
@@ -140,8 +141,10 @@ import html2pdf from 'html2pdf.js'
 import html2canvas from 'html2canvas'
 import { saveAs as saveFile } from 'file-saver'
 import md5 from 'md5'
+import HelpModal from './HelpModal.vue'
 
 const store = useSheetStore()
+const showHelp = ref(false)
 const showSettings = ref(false)
 const showSaveDialog = ref(false)
 const showLoadDialog = ref(false)
@@ -155,7 +158,7 @@ const openSettings = () => {
 }
 
 const openHelp = () => {
-  alert('Ayuda no implementada aún')
+  showHelp.value = true
 }
 
 const songsList = computed(() => store.getSongsList())
