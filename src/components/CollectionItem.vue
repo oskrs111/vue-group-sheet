@@ -32,6 +32,15 @@
         :collection="collection" 
         @close="showEditModal = false" 
       />
+      <ConfirmDialog
+        v-model="confirmState.show"
+        :title="confirmState.title"
+        :message="confirmState.message"
+        :confirmText="confirmState.confirmText"
+        :isDanger="confirmState.isDanger"
+        @confirm="confirmState.onConfirm"
+        @cancel="confirmState.onCancel"
+      />
     </Teleport>
 
     <!-- Contenedor oculto para exportación PDF -->
@@ -49,6 +58,8 @@ import CollectionEditModal from './CollectionEditModal.vue'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import { saveAs } from 'file-saver'
+import { useNotificationStore } from '../stores/notificationStore'
+import ConfirmDialog from './UI/ConfirmDialog.vue'
 
 const props = defineProps({
   collection: {
@@ -59,17 +70,50 @@ const props = defineProps({
 
 const store = useCollectionStore()
 const sheetStore = useSheetStore()
+const notification = useNotificationStore()
 const showEditModal = ref(false)
 const isExporting = ref(false)
 const pdfContainer = ref(null)
+
+const confirmState = ref({
+  show: false,
+  title: '',
+  message: '',
+  confirmText: 'Aceptar',
+  isDanger: false,
+  onConfirm: () => {},
+  onCancel: () => {}
+})
+
+const askConfirm = (options) => {
+  return new Promise((resolve) => {
+    confirmState.value = {
+      show: true,
+      title: options.title || 'Confirmar',
+      message: options.message || '¿Estás seguro?',
+      confirmText: options.confirmText || 'Aceptar',
+      isDanger: options.isDanger || false,
+      onConfirm: () => resolve(true),
+      onCancel: () => resolve(false)
+    }
+  })
+}
 
 const duplicate = () => {
   store.duplicateCollection(props.collection.id)
 }
 
-const confirmDelete = () => {
-  if (confirm(`¿Eliminar la colección "${props.collection.name}"?`)) {
+const confirmDelete = async () => {
+  const confirmed = await askConfirm({
+    title: 'Eliminar Colección',
+    message: `¿Eliminar la colección "${props.collection.name}"?`,
+    isDanger: true,
+    confirmText: 'Eliminar'
+  })
+  
+  if (confirmed) {
     store.deleteCollection(props.collection.id)
+    notification.addToast('Colección eliminada', 'info')
   }
 }
 
@@ -90,7 +134,7 @@ const getExportFileName = () => {
 
 const exportCollectionPDF = async () => {
   if (props.collection.songs.length === 0) {
-    alert('La colección está vacía')
+    notification.addToast('La colección está vacía', 'warning')
     return
   }
 
@@ -166,10 +210,10 @@ const exportCollectionPDF = async () => {
     console.log('Iniciando exportación de colección:', props.collection.name)
     
     // Preguntar por letras una sola vez al inicio
-    let includeLyrics = false
-    if (confirm('¿Incluir las letras (si están disponibles) en la exportación?')) {
-        includeLyrics = true
-    }
+    const includeLyrics = await askConfirm({
+        title: 'Exportar Letras',
+        message: '¿Incluir las letras (si están disponibles) en la exportación?'
+    })
 
     for (let i = 0; i < props.collection.songs.length; i++) {
       const songId = props.collection.songs[i]
@@ -282,7 +326,7 @@ const exportCollectionPDF = async () => {
 
   } catch (error) {
     console.error('Error exportando colección:', error)
-    alert('Error al generar el PDF: ' + error.message)
+    notification.addToast('Error al generar el PDF: ' + error.message, 'error')
     // Asegurar limpieza en caso de error
     sheetStore.updateExportFooter(null)
   } finally {
@@ -297,15 +341,16 @@ const exportJSON = () => {
     const blob = new Blob([jsonStr], { type: 'application/json' })
     const fileName = getExportFileName()
     saveAs(blob, `${fileName}.json`)
+    notification.addToast('Colección exportada', 'success')
   } catch (error) {
     console.error('Error exportando JSON:', error)
-    alert('Error al exportar: ' + error.message)
+    notification.addToast('Error al exportar: ' + error.message, 'error')
   }
 }
 
 const exportEPUB = async () => {
   if (props.collection.songs.length === 0) {
-    alert('La colección está vacía')
+    notification.addToast('La colección está vacía', 'warning')
     return
   }
 
@@ -318,8 +363,11 @@ const exportEPUB = async () => {
     const imageBlobs = []
 
     // Preguntar por letras una sola vez al inicio
-    let includeLyrics = false
-    if (confirm('¿Incluir las letras (si están disponibles) en la exportación?')) {
+    const includeLyrics = await askConfirm({
+        title: 'Exportar Letras',
+        message: '¿Incluir las letras (si están disponibles) en la exportación?'
+    })
+    if (includeLyrics) {
         includeLyrics = true
     }
 
@@ -397,7 +445,7 @@ const exportEPUB = async () => {
     }
 
     if (songsToExport.length === 0) {
-      alert('No se encontraron canciones válidas para exportar')
+      notification.addToast('No se encontraron canciones válidas para exportar', 'error')
       return
     }
 
@@ -417,7 +465,7 @@ const exportEPUB = async () => {
 
   } catch (error) {
     console.error('Error exportando EPUB:', error)
-    alert('Error al generar EPUB: ' + error.message)
+    notification.addToast('Error al generar EPUB: ' + error.message, 'error')
   } finally {
     isExporting.value = false
   }

@@ -26,7 +26,10 @@
           <div class="splash-card">
             <div class="splash-title-row">
               <h1 class="splash-title">Group Sheet Editor</h1>
-              <span class="splash-badge">Alpha Release</span>
+              <div class="splash-meta">
+                <span class="splash-badge">Alpha Release</span>
+                <span class="splash-version">v0.0.1 Build 25</span>
+              </div>
             </div>
             <p class="splash-author">by Oscar Sanz</p>
             <a class="splash-link" href="https://github.com/oskrs111" target="_blank" rel="noopener">github.com/oskrs111</a>
@@ -80,6 +83,7 @@
       </div>
     </div>
     <CollectionContainer />
+    <ToastProvider />
   </div>
 </template>
 
@@ -287,6 +291,12 @@
   text-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
 }
 
+.splash-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .splash-badge {
   font-size: 0.7rem;
   font-weight: 600;
@@ -298,6 +308,15 @@
   border-radius: 9999px;
   padding: 3px 10px;
   white-space: nowrap;
+  width: fit-content;
+}
+
+.splash-version {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ui-text-secondary);
+  opacity: 0.8;
+  font-family: 'Geist', monospace;
 }
 
 .splash-author {
@@ -365,6 +384,7 @@ import LyricsPage from './components/LyricsPage.vue'
 import html2canvas from 'html2canvas'
 import { EpubGenerator } from './utils/EpubGenerator'
 import { saveAs } from 'file-saver'
+import ToastProvider from './components/UI/ToastProvider.vue'
 
 const store = useSheetStore()
 const bodyComponent = ref(null)

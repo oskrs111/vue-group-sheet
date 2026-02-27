@@ -24,13 +24,13 @@
       <span class="material-icons">print</span>
       <span class="btn-label">Imprimir</span>
     </button>
-    <button @click="exportJSON" title="Exportar Canción" class="toolbar-btn">
+    <button @click="showExportModal = true" title="Exportar..." class="toolbar-btn">
       <span class="material-icons">file_upload</span>
-      <span class="btn-label">Exportar Canción</span>
+      <span class="btn-label">Exportar</span>
     </button>
-    <button @click="triggerImportJSON" title="Importar Canción" class="toolbar-btn">
+    <button @click="showImportModal = true" title="Importar..." class="toolbar-btn">
       <span class="material-icons">file_download</span>
-      <span class="btn-label">Importar Canción</span>
+      <span class="btn-label">Importar</span>
       <input 
         type="file" 
         ref="fileInput" 
@@ -38,15 +38,6 @@
         accept=".json"
         @change="handleImportJSON"
       />
-    </button>
-    <div style="height: 1px; background: var(--ui-border); width: 80%; margin: 8px auto;"></div>
-    <button @click="downloadCompleteBackup" title="Exportar Todo" class="toolbar-btn">
-      <span class="material-icons">cloud_download</span>
-      <span class="btn-label">Exportar Todo</span>
-    </button>
-    <button @click="triggerImportBackup" title="Restaurar Todo" class="toolbar-btn" style="color: var(--ui-danger);">
-      <span class="material-icons">cloud_upload</span>
-      <span class="btn-label" style="color: var(--ui-danger);">Restaurar Todo</span>
       <input 
         type="file" 
         ref="fileInputGlobal" 
@@ -108,6 +99,7 @@
             >
               <div class="song-info">
                 <div class="song-name">{{ song.name }}</div>
+                <div v-if="song.header?.center?.bottom?.author" class="song-author">{{ song.header.center.bottom.author }}</div>
                 <div class="song-date">{{ formatDate(song.updatedAt || song.createdAt) }}</div>
               </div>
               <div class="song-actions">
@@ -129,6 +121,93 @@
     <Teleport to="#modal-container">
       <SettingsModal v-if="showSettings" @close="showSettings = false"></SettingsModal>
       <HelpModal v-if="showHelp" @close="showHelp = false" />
+      <ConfirmDialog
+        v-model="confirmState.show"
+        :title="confirmState.title"
+        :message="confirmState.message"
+        :confirmText="confirmState.confirmText"
+        :isDanger="confirmState.isDanger"
+        @confirm="confirmState.onConfirm"
+        @cancel="confirmState.onCancel"
+      />
+
+      <!-- Modal Selección Importación -->
+      <div v-if="showImportModal" class="modal-overlay" @click.self="showImportModal = false">
+        <div class="modal-content">
+          <div class="modal-header">Importar Datos</div>
+          <div class="modal-body">
+            <div class="songs-list">
+              <div class="song-item" @click="selectImport('song')">
+                <div class="song-info">
+                  <div class="song-name">Canción</div>
+                  <div class="song-author">Sesión Individual</div>
+                  <div class="song-date">Importar un archivo .json de una sola canción</div>
+                </div>
+                <div class="song-actions">
+                  <span class="material-icons" style="color: var(--ui-text-secondary)">description</span>
+                </div>
+              </div>
+              <div class="song-item" @click="selectImport('all')">
+                <div class="song-info">
+                  <div class="song-name">Todo (Restaurar)</div>
+                  <div class="song-author">Base de Datos Completa</div>
+                  <div class="song-date">Restaurar o fusionar toda la base de datos completa</div>
+                </div>
+                <div class="song-actions">
+                  <span class="material-icons" style="color: var(--ui-danger)">storage</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="secondary" @click="showImportModal = false">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Selección Exportación -->
+      <div v-if="showExportModal" class="modal-overlay" @click.self="showExportModal = false">
+        <div class="modal-content">
+          <div class="modal-header">Exportar Datos</div>
+          <div class="modal-body">
+            <div class="songs-list">
+              <div class="song-item" @click="selectExport('song')">
+                <div class="song-info">
+                  <div class="song-name">{{ store.header?.center?.top?.name || 'Canción Actual' }}</div>
+                  <div v-if="store.header?.center?.bottom?.author" class="song-author">{{ store.header.center.bottom.author }}</div>
+                  <div class="song-date">Exportar esta canción en formato .json</div>
+                </div>
+                <div class="song-actions">
+                  <span class="material-icons" style="color: var(--ui-text-secondary)">description</span>
+                </div>
+              </div>
+              <div class="song-item" @click="selectExport('all')">
+                <div class="song-info">
+                  <div class="song-name">Todo (Copia Seguridad)</div>
+                  <div class="song-author">Backup Completo</div>
+                  <div class="song-date">Descargar un backup de todas las canciones y colecciones</div>
+                </div>
+                <div class="song-actions">
+                  <span class="material-icons" style="color: var(--ui-primary)">cloud_download</span>
+                </div>
+              </div>
+              <div class="song-item" @click="selectExport('musicxml')">
+                <div class="song-info">
+                  <div class="song-name">MusicXML</div>
+                  <div class="song-author">Formato Estándar</div>
+                  <div class="song-date">Exportar para MuseScore, Sibelius, etc.</div>
+                </div>
+                <div class="song-actions">
+                  <span class="material-icons" style="color: var(--ui-accent)">music_note</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="secondary" @click="showExportModal = false">Cancelar</button>
+          </div>
+        </div>
+      </div>
     </Teleport>
   </div>
 </template>
@@ -142,16 +221,60 @@ import html2canvas from 'html2canvas'
 import { saveAs as saveFile } from 'file-saver'
 import md5 from 'md5'
 import HelpModal from './HelpModal.vue'
+import { useNotificationStore } from '../stores/notificationStore'
+import ConfirmDialog from './UI/ConfirmDialog.vue'
 
 const store = useSheetStore()
+const notification = useNotificationStore()
 const showHelp = ref(false)
 const showSettings = ref(false)
 const showSaveDialog = ref(false)
 const showLoadDialog = ref(false)
+const showImportModal = ref(false)
+const showExportModal = ref(false)
 const selectedSongId = ref(null)
 const songName = ref('')
 const fileInput = ref(null)
 const fileInputGlobal = ref(null)
+
+const confirmState = ref({
+  show: false,
+  title: '',
+  message: '',
+  confirmText: 'Aceptar',
+  isDanger: false,
+  onConfirm: () => {},
+  onCancel: () => {}
+})
+
+const showConfirm = (options) => {
+  confirmState.value = {
+    show: true,
+    title: options.title || 'Confirmar',
+    message: options.message || '¿Estás seguro?',
+    confirmText: options.confirmText || 'Aceptar',
+    isDanger: options.isDanger || false,
+    onConfirm: options.onConfirm || (() => {})
+  }
+}
+
+const askConfirm = (options) => {
+  return new Promise((resolve) => {
+    const originalOnConfirm = options.onConfirm
+    confirmState.value = {
+      show: true,
+      title: options.title || 'Confirmar',
+      message: options.message || '¿Estás seguro?',
+      confirmText: options.confirmText || 'Aceptar',
+      isDanger: options.isDanger || false,
+      onConfirm: () => {
+        if (originalOnConfirm) originalOnConfirm()
+        resolve(true)
+      },
+      onCancel: () => resolve(false)
+    }
+  })
+}
 
 const openSettings = () => {
   showSettings.value = true
@@ -164,9 +287,14 @@ const openHelp = () => {
 const songsList = computed(() => store.getSongsList())
 
 const newFile = () => {
-  if (confirm('¿Crear un nuevo archivo? Se perderán los cambios no guardados.')) {
-    store.newFile()
-  }
+  showConfirm({
+    title: 'Nuevo Archivo',
+    message: '¿Crear un nuevo archivo? Se perderán los cambios no guardados.',
+    onConfirm: () => {
+      store.newFile()
+      notification.addToast('Nuevo archivo creado', 'info')
+    }
+  })
 }
 
 const openSaveDialog = () => {
@@ -188,7 +316,7 @@ const saveAs = () => {
   const nameToSave = songName.value.trim()
   
   if (!nameToSave) {
-    alert('Por favor, introduce un nombre para la canción')
+    notification.addToast('Por favor, introduce un nombre para la canción', 'warning')
     return
   }
   
@@ -203,11 +331,11 @@ const saveAs = () => {
     // Guardar la canción con el nombre actualizado
     store.saveSongAs(nameToSave)
     
-    alert(`Canción "${nameToSave}" guardada correctamente`)
+    notification.addToast(`Canción "${nameToSave}" guardada correctamente`, 'success')
     songName.value = ''
     showSaveDialog.value = false
   } catch (error) {
-    alert('Error al guardar: ' + error.message)
+    notification.addToast('Error al guardar: ' + error.message, 'error')
   }
 }
 
@@ -229,26 +357,38 @@ const loadSong = (id) => {
   const song = findSongById(id)
   const name = song?.name || 'sin nombre'
 
-  if (confirm(`¿Cargar la canción "${name}"? Se perderán los cambios no guardados.`)) {
-    try {
-      store.loadSong(id)
-      showLoadDialog.value = false
-    } catch (error) {
-      alert('Error al cargar: ' + error.message)
+  showConfirm({
+    title: 'Cargar Canción',
+    message: `¿Cargar la canción "${name}"? Se perderán los cambios no guardados.`,
+    onConfirm: () => {
+      try {
+        store.loadSong(id)
+        showLoadDialog.value = false
+        notification.addToast(`Canción "${name}" cargada`, 'success')
+      } catch (error) {
+        notification.addToast('Error al cargar: ' + error.message, 'error')
+      }
     }
-  }
+  })
 }
 
 const deleteSong = (id) => {
   const song = findSongById(id)
   const name = song?.name || 'sin nombre'
 
-  if (confirm(`¿Eliminar la canción "${name}"? Esta acción no se puede deshacer.`)) {
-    store.deleteSong(id)
-    if (selectedSongId.value === id) {
-      selectedSongId.value = null
+  showConfirm({
+    title: 'Eliminar Canción',
+    message: `¿Eliminar la canción "${name}"? Esta acción no se puede deshacer.`,
+    isDanger: true,
+    confirmText: 'Eliminar',
+    onConfirm: () => {
+      store.deleteSong(id)
+      notification.addToast(`Canción "${name}" eliminada`, 'info')
+      if (selectedSongId.value === id) {
+        selectedSongId.value = null
+      }
     }
-  }
+  })
 }
 
 const formatDate = (dateString) => {
@@ -289,7 +429,7 @@ const getExportFileName = () => {
 const exportPDF = async () => {
     const sheetPage = document.getElementById('sheet-page')
     if (!sheetPage) {
-        alert('No se encontró el contenido de la página para exportar')
+        notification.addToast('No se encontró el contenido de la página para exportar', 'error')
         return
     }
 
@@ -299,8 +439,11 @@ const exportPDF = async () => {
 
         // Check if lyrics are available/enabled and ask user
         if (store.settings.show_lyrics) {
-            if (confirm('¿Incluir las letras en la exportación?')) {
-                includeLyrics = true
+            includeLyrics = await askConfirm({
+                title: 'Exportar PDF',
+                message: '¿Incluir las letras en la exportación?'
+            })
+            if (includeLyrics) {
                 fileName += '_LETRAS'
             }
         }
@@ -392,7 +535,7 @@ const exportPDF = async () => {
 
     } catch (error) {
         console.error('Error generating PDF:', error)
-        alert('Error al generar el PDF: ' + error.message)
+        notification.addToast('Error al generar el PDF: ' + error.message, 'error')
     } finally {
         sheetPage.classList.remove('pdf-export')
         sheetPage.style.minHeight = prevMinHeight
@@ -410,7 +553,7 @@ const exportEPUB = async () => {
     try {
         const sheetPage = document.getElementById('sheet-page')
         if (!sheetPage) {
-            alert('No se encontró el contenido de la página para exportar')
+            notification.addToast('No se encontró el contenido de la página para exportar', 'error')
             return
         }
 
@@ -419,8 +562,11 @@ const exportEPUB = async () => {
 
         // Check if lyrics are available/enabled and ask user
         if (store.settings.show_lyrics) {
-            if (confirm('¿Incluir las letras en la exportación?')) {
-                includeLyrics = true
+            includeLyrics = await askConfirm({
+                title: 'Exportar EPUB',
+                message: '¿Incluir las letras en la exportación?'
+            })
+            if (includeLyrics) {
                 fileName += '_LETRAS'
             }
         }
@@ -496,7 +642,7 @@ const exportEPUB = async () => {
 
     } catch (error) {
         console.error('Error exportando EPUB:', error)
-        alert('Error al generar EPUB: ' + error.message)
+        notification.addToast('Error al generar EPUB: ' + error.message, 'error')
     }
 }
 
@@ -534,9 +680,10 @@ const exportJSON = () => {
 
     const blob = new Blob([JSON.stringify(songData, null, 2)], { type: 'application/json' })
     saveFile(blob, `${fileName}.json`)
+    notification.addToast('Exportación JSON completada', 'success')
   } catch (error) {
     console.error('Error exportando JSON:', error)
-    alert('Error al exportar JSON: ' + error.message)
+    notification.addToast('Error al exportar JSON: ' + error.message, 'error')
   }
 }
 
@@ -552,26 +699,30 @@ const handleImportJSON = (event) => {
     if (!file) return
 
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
         try {
             const songData = JSON.parse(e.target.result)
-            processImport(songData)
+            await processImport(songData)
         } catch (error) {
-            alert('El archivo no es un JSON válido')
+            notification.addToast('El archivo no es un JSON válido', 'error')
         }
     }
     reader.readAsText(file)
 }
 
-const processImport = (songData, overwrite = false) => {
+const processImport = async (songData, overwrite = false) => {
     try {
         // Acceder directamente al registro a través de métodos que sabemos que existen
         const registry = store.getSongsRegistry()
         if (!registry.songs) registry.songs = {}
 
         if (registry.songs[songData.id] && !overwrite) {
-            if (confirm(`La canción "${songData.name}" ya existe. ¿Deseas sobrescribirla?`)) {
-                processImport(songData, true)
+            const overwriteConfirm = await askConfirm({
+                title: 'Sobrescribir Canción',
+                message: `La canción "${songData.name}" ya existe. ¿Deseas sobrescribirla?`
+            })
+            if (overwriteConfirm) {
+                await processImport(songData, true)
             }
             return
         }
@@ -585,14 +736,14 @@ const processImport = (songData, overwrite = false) => {
         registry.songs[songData.id] = songData
         store.saveSongsRegistry(registry)
         
-        alert('Canción importada correctamente')
+        notification.addToast('Canción importada correctamente', 'success')
         if (store.currentSongId === songData.id) {
             store.loadSong(songData.id)
         }
 
     } catch (error) {
         console.error('Error importing:', error)
-        alert('Error al importar: ' + error.message)
+        notification.addToast('Error al importar: ' + error.message, 'error')
     }
 }
 
@@ -607,7 +758,7 @@ const downloadCompleteBackup = () => {
         saveFile(blob, fileName)
     } catch (error) {
         console.error('Error exportando Backup:', error)
-        alert('Error al generar el Backup: ' + error.message)
+        notification.addToast('Error al generar el Backup: ' + error.message, 'error')
     }
 }
 
@@ -623,35 +774,86 @@ const handleImportBackup = (event) => {
     if (!file) return
 
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
         try {
             const registryData = JSON.parse(e.target.result)
             
             // Confirmación Estricta Multi-Nivel
-            const mode = confirm(
-                '¡CUIDADO! Estás a punto de importar una base de datos de respaldo completa.\n\n' +
-                '¿Deseas FUSIONAR esta base con tus canciones actuales (presiona ACEPTAR) ' +
-                'o SOBRESCRIBIR y perder todo el contenido local actual (presiona CANCELAR)?'
-            )
+            const mode = await askConfirm({
+                title: 'Restaurar Base de Datos',
+                message: '¡CUIDADO! Estás a punto de importar una base de datos de respaldo completa.<br><br>' +
+                         '¿Deseas <b>FUSIONAR</b> esta base con tus canciones actuales (Aceptar) ' +
+                         'o <b>SOBRESCRIBIR</b> y perder todo el contenido local actual (Cancelar)?'
+            })
             
             if (!mode) {
                 // If cancelled the merge (so wants to overwrite), let's ask for definitive confirmation
-                if (!confirm('¿ESTÁS ABSOLUTAMENTE SEGURO DE QUE QUIERES ELIMINAR TODAS TUS CANCIONES Y REEMPLAZARLAS POR LAS DEL ARCHIVO DE RESPALDO? Esta acción es irreversible.')) {
-                    return // Aborta todo
-                }
+                const definitive = await askConfirm({
+                    title: '¡ACCIÓN IRREVERSIBLE!',
+                    message: '¿ESTÁS ABSOLUTAMENTE SEGURO de que quieres borrar toda la base de datos local? No podrás deshacer esto.',
+                    isDanger: true,
+                    confirmText: 'Borrar y Sobrescribir'
+                })
+                
+                if (!definitive) return
             }
 
             // mode: true = fusionar, false = destrutivo/sobrescribir
             store.importCompleteDatabase(registryData, mode)
             
-            alert(mode ? 'Base de datos fusionada con éxito.' : 'Base de datos restaurada desde cero con éxito.')
+            notification.addToast(
+                mode ? 'Base de datos fusionada con éxito.' : 'Base de datos restaurada desde cero con éxito.',
+                'success'
+            )
 
         } catch (error) {
             console.error('Error parsing backup:', error)
-            alert('El archivo no pudo leerse correctamente o no es un JSON estructurado.')
+            notification.addToast('El archivo no pudo leerse correctamente o no es un JSON estructurado.', 'error')
         }
     }
     reader.readAsText(file)
+}
+
+const selectImport = (type) => {
+    showImportModal.value = false
+    if (type === 'song') {
+        triggerImportJSON()
+    } else {
+        triggerImportBackup()
+    }
+}
+
+const selectExport = (type) => {
+    showExportModal.value = false
+    if (type === 'song') {
+        exportJSON()
+    } else if (type === 'all') {
+        downloadCompleteBackup()
+    } else if (type === 'musicxml') {
+        exportMusicXML()
+    }
+}
+
+const exportMusicXML = async () => {
+  try {
+    const { MusicXMLGenerator } = await import('../utils/MusicXMLGenerator.js')
+    const generator = new MusicXMLGenerator({
+      header: store.header,
+      body: store.body,
+      structure: store.structure,
+      settings: store.settings
+    })
+    
+    const xml = generator.generate()
+    const fileName = getExportFileName()
+    const blob = new Blob([xml], { type: 'application/xml' })
+    saveFile(blob, `${fileName}.musicxml`)
+    
+    notification.addToast('Exportación MusicXML completada', 'success')
+  } catch (error) {
+    console.error('Error exportando MusicXML:', error)
+    notification.addToast('Error al exportar MusicXML: ' + error.message, 'error')
+  }
 }
 </script>
 

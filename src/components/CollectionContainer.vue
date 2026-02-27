@@ -34,6 +34,7 @@
     <!-- Modal Crear Colección -->
     <Teleport to="#modal-container">
       <div v-if="showCreateDialog" class="modal-overlay" @click.self="showCreateDialog = false">
+        <!-- ... modal content ... -->
         <div class="modal-content">
           <div class="modal-header">Nueva Colección</div>
           <div class="modal-body">
@@ -53,6 +54,15 @@
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        v-model="confirmState.show"
+        :title="confirmState.title"
+        :message="confirmState.message"
+        :confirmText="confirmState.confirmText"
+        :isDanger="confirmState.isDanger"
+        @confirm="confirmState.onConfirm"
+        @cancel="confirmState.onCancel"
+      />
     </Teleport>
   </div>
 </template>
@@ -61,14 +71,41 @@
 import { ref, onMounted, computed } from 'vue'
 import { useCollectionStore } from '../stores/collectionStore'
 import { useSheetStore } from '../stores/sheetStore'
+import { useNotificationStore } from '../stores/notificationStore'
 import CollectionItem from './CollectionItem.vue'
+import ConfirmDialog from './UI/ConfirmDialog.vue'
 
 const store = useCollectionStore()
 const sheetStore = useSheetStore()
+const notification = useNotificationStore()
 const isCollapsed = ref(false)
 const showCreateDialog = ref(false)
 const newCollectionName = ref('')
 const fileInput = ref(null)
+
+const confirmState = ref({
+  show: false,
+  title: '',
+  message: '',
+  confirmText: 'Aceptar',
+  isDanger: false,
+  onConfirm: () => {},
+  onCancel: () => {}
+})
+
+const askConfirm = (options) => {
+  return new Promise((resolve) => {
+    confirmState.value = {
+      show: true,
+      title: options.title || 'Confirmar',
+      message: options.message || '¿Estás seguro?',
+      confirmText: options.confirmText || 'Aceptar',
+      isDanger: options.isDanger || false,
+      onConfirm: () => resolve(true),
+      onCancel: () => resolve(false)
+    }
+  })
+}
 
 const collections = computed(() => store.collections)
 
@@ -101,7 +138,12 @@ const handleFileImport = async (event) => {
       const existingCollection = store.collections.find(c => c.name === finalCollectionName)
 
       if (existingCollection) {
-        if (!confirm(`La colección "${finalCollectionName}" ya existe.\n¿Deseas importarla como una copia?`)) {
+        const importCopy = await askConfirm({
+            title: 'Colección Existente',
+            message: `La colección "${finalCollectionName}" ya existe.<br>¿Deseas importarla como una copia?`
+        })
+        
+        if (!importCopy) {
           event.target.value = '' // Limpiar input
           return
         }
@@ -134,13 +176,21 @@ const handleFileImport = async (event) => {
 
           if (importedDate > existingDate) {
             // La importada es más reciente, preguntar al usuario
-            if (confirm(`La canción "${song.name}" ya existe pero la versión importada es más reciente.\n\nLocal: ${existingSong.updatedAt}\nImportada: ${song.updatedAt}\n\n¿Deseas sobrescribirla?`)) {
+            const overwrite = await askConfirm({
+                title: 'Conflicto de Versión',
+                message: `La canción "${song.name}" ya existe pero la versión importada es más reciente.<br><br>Local: ${existingSong.updatedAt}<br>Importada: ${song.updatedAt}<br><br>¿Deseas sobrescribirla?`
+            })
+            if (overwrite) {
               songsRegistry.songs[song.id] = song
               updatedSongsCount++
             }
           } else if (existingSong.updatedAt !== song.updatedAt) {
              // Fechas distintas pero no necesariamente más reciente (o sin fecha), preguntar igual por si acaso
-             if (confirm(`La canción "${song.name}" ya existe con una fecha diferente.\n\n¿Deseas sobrescribirla con la versión importada?`)) {
+             const overwrite = await askConfirm({
+                 title: 'Conflicto de Canción',
+                 message: `La canción "${song.name}" ya existe con una fecha diferente.<br><br>¿Deseas sobrescribirla con la versión importada?`
+             })
+             if (overwrite) {
               songsRegistry.songs[song.id] = song
               updatedSongsCount++
             }
@@ -164,11 +214,15 @@ const handleFileImport = async (event) => {
         store.saveCollections()
       }
 
-      alert(`Importación completada.\n- Canciones nuevas: ${importedSongsCount}\n- Canciones actualizadas: ${updatedSongsCount}\n- Colección "${finalCollectionName}" añadida.`)
+      notification.addToast(
+        `Importación completada.<br>- Canciones nuevas: ${importedSongsCount}<br>- Canciones actualizadas: ${updatedSongsCount}<br>- Colección "${finalCollectionName}" añadida.`,
+        'success',
+        5000
+      )
 
     } catch (error) {
       console.error('Error importando:', error)
-      alert('Error al importar el archivo: ' + error.message)
+      notification.addToast('Error al importar el archivo: ' + error.message, 'error')
     } finally {
       // Limpiar input para permitir importar el mismo archivo de nuevo
       event.target.value = ''
