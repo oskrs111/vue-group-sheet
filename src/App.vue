@@ -28,7 +28,7 @@
               <h1 class="splash-title">Group Sheet Editor</h1>
               <div class="splash-meta">
                 <span class="splash-badge">Alpha Release</span>
-                <span class="splash-version">v0.0.1 Build 25</span>
+                <span class="splash-version">v0.0.1 Build 26</span>
               </div>
             </div>
             <p class="splash-author">by Oscar Sanz</p>

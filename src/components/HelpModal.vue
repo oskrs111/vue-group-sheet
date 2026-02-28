@@ -25,6 +25,18 @@
         </section>
 
         <section class="help-section">
+          <h3><span class="material-icons">music_note</span> Acordes y Notación</h3>
+          <p>El editor y el exportador MusicXML soportan nomenclatura estándar avanzada y Jazz:</p>
+          <ul>
+            <li><strong>Mayor / Menor:</strong> Usa <code>maj</code>, <code>M</code> para acordes mayores, y <code>m</code>, <code>-</code> para menores (ej. <code>Cmaj7</code>, <code>A-7</code>).</li>
+            <li><strong>Extensiones:</strong> Soporta <code>7</code>, <code>9</code>, <code>11</code>, <code>13</code>, así como <code>sus2</code> y <code>sus4</code>.</li>
+            <li><strong>Disminuidos:</strong> Usa <code>dim</code> u <code>o</code> para disminuidos, y <code>m7b5</code> o <code>ø</code> para semidisminuidos.</li>
+            <li><strong>Aumentados:</strong> Usa <code>aug</code> o <code>+</code>.</li>
+            <li><strong>Bajos e Inversiones:</strong> Utiliza la barra <code>/</code> o contrabarra <code>\</code> seguida de la nota del bajo (ej. <code>D/F#</code>, <code>G\B</code>).</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
           <h3><span class="material-icons">lyrics</span> Letras</h3>
           <p>Si activas la página de letras en configuración, podrás escribir la letra de la canción. El sistema sincroniza automáticamente los nombres de las secciones para ayudarte a organizarte.</p>
         </section>

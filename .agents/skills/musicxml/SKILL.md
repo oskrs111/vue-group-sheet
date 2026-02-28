@@ -14,7 +14,8 @@ Un archivo MusicXML debe comenzar con la declaración XML y el DOCTYPE (aunque X
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- En 4.0 y versiones recientes es preferido usar el DTD de la W3C -->
+<!DOCTYPE score-partwise PUBLIC "-//W3C//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
   <!-- Contenido aquí -->
 </score-partwise>
@@ -54,17 +55,21 @@ El elemento `<note>` es el más complejo y central.
 - `<type>`: Nombre rítmico (whole, half, quarter, eighth, 16th, etc.).
 
 ### Estructuras Especiales
-- `<chord/>`: Indica que la nota actual es parte de un acorde con la nota anterior.
-- `<rest/>`: Indica un silencio. Puede incluir `measure="yes"` para silencios de compás completo.
-- `<grace/>`: Indica una apoyatura (nota de adorno). Normalmente no tiene duración.
-- `<tie type="start"|"stop"/>`: Indica ligadura de prolongación (aspecto sonoro).
+- `<grace/>`: Indica una apoyatura (nota de adorno). Se coloca antes del pitch y no consume duración.
+- `<chord/>`: Indica que la nota forma un acorde con la nota que le precede. ¡Debe ir introducido **antes** de `<pitch>`!
+- `<rest/>`: Indica un silencio. Reemplaza a `<pitch>`, puede incluir `measure="yes"` para compases de espera.
+- `<tie type="start"|"stop"/>`: Indica ligadura de prolongación (aspecto sonoro, para reproducción).
+
+### Pentagramas y Agrupación
+- `<staff>`: Indica en qué pentagrama se dibuja la nota (ej. `1` clave de Sol, `2` clave de Fa en un piano).
+- `<beam number="1">begin|continue|end</beam>`: Controla las uniones de plicas (barras) entre corcheas y semicorcheas.
 
 ### Notaciones y Apariencia
-Dentro de `<notations>`:
-- `<tied type="start"|"stop"/>`: Representación visual de la ligadura.
-- `<slur type="start"|"stop"/>`: Ligadura de expresión.
-- `<tuplet type="start"|"stop"/>`: Grupos irregulares (tresillos, etc.).
-- `<articulations>`: `<staccato/>`, `<accent/>`, `<tenuto/>`.
+Ubicadas dentro de `<notations>`:
+- `<tied type="start"|"stop"/>`: Representación visual de la ligadura de prolongación en la partitura.
+- `<slur type="start"|"stop"/>`: Ligadura de expresión o fraseo (puede abarcar muchas notas).
+- `<tuplet type="start"|"stop"/>`: Grupos irregulares (tresillos, cinquillos, etc.).
+- `<articulations>`: Articulaciones como `<staccato/>`, `<accent/>`, `<tenuto/>`.
 
 ## 4. Letras y Armonía
 
@@ -80,15 +85,30 @@ Se colocan antes de la nota donde empieza el acorde.
 - `<kind>`: Tipo de acorde (major, minor, dominant, etc.).
 - `<degree>`: Alteraciones o tensiones (add9, b5).
 
-## 5. Direcciones y Flujo (`<direction>`)
+## 5. Direcciones, Flujo y Estructura (`<direction>`)
 
-Se usa para marcas de dinámica (`<dynamics>`), tempo (`<metronome>`), o texto libre (`<words>`).
+Se usa para indicaciones generales a lo largo del compás:
+- `<dynamics>`: Dinámicas (ej. `p`, `mf`, `f`).
+- `<metronome>`: Marcas de tempo visuales y BPM. Anidado en `<direction-type>`, define la figura base (`<beat-unit>`, ej. `quarter`) y los pulsos por minuto (`<per-minute>`, ej. `120`).
+- `<words>`: Texto libre por encima o debajo del pentagrama.
+- `<rehearsal>`: Marcadores de sección (ej. Intro, A1, B2). Esenciales para la navegación por secciones u organizar "Section Marks".
 
-### Posicionamiento (Polyphony)
-- `<backup>`: Retrocede el "cabezal" de lectura en el tiempo (útil para múltiples voces en un mismo pentagrama).
-- `<forward>`: Salta tiempo hacia adelante.
+Además, para que el BPM afecte a la **reproducción MIDI/Audio**, se debe incluir la etiqueta `<sound tempo="120"/>` directamente como hijo de `<direction>`, al mismo nivel que `<direction-type>`.
+
+### Barras y Repeticiones (`<barline>`)
+Permiten delimitar secciones o finalizar la obra:
+- Para barras especiales, se usa `<barline location="right">` o `"left"`.
+- `<bar-style>`: Estilos comunes son `light-light` (doble barra), y `light-heavy` (barra final).
+- `<repeat direction="forward"|"backward"/>`: Añadidos dentro de barline para denotar secciones que se repiten.
+
+### Posicionamiento y Polifonía
+- `<voice>`: Diferencia las voces/líneas melódicas activas (ej. 1, 2, 3).
+- `<backup>`: Retrocede el "cabezal" de lectura en el tiempo, descontando `<duration>`. Fundamental para escribir múltiples voces en un pentagrama.
+- `<forward>`: Salta tiempo hacia adelante (análogo a un silencio invisible).
 
 ## 6. Reglas de Validación y Mejores Prácticas
-1. **Consistencia de Divisiones**: Mantén un valor de `<divisions>` constante si es posible para simplificar cálculos.
-2. **Orden de Elementos**: MusicXML es estricto con el orden de los sub-elementos (XSD). Sigue siempre el orden: pitch/rest -> duration -> tie -> voice -> type -> dot -> accidental -> time-modification -> stem -> notehead -> notations -> lyric.
-3. **Escala**: Usa `<defaults>` para definir el tamaño de página y escalado (`<scaling>`) para asegurar consistencia visual en diferentes lectores.
+1. **Consistencia de Divisiones**: Mantén un valor de `<divisions>` constante a lo largo de las partes si es posible, para mantener los cálculos más simples.
+2. **Orden Estricto de Elementos (Error común de XSD)**: MusicXML exige un orden exacto para los elementos anidados de `<note>`. Sigue rigurosamente este orden: 
+   `grace` -> `chord` -> `pitch` (ó `rest`) -> `duration` -> `tie` -> `voice` -> `type` -> `dot` -> `accidental` -> `time-modification` -> `stem` -> `staff` -> `beam` -> `notations` -> `lyric`.
+3. **Escala y Defaults**: Usa `<defaults>` a nivel raíz para definir el tamaño de página y escalado (`<scaling>`), asegurando una consistencia visual en diferentes softwares notacionales.
+4. **Agrupación de Direction-Types**: Si hay varias marcas en el mismo compás y momento temporal (ej. una Rehearsal Mark y Texto), se pueden agrupar en múltiples `<direction-type>` bajo el mismo `<direction>`.

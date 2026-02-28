@@ -188,8 +188,14 @@
       <div class="modal-content">
         <div class="modal-header">Caracteres Permitidos</div>
         <div class="modal-body">
-          <p>Los siguientes caracteres están permitidos para formar acordes:</p>
-          <p class="allowed-chars">C, D, E, F, G, A, B, M, m, b, #, 7, 9, 1, 3, /, -, +, o</p>
+          <p>Sintaxis Jazz y caracteres permitidos:</p>
+          <ul style="text-align: left; margin: 10px 0; padding-left: 20px; line-height: 1.4;">
+            <li><strong>Mayor / Menor:</strong> `M`, `maj` / `m`, `-`</li>
+            <li><strong>Extensiones:</strong> `7`, `9`, `11`, `13`, `sus2`, `sus4`</li>
+            <li><strong>Alterados:</strong> `dim`, `o`, `m7b5`, `ø`</li>
+            <li><strong>Aumentados:</strong> `aug`, `+`</li>
+            <li><strong>Bajos / Inversiones:</strong> `/`, `\` (ej. C/E, A\C#)</li>
+          </ul>
         </div>
         <div class="modal-footer">
           <button class="primary" @click="showHelpModal = false">Entendido</button>
@@ -218,7 +224,7 @@ const localChords = ref(JSON.parse(JSON.stringify(props.compass.chords)))
 const chordErrors = ref({})
 
 // Caracteres permitidos para el acorde
-const allowedChars = /^[CDEFGABMmb#7913sus24altdimag/\-+o]*$/
+const allowedChars = /^[CDEFGABMmb#7913sus24altdimag/\\+oø-]*$/
 
 const isRepeatCompass = computed(() => {
   return props.compass.chords.length === 1 && props.compass.chords[0].chord === 'R'
@@ -260,7 +266,7 @@ const validateChord = (index) => {
   if (!allowedChars.test(chordString)) {
     chordErrors.value[index] = 'Caracteres no válidos detectados'
     // Eliminar caracteres no permitidos
-    chord.chord = chordString.replace(/[^CDEFGABMmb#7913sus24altdimag/\-+o]/g, '')
+    chord.chord = chordString.replace(/[^CDEFGABMmb#7913sus24altdimag/\\+oø-]/g, '')
     return
   }
   

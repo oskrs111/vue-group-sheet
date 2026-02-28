@@ -17,6 +17,7 @@ export class MusicXMLGenerator {
     const title = header.center.top.name || 'Sin título'
     const composer = header.center.bottom.author || ''
     const timeSig = header.left.bottom.signature || '4/4'
+    const tempo = header.left.top.tempo || '120'
     const [beats, beatType] = timeSig.split('/').map(Number)
 
     // Flatten structure: expand structure into actual measures
@@ -90,7 +91,16 @@ export class MusicXMLGenerator {
           <sign>G</sign>
           <line>2</line>
         </clef>
-      </attributes>`
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>${tempo}</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="${tempo}"/>
+      </direction>`
       }
 
       const totalMeasureDuration = (beats || 4) * this.divisions
@@ -176,12 +186,14 @@ export class MusicXMLGenerator {
   }
 
   interpretChord(chordStr) {
-    const match = chordStr.match(/^([A-G])([#b])?(.*)$/)
+    // Apoyar C/E o C\E
+    const match = chordStr.match(/^([A-G])([#b])?(.*?)(?:[/\\]([A-G][#b]?))?$/)
     if (!match) return []
 
     const rootBase = match[1]
     const accidental = match[2] || ''
     const suffix = match[3] || ''
+    const bassNoteStr = match[4] || null
 
     const semitonesMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 }
     let rootSemitone = semitonesMap[rootBase]
@@ -191,17 +203,25 @@ export class MusicXMLGenerator {
     // Default intervals
     let intervals = [0, 4, 7] // Major triad
 
-    if (suffix.includes('m') && !suffix.includes('maj')) {
+    const isMinor = suffix.includes('m') && !suffix.includes('maj') || suffix.includes('-')
+    const isMaj7 = suffix.includes('maj') || suffix.includes('M')
+    const isHalfDim = suffix.includes('m7b5') || suffix.includes('-7b5') || suffix.includes('ø')
+    const isDim = suffix.includes('dim') || suffix.includes('o') && !isHalfDim
+    const isAug = suffix.includes('aug') || suffix.includes('+')
+
+    if (isHalfDim) {
+      intervals = [0, 3, 6, 10]
+    } else if (isMinor) {
       intervals = [0, 3, 7] // Minor triad
       if (suffix.includes('7')) intervals.push(10) // Minor 7th
-    } else if (suffix.includes('maj7')) {
+    } else if (isMaj7 && suffix.includes('7')) {
       intervals = [0, 4, 7, 11] // Major 7th
     } else if (suffix.includes('7')) {
       intervals = [0, 4, 7, 10] // Dominant 7th
-    } else if (suffix.includes('dim')) {
+    } else if (isDim) {
       intervals = [0, 3, 6] // Dim triad
       if (suffix.includes('7')) intervals.push(9) // Dim 7th
-    } else if (suffix.includes('aug') || suffix.includes('+')) {
+    } else if (isAug) {
       intervals = [0, 4, 8] // Aug triad
     } else if (suffix.includes('sus4')) {
       intervals = [0, 5, 7]
@@ -214,12 +234,30 @@ export class MusicXMLGenerator {
     if (suffix.includes('11')) intervals.push(17)
     if (suffix.includes('13')) intervals.push(21)
 
+    // Optional bass note logic
+    let bassAbsoluteSemitone = null
+    if (bassNoteStr) {
+      const matchBass = bassNoteStr.match(/^([A-G])([#b])?$/)
+      if (matchBass) {
+        let bSemi = semitonesMap[matchBass[1]]
+        if (matchBass[2] === '#') bSemi += 1
+        if (matchBass[2] === 'b') bSemi -= 1
+        bassAbsoluteSemitone = bSemi + 36 // Place bass in octave 2 (C2)
+      }
+    }
+
     // Convert root + intervals to actual notes in guitar register
     // Guitar register: Octave 3 is a good base for chords
-    return intervals.map(interval => {
+    const chordNotes = intervals.map(interval => {
       const absoluteSemitone = rootSemitone + interval + 48 // Start at C3
       return this.semitoneToPitch(absoluteSemitone)
     })
+
+    if (bassAbsoluteSemitone !== null) {
+      chordNotes.unshift(this.semitoneToPitch(bassAbsoluteSemitone)) // Add to bottom
+    }
+
+    return chordNotes
   }
 
   semitoneToPitch(totalSemitones) {
@@ -237,28 +275,52 @@ export class MusicXMLGenerator {
   }
 
   generateHarmony(chordStr) {
-    const match = chordStr.match(/^([A-G])([#b])?(.*)$/)
+    const match = chordStr.match(/^([A-G])([#b])?(.*?)(?:[/\\]([A-G][#b]?))?$/)
     if (!match) return ''
 
     const root = match[1]
     const alter = match[2] === '#' ? 1 : (match[2] === 'b' ? -1 : 0)
-    let kind = 'major'
-    const suffix = match[3]
+    const suffix = match[3] || ''
+    const bassNoteStr = match[4] || null
 
-    if (suffix.includes('m') && !suffix.includes('maj')) {
+    let kind = 'major'
+
+    const isMinor = suffix.includes('m') && !suffix.includes('maj') || suffix.includes('-')
+    const isMaj7 = suffix.includes('maj') || suffix.includes('M')
+    const isHalfDim = suffix.includes('m7b5') || suffix.includes('-7b5') || suffix.includes('ø')
+    const isDim = suffix.includes('dim') || suffix.includes('o') && !isHalfDim
+    const isAug = suffix.includes('aug') || suffix.includes('+')
+
+    if (isHalfDim) {
+      kind = 'half-diminished'
+    } else if (isMinor) {
       kind = suffix.includes('7') ? 'minor-seventh' : 'minor'
-    } else if (suffix.includes('maj7')) {
+    } else if (isMaj7 && suffix.includes('7')) {
       kind = 'major-seventh'
     } else if (suffix.includes('7')) {
       kind = 'dominant'
-    } else if (suffix.includes('dim')) {
+    } else if (isDim) {
       kind = suffix.includes('7') ? 'diminished-seventh' : 'diminished'
-    } else if (suffix.includes('aug') || suffix.includes('+')) {
+    } else if (isAug) {
       kind = 'augmented'
     } else if (suffix.includes('sus4')) {
       kind = 'suspended-fourth'
     } else if (suffix.includes('sus2')) {
       kind = 'suspended-second'
+    }
+
+    let bassXml = ''
+    if (bassNoteStr) {
+      const matchBass = bassNoteStr.match(/^([A-G])([#b])?$/)
+      if (matchBass) {
+        const bassRoot = matchBass[1]
+        const bassAlter = matchBass[2] === '#' ? 1 : (matchBass[2] === 'b' ? -1 : 0)
+        bassXml = `
+        <bass>
+          <bass-step>${bassRoot}</bass-step>
+          ${bassAlter !== 0 ? `<bass-alter>${bassAlter}</bass-alter>` : ''}
+        </bass>`
+      }
     }
 
     return `
@@ -267,7 +329,7 @@ export class MusicXMLGenerator {
           <root-step>${root}</root-step>
           ${alter !== 0 ? `<root-alter>${alter}</root-alter>` : ''}
         </root>
-        <kind>${kind}</kind>
+        <kind>${kind}</kind>${bassXml}
         <offset>0</offset>
       </harmony>`
   }
