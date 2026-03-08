@@ -12,7 +12,7 @@
       <button @click="duplicate" title="Duplicar" class="action-btn">
         <span class="material-icons">content_copy</span>
       </button>
-      <button @click="exportJSON" title="Exportar JSON" class="action-btn">
+      <button @click="exportJSON" title="Exportar .col" class="action-btn">
         <span class="material-icons">file_download</span>
       </button>
       <button @click="exportCollectionPDF" title="Exportar PDF" class="action-btn" :disabled="isExporting">
@@ -340,10 +340,10 @@ const exportJSON = () => {
     const jsonStr = JSON.stringify(data, null, 2)
     const blob = new Blob([jsonStr], { type: 'application/json' })
     const fileName = getExportFileName()
-    saveAs(blob, `${fileName}.json`)
-    notification.addToast('Colección exportada', 'success')
+    saveAs(blob, `${fileName}.col`)
+    notification.addToast('Colección exportada exitosamente', 'success')
   } catch (error) {
-    console.error('Error exportando JSON:', error)
+    console.error('Error exportando colección:', error)
     notification.addToast('Error al exportar: ' + error.message, 'error')
   }
 }

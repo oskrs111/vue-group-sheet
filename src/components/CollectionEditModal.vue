@@ -43,7 +43,7 @@
                   <span class="material-icons">expand_more</span>
                 </button>
               </div>
-              <span class="song-name" @click="loadSong(song.id)" title="Cargar canción">{{ song.name }}</span>
+              <span class="song-name" @click="loadSong(song.id)" title="Abrir canción">{{ song.name }}</span>
               <button @click="removeSong(song.id)" class="remove-btn" title="Quitar">
                 <span class="material-icons">close</span>
               </button>
@@ -121,13 +121,13 @@ const loadSong = (songId) => {
   const song = allSongs.value.find(s => s.id === songId)
   if (!song) return
 
-  const name = song.name || 'sin nombre'
-  if (confirm(`¿Cargar la canción "${name}"? Se perderán los cambios no guardados.`)) {
+  const name = song?.name || 'sin nombre'
+  if (confirm(`¿Abrir la canción "${name}"? Se perderán los cambios no guardados.`)) {
     try {
       sheetStore.loadSong(songId)
       emit('close')
     } catch (error) {
-      alert('Error al cargar: ' + error.message)
+      alert('Error al abrir: ' + error.message)
     }
   }
 }

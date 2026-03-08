@@ -8,9 +8,9 @@
       <span class="material-icons">save</span>
       <span class="btn-label">Guardar</span>
     </button>
-    <button @click="showLoadDialog = true" title="Cargar Canción" class="toolbar-btn">
+    <button @click="openLoadDialog" title="Abrir Canción" class="toolbar-btn">
       <span class="material-icons">folder_open</span>
-      <span class="btn-label">Cargar</span>
+      <span class="btn-label">Abrir</span>
     </button>
     <button @click="exportPDF" title="Exportar PDF" class="toolbar-btn">
       <span class="material-icons">picture_as_pdf</span>
@@ -35,14 +35,14 @@
         type="file" 
         ref="fileInput" 
         style="display: none" 
-        accept=".json"
+        accept=".gse,.json"
         @change="handleImportJSON"
       />
       <input 
         type="file" 
         ref="fileInputGlobal" 
         style="display: none" 
-        accept=".json"
+        accept=".backup,.gse,.json"
         @change="handleImportBackup"
       />
     </button>
@@ -80,26 +80,41 @@
       </div>
     </Teleport>
     
-    <!-- Modal Cargar Canción -->
+    <!-- Modal Abrir Canción -->
     <Teleport to="#modal-container">
       <div v-if="showLoadDialog" class="modal-overlay" @click.self="showLoadDialog = false">
-        <div class="modal-content">
-        <div class="modal-header">Cargar Canción</div>
+        <div class="modal-content" style="max-width: 800px; width: 90%;">
+        <div class="modal-header">Abrir Canción</div>
         <div class="modal-body">
-          <div v-if="songsList.length === 0" style="padding: 20px; text-align: center; color: var(--ui-text-secondary);">
-            No hay canciones guardadas
+          <div class="dialog-filters" style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+            <input type="text" v-model="searchQuery" placeholder="Buscar por título o autor..." class="search-input" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 4px; border: 1px solid var(--ui-border); background: var(--ui-bg-input); color: var(--ui-text-secondary);" />
+            <select v-model="sortBy" class="sort-select" style="padding: 10px; border-radius: 4px; border: 1px solid var(--ui-border); background: var(--ui-bg-input); color: var(--ui-text-secondary);">
+              <option value="date">Más recientes</option>
+              <option value="alpha">Alfabético</option>
+            </select>
+            <select v-model="filterCollection" class="collection-select" style="padding: 10px; border-radius: 4px; border: 1px solid var(--ui-border); background: var(--ui-bg-input); color: var(--ui-text-secondary);">
+              <option value="">Todas las colecciones</option>
+              <option v-for="collection in collectionStore.collections" :key="collection.id" :value="collection.id">
+                {{ collection.name }}
+              </option>
+            </select>
+          </div>
+          
+          <div v-if="filteredSongsList.length === 0" style="padding: 20px; text-align: center; color: var(--ui-text-secondary);">
+            No hay canciones guardadas que coincidan
           </div>
           <div v-else class="songs-list">
             <div 
-              v-for="song in songsList" 
+              v-for="song in filteredSongsList" 
               :key="song.id"
               class="song-item"
               :class="{ selected: selectedSongId === song.id }"
               @click="selectSong(song.id)"
+              @dblclick="loadSong(song.id)"
             >
               <div class="song-info">
                 <div class="song-name">{{ song.name }}</div>
-                <div v-if="song.header?.center?.bottom?.author" class="song-author">{{ song.header.center.bottom.author }}</div>
+                <div class="song-author">{{ song.header?.center?.bottom?.author || 'Sin autor' }}</div>
                 <div class="song-date">{{ formatDate(song.updatedAt || song.createdAt) }}</div>
               </div>
               <div class="song-actions">
@@ -112,7 +127,7 @@
         </div>
         <div class="modal-footer">
           <button class="secondary" @click="showLoadDialog = false">Cerrar</button>
-          <button class="primary" :disabled="!selectedSongId" @click="loadSelectedSong">Cargar</button>
+          <button class="primary" :disabled="!selectedSongId" @click="loadSelectedSong">Abrir</button>
         </div>
         </div>
       </div>
@@ -141,7 +156,7 @@
                 <div class="song-info">
                   <div class="song-name">Canción</div>
                   <div class="song-author">Sesión Individual</div>
-                  <div class="song-date">Importar un archivo .json de una sola canción</div>
+                  <div class="song-date">Importar un archivo de canción (.gse o .json)</div>
                 </div>
                 <div class="song-actions">
                   <span class="material-icons" style="color: var(--ui-text-secondary)">description</span>
@@ -175,7 +190,7 @@
                 <div class="song-info">
                   <div class="song-name">{{ store.header?.center?.top?.name || 'Canción Actual' }}</div>
                   <div v-if="store.header?.center?.bottom?.author" class="song-author">{{ store.header.center.bottom.author }}</div>
-                  <div class="song-date">Exportar esta canción en formato .json</div>
+                  <div class="song-date">Exportar esta canción en formato nativo (.gse)</div>
                 </div>
                 <div class="song-actions">
                   <span class="material-icons" style="color: var(--ui-text-secondary)">description</span>
@@ -213,8 +228,9 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
+import { useCollectionStore } from '../stores/collectionStore'
 import SettingsModal from './SettingsModal.vue'
 import html2pdf from 'html2pdf.js'
 import html2canvas from 'html2canvas'
@@ -225,6 +241,7 @@ import { useNotificationStore } from '../stores/notificationStore'
 import ConfirmDialog from './UI/ConfirmDialog.vue'
 
 const store = useSheetStore()
+const collectionStore = useCollectionStore()
 const notification = useNotificationStore()
 const showHelp = ref(false)
 const showSettings = ref(false)
@@ -236,6 +253,10 @@ const selectedSongId = ref(null)
 const songName = ref('')
 const fileInput = ref(null)
 const fileInputGlobal = ref(null)
+
+const searchQuery = ref('')
+const sortBy = ref('date')
+const filterCollection = ref('')
 
 const confirmState = ref({
   show: false,
@@ -285,6 +306,46 @@ const openHelp = () => {
 }
 
 const songsList = computed(() => store.getSongsList())
+
+const filteredSongsList = computed(() => {
+  let list = [...songsList.value]
+  
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase()
+    list = list.filter(song => {
+      const name = (song.name || '').toLowerCase()
+      const author = song.header?.center?.bottom?.author ? song.header.center.bottom.author.toLowerCase() : ''
+      return name.includes(query) || author.includes(query)
+    })
+  }
+  
+  if (filterCollection.value) {
+    const collection = collectionStore.collections.find(c => c.id === filterCollection.value)
+    if (collection) {
+      list = list.filter(song => collection.songs.includes(song.id))
+    }
+  }
+  
+  if (sortBy.value === 'alpha') {
+    list.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+  } else {
+    list.sort((a, b) => {
+      const dateA = a.updatedAt || a.createdAt || ''
+      const dateB = b.updatedAt || b.createdAt || ''
+      return dateB.localeCompare(dateA)
+    })
+  }
+  
+  return list
+})
+
+const openLoadDialog = () => {
+  collectionStore.loadCollections()
+  searchQuery.value = ''
+  filterCollection.value = ''
+  sortBy.value = 'date'
+  showLoadDialog.value = true
+}
 
 const newFile = () => {
   showConfirm({
@@ -358,15 +419,15 @@ const loadSong = (id) => {
   const name = song?.name || 'sin nombre'
 
   showConfirm({
-    title: 'Cargar Canción',
-    message: `¿Cargar la canción "${name}"? Se perderán los cambios no guardados.`,
+    title: 'Abrir Canción',
+    message: `¿Abrir la canción "${name}"? Se perderán los cambios no guardados.`,
     onConfirm: () => {
       try {
         store.loadSong(id)
         showLoadDialog.value = false
-        notification.addToast(`Canción "${name}" cargada`, 'success')
+        notification.addToast(`Canción "${name}" abierta`, 'success')
       } catch (error) {
-        notification.addToast('Error al cargar: ' + error.message, 'error')
+        notification.addToast('Error al abrir: ' + error.message, 'error')
       }
     }
   })
@@ -679,11 +740,11 @@ const exportJSON = () => {
     }
 
     const blob = new Blob([JSON.stringify(songData, null, 2)], { type: 'application/json' })
-    saveFile(blob, `${fileName}.json`)
-    notification.addToast('Exportación JSON completada', 'success')
+    saveFile(blob, `${fileName}.gse`)
+    notification.addToast('Canción exportada exitosamente', 'success')
   } catch (error) {
-    console.error('Error exportando JSON:', error)
-    notification.addToast('Error al exportar JSON: ' + error.message, 'error')
+    console.error('Error exportando canción:', error)
+    notification.addToast('Error al exportar la canción: ' + error.message, 'error')
   }
 }
 
@@ -737,9 +798,11 @@ const processImport = async (songData, overwrite = false) => {
         store.saveSongsRegistry(registry)
         
         notification.addToast('Canción importada correctamente', 'success')
-        if (store.currentSongId === songData.id) {
-            store.loadSong(songData.id)
-        }
+        
+        // Cargar inmediatamente la canción importada y cerrar el modal
+        store.loadSong(songData.id)
+        showImportModal.value = false
+        selectedSongId.value = songData.id
 
     } catch (error) {
         console.error('Error importing:', error)
@@ -752,7 +815,7 @@ const downloadCompleteBackup = () => {
     try {
         const fullDatabase = store.exportCompleteDatabase()
         const dateTime = formatDateForFileName(new Date())
-        const fileName = `VueGroupSheet_Backup_${dateTime}.json`
+        const fileName = `VueGroupSheet_Backup_${dateTime}.backup`
 
         const blob = new Blob([JSON.stringify(fullDatabase, null, 2)], { type: 'application/json' })
         saveFile(blob, fileName)

@@ -514,7 +514,14 @@ export const useSheetStore = defineStore('sheet', {
       if (!registry.collections) {
         registry.collections = {}
       }
-      localStorage.setItem('groupSheetSongs', JSON.stringify(registry))
+
+      if (window.electronAPI) {
+        // Enviar a guardar en archivo local si estamos en Electron
+        window.electronAPI.saveDatabase(registry)
+      } else {
+        // Comportamiento normal web
+        localStorage.setItem('groupSheetSongs', JSON.stringify(registry))
+      }
     },
 
     saveToLocalStorage() {

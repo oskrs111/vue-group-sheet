@@ -22,7 +22,11 @@ export const useCollectionStore = defineStore('collections', {
         },
 
         saveCollections() {
-            localStorage.setItem('groupSheetCollections', JSON.stringify(this.collections))
+            if (window.electronAPI && window.electronAPI.saveCollections) {
+                window.electronAPI.saveCollections(this.collections)
+            } else {
+                localStorage.setItem('groupSheetCollections', JSON.stringify(this.collections))
+            }
         },
 
         addCollection(name) {
