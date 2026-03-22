@@ -1,0 +1,15 @@
+Sections:
+In=|G|
+A=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|
+B=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|
+C=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|
+
+Structure:
+In,A,A,B,C
+
+Lyrics:
+In=
+A=At the dark end of the street / That's where we always meet / Hiding in shadows where we don't belong / Living in darkness to hide our wrong / You and me / At the dark end / Of the street / You and me
+A=I know time is gonna take its toll / We have to pay for the love we stole / It's a sin, and we know it's wrong / Oh, but our love keeps coming on strong / Steal away / To the dark end / Of the street
+B=They're gonna find us / They're gonna find us / They're gonna find us, Lord, someday / You and me / At the dark end / Of the street / You and me
+C=And when the daylight hours roll 'round / And by chance we're both downtown / If we should meet, just walk on by / Oh, darling, please, don't cry / Tonight, we'll meet / At the dark end / Of the street

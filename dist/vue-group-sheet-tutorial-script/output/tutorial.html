@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tutorial #1 - Crear una canción con Script</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #050a13;
+        --panel: rgba(7, 16, 30, 0.92);
+        --panel-border: rgba(148, 163, 184, 0.16);
+        --accent: #f59e0b;
+        --accent-soft: rgba(245, 158, 11, 0.14);
+        --secondary: #7dd3fc;
+        --text: #f8fafc;
+        --muted: #cbd5e1;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(125, 211, 252, 0.16), transparent 24%),
+          radial-gradient(circle at right, rgba(245, 158, 11, 0.18), transparent 20%),
+          linear-gradient(180deg, #08111d 0%, #030712 100%);
+      }
+      body {
+        position: relative;
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+      }
+      .slides {
+        width: 100vw;
+        min-height: 0;
+        position: relative;
+      }
+      .slide {
+        position: absolute;
+        inset: 0;
+        padding: 28px 28px 12px;
+        display: none;
+      }
+      .slide.is-active {
+        display: block;
+      }
+      .slide-shell {
+        width: 100%;
+        height: 100%;
+        border: 1px solid var(--panel-border);
+        border-radius: 28px;
+        background: var(--panel);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: 18px;
+        padding: 24px;
+      }
+      .slide-shell--intro {
+        grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+        grid-template-rows: 1fr;
+        align-items: center;
+        gap: 24px;
+      }
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 0.72rem;
+      }
+      h1 {
+        margin: 0 0 16px;
+        font-size: clamp(3rem, 4.5vw, 5rem);
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+      }
+      h2 {
+        margin: 0;
+        font-size: clamp(2rem, 3vw, 3rem);
+        letter-spacing: -0.04em;
+      }
+      .intro-copy,
+      .slide-caption {
+        display: grid;
+        gap: 18px;
+      }
+      .slide-text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+      .intro-media,
+      .slide-media {
+        min-height: 0;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .intro-logo {
+        width: min(72vh, 460px);
+        max-width: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 0 50px rgba(96, 165, 250, 0.28));
+      }
+      .slide-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .phase-chip {
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .slide-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+      .code-block {
+        margin: 0;
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(2, 6, 23, 0.78);
+        border: 1px solid rgba(125, 211, 252, 0.14);
+        color: #e2e8f0;
+        font-family: "Consolas", "JetBrains Mono", monospace;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        white-space: pre-wrap;
+      }
+      .intro-footer {
+        color: var(--secondary);
+        font-size: 0.9rem;
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-self: center;
+        gap: 12px;
+        margin: 0 0 18px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(2, 6, 23, 0.78);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+      }
+      .controls button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 16px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+      }
+      .controls button:hover {
+        background: rgba(255, 255, 255, 0.14);
+      }
+      .counter {
+        min-width: 92px;
+        text-align: center;
+        color: var(--muted);
+      }
+      @media (max-width: 980px) {
+        .slide {
+          padding: 16px 16px 10px;
+        }
+        .slide-shell {
+          padding: 18px;
+        }
+        .slide-shell--intro {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+        }
+        .controls {
+          margin-bottom: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="slides">
+      
+      <section class="slide" data-slide-index="0">
+        <div class="slide-shell slide-shell--intro">
+          <div class="intro-copy">
+            <p class="eyebrow">Group Sheet Editor</p>
+            <h1>Aprende a crear una canción con Script</h1>
+            <p class="slide-text">En esta guía verás cómo construir Dark End Of Street desde la función Script, escribiendo primero las secciones, después la estructura y al final las letras.</p>
+            <div class="intro-footer">Slide 1 / 6</div>
+          </div>
+          <div class="intro-media">
+            <img class="intro-logo" src="../../src/asset/gse_logo_1024x1024.png" alt="Group Sheet Editor logo" />
+          </div>
+        </div>
+      </section>
+    
+    <section class="slide" data-slide-index="1">
+      <div class="slide-shell">
+        <div class="slide-header">
+          <div>
+            <p class="eyebrow">Paso 1 de 5</p>
+            <h2>Abrir el editor de script</h2>
+          </div>
+          <div class="phase-chip">Abrir Script</div>
+        </div>
+
+        <div class="slide-media">
+          <img src="gifs/step-001.gif" alt="Abrir el editor de script" />
+        </div>
+
+        <div class="slide-caption">
+          <p class="slide-text">La vista Script reúne toda la canción en un único texto. Es la forma más rápida de crear o revisar una hoja completa sin editar compás por compás.</p>
+          
+        </div>
+      </div>
+    </section>
+  
+    <section class="slide" data-slide-index="2">
+      <div class="slide-shell">
+        <div class="slide-header">
+          <div>
+            <p class="eyebrow">Paso 2 de 5</p>
+            <h2>Escribir el bloque Sections</h2>
+          </div>
+          <div class="phase-chip">Secciones</div>
+        </div>
+
+        <div class="slide-media">
+          <img src="gifs/step-002.gif" alt="Escribir el bloque Sections" />
+        </div>
+
+        <div class="slide-caption">
+          <p class="slide-text">Empieza por Sections:. Cada línea define una sección y sus compases. Aquí se cargan In, A, B y C, que serán la base del resto de la canción.</p>
+          <pre class="code-block">Sections:
+In=|G|
+A=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|
+B=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|
+C=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|</pre>
+        </div>
+      </div>
+    </section>
+  
+    <section class="slide" data-slide-index="3">
+      <div class="slide-shell">
+        <div class="slide-header">
+          <div>
+            <p class="eyebrow">Paso 3 de 5</p>
+            <h2>Añadir Structure</h2>
+          </div>
+          <div class="phase-chip">Estructura</div>
+        </div>
+
+        <div class="slide-media">
+          <img src="gifs/step-003.gif" alt="Añadir Structure" />
+        </div>
+
+        <div class="slide-caption">
+          <p class="slide-text">Cuando las secciones ya están definidas, añade Structure: para fijar el orden real de interpretación. En este caso la canción sigue In, A, A, B y C.</p>
+          <pre class="code-block">Structure:
+In,A,A,B,C</pre>
+        </div>
+      </div>
+    </section>
+  
+    <section class="slide" data-slide-index="4">
+      <div class="slide-shell">
+        <div class="slide-header">
+          <div>
+            <p class="eyebrow">Paso 4 de 5</p>
+            <h2>Completar Lyrics</h2>
+          </div>
+          <div class="phase-chip">Letras</div>
+        </div>
+
+        <div class="slide-media">
+          <img src="gifs/step-004.gif" alt="Completar Lyrics" />
+        </div>
+
+        <div class="slide-caption">
+          <p class="slide-text">Por último se añade Lyrics:. Cada entrada se queda ligada a una aparición de la sección en la estructura, así que el script ya contiene acordes, orden y texto.</p>
+          <pre class="code-block">Lyrics:
+In=
+A=At the dark end of the street / That&#39;s where we always meet / Hiding in shadows where we don&#39;t belong / Living in darkness to hide our wrong / You and me / At the dark end / Of the street / You and me
+A=I know time is gonna take its toll / We have to pay for the love we stole / It&#39;s a sin, and we know it&#39;s wrong / Oh, but our love keeps coming on strong / Steal away / To the dark end / Of the street
+B=They&#39;re gonna find us / They&#39;re gonna find us / They&#39;re gonna find us, Lord, someday / You and me / At the dark end / Of the street / You and me
+C=And when the daylight hours roll &#39;round / And by chance we&#39;re both downtown / If we should meet, just walk on by / Oh, darling, please, don&#39;t cry / Tonight, we&#39;ll meet / At the dark end / Of the street</pre>
+        </div>
+      </div>
+    </section>
+  
+    <section class="slide" data-slide-index="5">
+      <div class="slide-shell">
+        <div class="slide-header">
+          <div>
+            <p class="eyebrow">Paso 5 de 5</p>
+            <h2>Aplicar el script</h2>
+          </div>
+          <div class="phase-chip">Aplicar</div>
+        </div>
+
+        <div class="slide-media">
+          <img src="gifs/step-005.gif" alt="Aplicar el script" />
+        </div>
+
+        <div class="slide-caption">
+          <p class="slide-text">Pulsa Aplicar para convertir el texto en la canción editable. El editor crea de una vez las secciones, la estructura y las letras a partir del script final.</p>
+          
+        </div>
+      </div>
+    </section>
+  
+    </main>
+
+    <nav class="controls" aria-label="Navegación del tutorial">
+      <button type="button" id="prevBtn">Anterior</button>
+      <div class="counter" id="slideCounter"></div>
+      <button type="button" id="nextBtn">Siguiente</button>
+    </nav>
+
+    <script>
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const counter = document.getElementById("slideCounter");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      let currentIndex = 0;
+
+      function renderSlide() {
+        slides.forEach((slide, index) => {
+          slide.classList.toggle("is-active", index === currentIndex);
+        });
+
+        counter.textContent = (currentIndex + 1) + " / " + slides.length;
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex === slides.length - 1;
+      }
+
+      prevBtn.addEventListener("click", () => {
+        currentIndex = Math.max(0, currentIndex - 1);
+        renderSlide();
+      });
+
+      nextBtn.addEventListener("click", () => {
+        currentIndex = Math.min(slides.length - 1, currentIndex + 1);
+        renderSlide();
+      });
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight") {
+          currentIndex = Math.min(slides.length - 1, currentIndex + 1);
+          renderSlide();
+        }
+        if (event.key === "ArrowLeft") {
+          currentIndex = Math.max(0, currentIndex - 1);
+          renderSlide();
+        }
+      });
+
+      renderSlide();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "title": "Tutorial #1 - Crear una canción con Script",
+    "generatedAt": "2026-03-22T16:28:07.184Z"
+  },
+  "slides": [
+    {
+      "id": "slide-intro",
+      "kind": "intro",
+      "title": "Aprende a crear una canción con Script",
+      "eyebrow": "Group Sheet Editor",
+      "body": "En esta guía verás cómo construir Dark End Of Street desde la función Script, escribiendo primero las secciones, después la estructura y al final las letras.",
+      "logoPath": "../../src/asset/gse_logo_1024x1024.png"
+    },
+    {
+      "id": "step-001",
+      "kind": "step",
+      "title": "Abrir el editor de script",
+      "eyebrow": "Paso 1 de 5",
+      "body": "La vista Script reúne toda la canción en un único texto. Es la forma más rápida de crear o revisar una hoja completa sin editar compás por compás.",
+      "phaseTitle": "Abrir Script",
+      "gifPath": "gifs/step-001.gif",
+      "codeSnippet": ""
+    },
+    {
+      "id": "step-002",
+      "kind": "step",
+      "title": "Escribir el bloque Sections",
+      "eyebrow": "Paso 2 de 5",
+      "body": "Empieza por Sections:. Cada línea define una sección y sus compases. Aquí se cargan In, A, B y C, que serán la base del resto de la canción.",
+      "phaseTitle": "Secciones",
+      "gifPath": "gifs/step-002.gif",
+      "codeSnippet": "Sections:\nIn=|G|\nA=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|\nB=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|\nC=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|"
+    },
+    {
+      "id": "step-003",
+      "kind": "step",
+      "title": "Añadir Structure",
+      "eyebrow": "Paso 3 de 5",
+      "body": "Cuando las secciones ya están definidas, añade Structure: para fijar el orden real de interpretación. En este caso la canción sigue In, A, A, B y C.",
+      "phaseTitle": "Estructura",
+      "gifPath": "gifs/step-003.gif",
+      "codeSnippet": "Structure:\nIn,A,A,B,C"
+    },
+    {
+      "id": "step-004",
+      "kind": "step",
+      "title": "Completar Lyrics",
+      "eyebrow": "Paso 4 de 5",
+      "body": "Por último se añade Lyrics:. Cada entrada se queda ligada a una aparición de la sección en la estructura, así que el script ya contiene acordes, orden y texto.",
+      "phaseTitle": "Letras",
+      "gifPath": "gifs/step-004.gif",
+      "codeSnippet": "Lyrics:\nIn=\nA=At the dark end of the street / That's where we always meet / Hiding in shadows where we don't belong / Living in darkness to hide our wrong / You and me / At the dark end / Of the street / You and me\nA=I know time is gonna take its toll / We have to pay for the love we stole / It's a sin, and we know it's wrong / Oh, but our love keeps coming on strong / Steal away / To the dark end / Of the street\nB=They're gonna find us / They're gonna find us / They're gonna find us, Lord, someday / You and me / At the dark end / Of the street / You and me\nC=And when the daylight hours roll 'round / And by chance we're both downtown / If we should meet, just walk on by / Oh, darling, please, don't cry / Tonight, we'll meet / At the dark end / Of the street"
+    },
+    {
+      "id": "step-005",
+      "kind": "step",
+      "title": "Aplicar el script",
+      "eyebrow": "Paso 5 de 5",
+      "body": "Pulsa Aplicar para convertir el texto en la canción editable. El editor crea de una vez las secciones, la estructura y las letras a partir del script final.",
+      "phaseTitle": "Aplicar",
+      "gifPath": "gifs/step-005.gif",
+      "codeSnippet": ""
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-001",
+      "phaseId": "open-script",
+      "phaseTitle": "Abrir Script",
+      "title": "Abrir el editor de script",
+      "description": "La vista Script reúne toda la canción en un único texto. Es la forma más rápida de crear o revisar una hoja completa sin editar compás por compás.",
+      "gifPath": "gifs/step-001.gif",
+      "codeSnippet": ""
+    },
+    {
+      "id": "step-002",
+      "phaseId": "sections",
+      "phaseTitle": "Secciones",
+      "title": "Escribir el bloque Sections",
+      "description": "Empieza por Sections:. Cada línea define una sección y sus compases. Aquí se cargan In, A, B y C, que serán la base del resto de la canción.",
+      "gifPath": "gifs/step-002.gif",
+      "codeSnippet": "Sections:\nIn=|G|\nA=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|\nB=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|\nC=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|"
+    },
+    {
+      "id": "step-003",
+      "phaseId": "structure",
+      "phaseTitle": "Estructura",
+      "title": "Añadir Structure",
+      "description": "Cuando las secciones ya están definidas, añade Structure: para fijar el orden real de interpretación. En este caso la canción sigue In, A, A, B y C.",
+      "gifPath": "gifs/step-003.gif",
+      "codeSnippet": "Structure:\nIn,A,A,B,C"
+    },
+    {
+      "id": "step-004",
+      "phaseId": "lyrics",
+      "phaseTitle": "Letras",
+      "title": "Completar Lyrics",
+      "description": "Por último se añade Lyrics:. Cada entrada se queda ligada a una aparición de la sección en la estructura, así que el script ya contiene acordes, orden y texto.",
+      "gifPath": "gifs/step-004.gif",
+      "codeSnippet": "Lyrics:\nIn=\nA=At the dark end of the street / That's where we always meet / Hiding in shadows where we don't belong / Living in darkness to hide our wrong / You and me / At the dark end / Of the street / You and me\nA=I know time is gonna take its toll / We have to pay for the love we stole / It's a sin, and we know it's wrong / Oh, but our love keeps coming on strong / Steal away / To the dark end / Of the street\nB=They're gonna find us / They're gonna find us / They're gonna find us, Lord, someday / You and me / At the dark end / Of the street / You and me\nC=And when the daylight hours roll 'round / And by chance we're both downtown / If we should meet, just walk on by / Oh, darling, please, don't cry / Tonight, we'll meet / At the dark end / Of the street"
+    },
+    {
+      "id": "step-005",
+      "phaseId": "apply-script",
+      "phaseTitle": "Aplicar",
+      "title": "Aplicar el script",
+      "description": "Pulsa Aplicar para convertir el texto en la canción editable. El editor crea de una vez las secciones, la estructura y las letras a partir del script final.",
+      "gifPath": "gifs/step-005.gif",
+      "codeSnippet": ""
+    }
+  ]
+}

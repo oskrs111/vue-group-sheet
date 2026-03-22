@@ -47,6 +47,10 @@
       />
     </button>
     <div style="height: 1px; background: var(--ui-border); width: 80%; margin: 8px auto;"></div>
+    <button @click="openScriptDialog" title="Script" class="toolbar-btn">
+      <span class="material-icons">code</span>
+      <span class="btn-label">Script</span>
+    </button>
     <button @click="openSettings" title="Configuración" class="toolbar-btn">
       <span class="material-icons">settings</span>
       <span class="btn-label">Ajustes</span>
@@ -133,6 +137,55 @@
       </div>
     </Teleport>
     
+    <!-- Modal Script -->
+    <Teleport to="#modal-container">
+      <div v-if="showScriptDialog" class="modal-overlay" @click.self="closeScriptDialog">
+        <div class="modal-content script-modal">
+          <div class="modal-header">Script</div>
+          <div class="modal-body script-modal-body">
+            <div class="script-editor">
+              <div class="script-line-numbers" aria-hidden="true">
+                <div
+                  class="script-line-numbers-inner"
+                  :style="{ transform: `translateY(-${scriptScrollTop}px)` }"
+                >
+                  <div
+                    v-for="lineNumber in scriptLineNumbers"
+                    :key="lineNumber"
+                    class="script-line-number"
+                    :class="{ 'is-error': scriptErrorLine === lineNumber }"
+                  >
+                    {{ lineNumber }}
+                  </div>
+                </div>
+              </div>
+              <textarea
+              ref="scriptTextareaRef"
+              v-model="scriptText"
+              class="script-textarea"
+              placeholder="Escribe tu script aquí..."
+              spellcheck="false"
+              wrap="off"
+              @input="handleScriptInput"
+              @scroll="syncScriptGutterScroll"
+            ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div
+              v-if="scriptValidationMessage"
+              class="modal-footer-message script-error-message"
+              aria-live="polite"
+            >
+              {{ scriptValidationMessage }}
+            </div>
+            <button class="secondary" @click="closeScriptDialog">Cancelar</button>
+            <button class="primary" @click="applyScript">Aplicar</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <Teleport to="#modal-container">
       <SettingsModal v-if="showSettings" @close="showSettings = false"></SettingsModal>
       <HelpModal v-if="showHelp" @close="showHelp = false" />
@@ -228,7 +281,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import { useCollectionStore } from '../stores/collectionStore'
 import SettingsModal from './SettingsModal.vue'
@@ -239,6 +292,7 @@ import md5 from 'md5'
 import HelpModal from './HelpModal.vue'
 import { useNotificationStore } from '../stores/notificationStore'
 import ConfirmDialog from './UI/ConfirmDialog.vue'
+import { generateScript, parseScript } from '../utils/ScriptEngine.js'
 
 const store = useSheetStore()
 const collectionStore = useCollectionStore()
@@ -249,6 +303,13 @@ const showSaveDialog = ref(false)
 const showLoadDialog = ref(false)
 const showImportModal = ref(false)
 const showExportModal = ref(false)
+const showScriptDialog = ref(false)
+const scriptText = ref('')
+const scriptValidationMessage = ref('')
+const scriptErrorLine = ref(null)
+const scriptScrollTop = ref(0)
+const scriptTextareaRef = ref(null)
+const hasAttemptedScriptValidation = ref(false)
 const selectedSongId = ref(null)
 const songName = ref('')
 const fileInput = ref(null)
@@ -304,6 +365,147 @@ const openSettings = () => {
 const openHelp = () => {
   showHelp.value = true
 }
+
+const openScriptDialog = () => {
+  // Generate script from current song state
+  try {
+    scriptText.value = generateScript({
+      body: store.body,
+      structure: store.structure,
+    })
+  } catch (e) {
+    console.error('Error generating script:', e)
+    scriptText.value = '// Error generando el script: ' + e.message
+  }
+
+  resetScriptValidation()
+  showScriptDialog.value = true
+  nextTick(() => {
+    scriptTextareaRef.value?.focus()
+    syncScriptGutterScroll()
+  })
+}
+
+const closeScriptDialog = () => {
+  resetScriptValidation()
+  showScriptDialog.value = false
+}
+
+const resetScriptValidation = () => {
+  scriptValidationMessage.value = ''
+  scriptErrorLine.value = null
+  scriptScrollTop.value = 0
+  hasAttemptedScriptValidation.value = false
+}
+
+const scriptLineNumbers = computed(() => {
+  const lineCount = Math.max(scriptText.value.split('\n').length, 1)
+  return Array.from({ length: lineCount }, (_, index) => index + 1)
+})
+
+const syncScriptGutterScroll = () => {
+  scriptScrollTop.value = scriptTextareaRef.value?.scrollTop || 0
+}
+
+const focusScriptErrorLine = (lineNumber) => {
+  const textarea = scriptTextareaRef.value
+  if (!textarea || !lineNumber) return
+
+  const lines = scriptText.value.split('\n')
+  const safeLineNumber = Math.min(Math.max(lineNumber, 1), Math.max(lines.length, 1))
+  const selectionStart = lines
+    .slice(0, safeLineNumber - 1)
+    .reduce((total, line) => total + line.length + 1, 0)
+  const lineText = lines[safeLineNumber - 1] || ''
+  const lineHeight = Number.parseFloat(window.getComputedStyle(textarea).lineHeight) || 20
+
+  textarea.focus()
+  textarea.setSelectionRange(selectionStart, selectionStart + lineText.length)
+  textarea.scrollTop = Math.max(0, (safeLineNumber - 2) * lineHeight)
+  syncScriptGutterScroll()
+}
+
+const validateScriptText = ({ scrollToError = false } = {}) => {
+  try {
+    const patch = parseScript(scriptText.value, {
+      body: store.body,
+      structure: store.structure,
+    })
+
+    scriptValidationMessage.value = ''
+    scriptErrorLine.value = null
+    return patch
+  } catch (e) {
+    console.error('Error parsing script:', e)
+    scriptValidationMessage.value = e.message || 'El script contiene errores de formato.'
+    scriptErrorLine.value = Number.isFinite(e.lineNumber) ? e.lineNumber : null
+
+    if (scrollToError && scriptErrorLine.value) {
+      nextTick(() => focusScriptErrorLine(scriptErrorLine.value))
+    }
+
+    return null
+  }
+}
+
+const handleScriptInput = () => {
+  if (!hasAttemptedScriptValidation.value) {
+    scriptValidationMessage.value = ''
+    scriptErrorLine.value = null
+    return
+  }
+
+  validateScriptText()
+}
+
+const applyScript = () => {
+  hasAttemptedScriptValidation.value = true
+  const patch = validateScriptText({ scrollToError: true })
+  if (!patch) return
+
+  try {
+    store.importData({
+      header: store.header,
+      body: patch.body,
+      structure: patch.structure,
+      notes: store.notes,
+      settings: store.settings,
+    }, {
+      operation: 'Aplicar script'
+    })
+    closeScriptDialog()
+    notification.addToast('Script aplicado — Ctrl+Z para deshacer', 'success')
+  } catch (e) {
+    console.error('Error applying script:', e)
+    scriptValidationMessage.value = e.message || 'No se pudo aplicar el script.'
+    notification.addToast('Error en el script: ' + e.message, 'error')
+  }
+}
+
+const isTypingTarget = () => {
+  const activeElement = document.activeElement
+  const tagName = activeElement?.tagName?.toLowerCase()
+
+  return activeElement?.isContentEditable || tagName === 'input' || tagName === 'textarea' || tagName === 'select'
+}
+
+const handleGlobalKeydown = (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey && !isTypingTarget() && store.undoHistory.length > 0) {
+    e.preventDefault()
+    const undoneEntry = store.undoLastChange()
+    if (undoneEntry) {
+      notification.addToast(`Deshecho: ${undoneEntry.operation}`, 'info')
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown)
+})
 
 const songsList = computed(() => store.getSongsList())
 
@@ -919,6 +1121,3 @@ const exportMusicXML = async () => {
   }
 }
 </script>
-
-
-

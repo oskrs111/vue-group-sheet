@@ -6,6 +6,20 @@
         Guía de Usuario - Group Sheet Editor
       </div>
       <div class="modal-body help-body">
+        <section class="help-section tutorial-links">
+          <h3><span class="material-icons">school</span> Tutoriales</h3>
+          <p>Guías paso a paso para aprender flujos completos de edición sin perderte en la interfaz.</p>
+          <a
+            class="tutorial-link"
+            :href="tutorialScriptHref"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span class="material-icons">slideshow</span>
+            Tutorial #1: Crear una canción con Script
+          </a>
+        </section>
+
         <section class="help-section">
           <h3><span class="material-icons">architecture</span> Conceptos Básicos</h3>
           <p>Esta aplicación es un editor WYSIWYG (lo que ves es lo que tienes) diseñado para crear <strong>hojas de ruta musicales</strong> en formato A4 (210x297mm).</p>
@@ -48,11 +62,68 @@
             <li><strong>EPUB:</strong> Optimizado para lectores electrónicos tipo Kindle.</li>
             <li><strong>Biblioteca y Backup:</strong> Todas las canciones se guardan automáticamente en tu navegador. Usa "Exportar Todo" para descargar un archivo de respaldo (.json) y "Cargar Backup" para recuperarlo en otro dispositivo.</li>
           </ul>
+        </section>        <section class="help-section script-help">
+          <h3><span class="material-icons">code</span> Modo Script (Modo Experto)</h3>
+          <p>El modo Script permite representar y editar toda la canción (Acordes, Estructura y Letras) mediante un bloque de texto plano. Es la herramienta más potente para realizar cambios estructurales masivos.</p>
+          
+          <div class="help-subsection">
+            <h4>1. Bloque de Secciones (<code>Sections:</code>)</h4>
+            <p>Define el contenido rítmico y armónico de cada sección. Formato: <code>ID = |compás1|compás2|...|</code></p>
+            <div class="syntax-ref">
+              <ul>
+                <li><strong>Barras <code>|</code>:</strong> Delimitan un compás.</li>
+                <li><strong>Comas <code>,</code>:</strong> Separan acordes dentro de un compás.</li>
+                <li><strong>Duraciones (Puntos):</strong>
+                  <div class="duration-table">
+                    <span><code>C</code> Redonda</span>
+                    <span><code>C..</code> Blanca</span>
+                    <span><code>C.</code> Negra</span>
+                    <span><code>C...</code> Blanca con puntillo</span>
+                  </div>
+                </li>
+                <li><strong>Símbolos Especiales:</strong>
+                  <ul>
+                    <li><code>%</code> : Repite el acorde anterior.</li>
+                    <li><code>_</code> : Silencio (Rest).</li>
+                    <li><code>/</code> : Salto de línea visual en la partitura.</li>
+                    <li><code>xN</code> : Repeticiones al final de la línea (ej. <code>x2</code>).</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="help-subsection">
+            <h4>2. Bloque de Estructura (<code>Structure:</code>)</h4>
+            <p>Lista de IDs de sección separados por comas que define el orden de la canción.</p>
+            <p>Ejemplo: <code>INTRO, ESTROFA, CORO, / , ESTROFA, CORO, FIN</code> (El símbolo <code>/</code> inserta un salto de línea).</p>
+          </div>
+
+          <div class="help-subsection">
+            <h4>3. Bloque de Letras (<code>Lyrics:</code>)</h4>
+            <p>Define el texto literario asignado a cada aparición de una sección en la estructura.</p>
+            <p>Formato: <code>ID = Texto</code>. Si una sección se repite varias veces en la estructura, el sistema consumirá las definiciones de letra en orden correlativo.</p>
+          </div>
+
+          <div class="script-example-box">
+            <div class="example-header">Ejemplo completo de Script:</div>
+<pre><code>Sections:
+CORO = |C,G..|Am,F..|%|/|x2
+
+Structure:
+CORO, CORO
+
+Lyrics:
+CORO = Letra de la primera vuelta.
+CORO = Letra de la segunda con variación.</code></pre>
+          </div>
         </section>
 
         <section class="help-section shortcuts">
           <h3><span class="material-icons">keyboard</span> Atajos de Teclado</h3>
           <div class="shortcut-grid">
+            <span class="key">Ctrl + Z</span> <span>Deshacer cambios</span>
+            <span class="key">Ctrl + V</span> <span>Pegar compás (en editor)</span>
             <span class="key">Ctrl + S</span> <span>Guardar canción</span>
             <span class="key">Ctrl + P</span> <span>Exportar PDF</span>
             <span class="key">Esc</span> <span>Cerrar modales</span>
@@ -68,6 +139,7 @@
 
 <script setup>
 const emit = defineEmits(['close'])
+const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tutorial.html', window.location.href).href
 </script>
 
 <style scoped>
@@ -93,6 +165,10 @@ const emit = defineEmits(['close'])
   margin-bottom: 25px;
 }
 
+.tutorial-links {
+  margin-bottom: 28px;
+}
+
 .help-section h3 {
   display: flex;
   align-items: center;
@@ -108,10 +184,109 @@ const emit = defineEmits(['close'])
   font-size: 22px;
 }
 
+.help-subsection {
+  margin-top: 15px;
+  padding-left: 10px;
+}
+
+.help-subsection h4 {
+  color: var(--ui-text-primary);
+  margin-bottom: 8px;
+  font-size: 1rem;
+  border-left: 3px solid var(--ui-accent);
+  padding-left: 10px;
+}
+
+.syntax-ref {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.duration-table {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.duration-table span {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ui-text-primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.duration-table code {
+  color: var(--ui-accent-hover);
+  font-family: 'Geist Mono', monospace;
+  font-weight: bold;
+}
+
+.script-example-box {
+  margin-top: 20px;
+  background: #1e1e24;
+  border-radius: 8px;
+  border: 1px solid var(--ui-border);
+  overflow: hidden;
+}
+
+.example-header {
+  background: var(--ui-bg-surface);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--ui-accent);
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.script-example-box pre {
+  margin: 0;
+  padding: 15px;
+  overflow-x: auto;
+}
+
+.script-example-box code {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.9rem;
+  color: #d1d5db;
+  line-height: 1.5;
+}
+
 .help-section p {
   line-height: 1.6;
   color: var(--ui-text-primary);
   margin-bottom: 10px;
+}
+
+.tutorial-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ui-accent);
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.tutorial-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.tutorial-link .material-icons {
+  font-size: 20px;
 }
 
 .help-section ul {

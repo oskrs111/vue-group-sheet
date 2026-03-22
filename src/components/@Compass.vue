@@ -1,185 +1,171 @@
 <template>
-  <!-- Normal or Repeat Compass -->
-  <div 
-    v-if="!isSpaceCompass" 
+  <div
+    v-if="!isSpaceCompass"
     class="compass-box editable-container"
-    :class="{ 'selected': isCompassSelected }"
+    :class="{ selected: isCompassSelected }"
     @click.stop="selectCompass"
   >
     <div class="compass-header">
-      <button @click.stop="showEditModal = true" class="compass-edit-btn">
-        <span class="material-icons">edit</span>
-      </button>
       <button @click.stop="copyCompass" class="compass-copy-btn" title="Copiar compás">
         <span class="material-icons">content_copy</span>
       </button>
-      <button @click.stop="showDeleteModal = true" class="delete-btn-small">
-        <span class="material-icons">close</span>
-      </button>
     </div>
-    
+
     <div class="chords-display" v-if="!isRepeatCompass">
-      <ChordComponent 
+      <ChordComponent
         v-for="(chord, index) in compass.chords"
         :key="index"
         :chord="chord"
       />
     </div>
-    
-    <div class="repeat-symbol" v-else-if="isRepeatCompass">
+
+    <div class="repeat-symbol" v-else>
       %
     </div>
   </div>
 
-  <!-- Break Compass -->
   <template v-else>
-    <div 
-      class="compass-break-filler" 
-      :class="{ 'selected': isCompassSelected }"
+    <div
+      class="compass-break-filler"
+      :class="{ selected: isCompassSelected }"
       @click.stop="selectCompass"
-      @dblclick.stop="showEditModal = true"
     >
       <div class="break-display">
-        <span class="break-label">Salto de Línea</span>
+        <span class="break-label">Salto de línea</span>
       </div>
-      
-      <!-- Hidden Controls for Break (appear on hover/click?) or just click to edit -->
-       <div class="compass-header static-visible">
-          <button @click.stop="showEditModal = true" class="compass-edit-btn">
-            <span class="material-icons">edit</span>
-          </button>
-          <button @click.stop="showDeleteModal = true" class="delete-btn-small">
-            <span class="material-icons">close</span>
-          </button>
-       </div>
+
+      <div class="compass-header">
+        <button @click.stop="copyCompass" class="compass-copy-btn" title="Copiar compás">
+          <span class="material-icons">content_copy</span>
+        </button>
+      </div>
     </div>
     <div class="compass-break-force"></div>
   </template>
 
-  <!-- Shared Modals -->
   <Teleport to="#modal-container">
     <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
       <div class="modal-content modal-compass-edit">
-      <div class="modal-header">Editar Compás</div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Tipo de Compás:</label>
-          <div class="radio-group">
-            <label class="radio-option">
-              <input 
-                type="radio" 
-                v-model="compassType" 
-                value="normal"
-                @change="handleCompassTypeChange"
-              />
-              <span>Normal</span>
-            </label>
-            <label class="radio-option">
-              <input 
-                type="radio" 
-                v-model="compassType" 
-                value="repeat"
-                @change="handleCompassTypeChange"
-              />
-              <span>Repetición (%)</span>
-            </label>
-            <label class="radio-option">
-              <input 
-                type="radio" 
-                v-model="compassType" 
-                value="space"
-                @change="handleCompassTypeChange"
-              />
-              <span>Salto de línea</span>
-            </label>
-          </div>
-        </div>
-        
-        <div v-if="compassType === 'normal'" class="chords-container">
-          <div v-for="(chord, idx) in localChords" :key="idx" class="chord-editor">
-            <div class="form-group">
-              <div class="chord-label-row">
-                <label>Acorde {{ idx + 1 }}:</label>
-                <label class="checkbox-label">
-                  <input 
-                    type="checkbox" 
-                    :checked="chord.chord === 'REST'" 
-                    @change="toggleRest(idx, $event)"
-                  />
-                  <span>Silencio</span>
-                </label>
-              </div>
-              
-              <div v-if="chord.chord !== 'REST'" class="input-with-help">
-                <input 
-                  type="text" 
-                  v-model="chord.chord"
-                  @input="validateChord(idx)"
-                  placeholder="Ej: C, Dm"
-                  class="chord-input"
+        <div class="modal-header">Editar Compás</div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Tipo de Compás:</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  v-model="compassType"
+                  value="normal"
+                  @change="handleCompassTypeChange"
                 />
-                <button class="help-btn" @click="showHelpModal = true" title="Ver caracteres permitidos">
-                  <span class="material-icons">help_outline</span>
-                </button>
-              </div>
-              <div v-else class="rest-placeholder">
-                Silencio musical
-              </div>
-              
-              <small v-if="chordErrors[idx]" class="error-text">
-                {{ chordErrors[idx] }}
-              </small>
+                <span>Normal</span>
+              </label>
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  v-model="compassType"
+                  value="repeat"
+                  @change="handleCompassTypeChange"
+                />
+                <span>Repetición (%)</span>
+              </label>
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  v-model="compassType"
+                  value="space"
+                  @change="handleCompassTypeChange"
+                />
+                <span>Salto de línea</span>
+              </label>
             </div>
-            <div class="form-group">
-              <label>Duración:</label>
-              <div class="radio-group duration-radio-group">
-                <label class="radio-option">
-                  <input type="radio" v-model.number="chord.div" :value="1" />
-                  <span>𝅝 Redonda</span>
-                </label>
-                <label class="radio-option">
-                  <input type="radio" v-model.number="chord.div" :value="5" />
-                  <span>𝅗𝅥. Blanca p.</span>
-                </label>
-                <label class="radio-option">
-                  <input type="radio" v-model.number="chord.div" :value="2" />
-                  <span>𝅗𝅥 Blanca</span>
-                </label>
-                <label class="radio-option">
-                  <input type="radio" v-model.number="chord.div" :value="3" />
-                  <span>♩ Negra</span>
-                </label>
+          </div>
+
+          <div v-if="compassType === 'normal'" class="chords-container">
+            <div v-for="(chord, idx) in localChords" :key="idx" class="chord-editor">
+              <div class="form-group">
+                <div class="chord-label-row">
+                  <label>Acorde {{ idx + 1 }}:</label>
+                  <label class="checkbox-label">
+                    <input
+                      type="checkbox"
+                      :checked="chord.chord === 'REST'"
+                      @change="toggleRest(idx, $event)"
+                    />
+                    <span>Silencio</span>
+                  </label>
+                </div>
+
+                <div v-if="chord.chord !== 'REST'" class="input-with-help">
+                  <input
+                    type="text"
+                    v-model="chord.chord"
+                    @input="validateChord(idx)"
+                    placeholder="Ej: C, Dm"
+                    class="chord-input"
+                  />
+                  <button class="help-btn" @click="showHelpModal = true" title="Ver caracteres permitidos">
+                    <span class="material-icons">help_outline</span>
+                  </button>
+                </div>
+                <div v-else class="rest-placeholder">
+                  Silencio musical
+                </div>
+
+                <small v-if="chordErrors[idx]" class="error-text">
+                  {{ chordErrors[idx] }}
+                </small>
               </div>
+              <div class="form-group">
+                <label>Duración:</label>
+                <div class="radio-group duration-radio-group">
+                  <label class="radio-option">
+                    <input type="radio" v-model.number="chord.div" :value="1" />
+                    <span>Redonda</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" v-model.number="chord.div" :value="5" />
+                    <span>Blanca p.</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" v-model.number="chord.div" :value="2" />
+                    <span>Blanca</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" v-model.number="chord.div" :value="3" />
+                    <span>Negra</span>
+                  </label>
+                </div>
+              </div>
+              <button @click="removeChord(idx)" class="delete-btn-small" title="Eliminar acorde">
+                <span class="material-icons">close</span>
+              </button>
             </div>
-            <button @click="removeChord(idx)" class="delete-btn-small" title="Eliminar acorde">
-              <span class="material-icons">close</span>
+            <button @click="addChord" class="add-btn" title="Añadir acorde">
+              <span class="material-icons">add</span>
             </button>
           </div>
-          <button @click="addChord" class="add-btn" title="Añadir acorde">
-            <span class="material-icons">add</span>
-          </button>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary" @click="showEditModal = false">Cancelar</button>
+          <button class="primary" @click="save">Guardar</button>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="secondary" @click="showEditModal = false">Cancelar</button>
-        <button class="primary" @click="save">Guardar</button>
-      </div>
-    </div>
     </div>
   </Teleport>
-  
+
   <Teleport to="#modal-container">
     <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
-    <div class="modal-content">
-      <div class="modal-header">Confirmar Eliminación</div>
-      <div class="modal-body">
-        <p>¿Está seguro de que desea eliminar este compás?</p>
+      <div class="modal-content">
+        <div class="modal-header">Confirmar Eliminación</div>
+        <div class="modal-body">
+          <p>¿Está seguro de que desea eliminar este compás?</p>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
+          <button class="primary" @click="confirmDelete">Eliminar</button>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
-        <button class="primary" @click="confirmDelete">Eliminar</button>
-      </div>
-    </div>
     </div>
   </Teleport>
 
@@ -206,7 +192,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import ChordComponent from './@Chord.vue'
 
@@ -220,11 +206,25 @@ const store = useSheetStore()
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const showHelpModal = ref(false)
-const localChords = ref(JSON.parse(JSON.stringify(props.compass.chords)))
+const localChords = ref([])
 const chordErrors = ref({})
+const compassType = ref('normal')
 
-// Caracteres permitidos para el acorde
 const allowedChars = /^[CDEFGABMmb#7913sus24altdimag/\\+oø-]*$/
+
+const getCompassType = (chords = []) => {
+  if (chords.length === 1 && chords[0].chord === 'R') return 'repeat'
+  if (chords.length === 1 && chords[0].chord === 'S') return 'space'
+  return 'normal'
+}
+
+const syncLocalState = () => {
+  localChords.value = JSON.parse(JSON.stringify(props.compass.chords))
+  chordErrors.value = {}
+  compassType.value = getCompassType(props.compass.chords)
+}
+
+watch(() => props.compass.chords, syncLocalState, { deep: true, immediate: true })
 
 const isRepeatCompass = computed(() => {
   return props.compass.chords.length === 1 && props.compass.chords[0].chord === 'R'
@@ -235,16 +235,23 @@ const isSpaceCompass = computed(() => {
 })
 
 const isCompassSelected = computed(() => {
-  return store.selectedCompass 
-    && store.selectedCompass.sIndex === props.sectionIndex 
-    && store.selectedCompass.cIndex === props.compassIndex
+  return store.selectedCompass &&
+    store.selectedCompass.sIndex === props.sectionIndex &&
+    store.selectedCompass.cIndex === props.compassIndex
 })
 
 const selectCompass = () => {
   store.setSelectedCompass(props.sectionIndex, props.compassIndex)
 }
 
-const compassType = ref(isRepeatCompass.value ? 'repeat' : (isSpaceCompass.value ? 'space' : 'normal'))
+const openEditModal = () => {
+  syncLocalState()
+  showEditModal.value = true
+}
+
+const openDeleteModal = () => {
+  showDeleteModal.value = true
+}
 
 const toggleRest = (index, event) => {
   const isChecked = event.target.checked
@@ -259,24 +266,20 @@ const toggleRest = (index, event) => {
 const validateChord = (index) => {
   const chord = localChords.value[index]
   const chordString = chord.chord || ''
-  
+
   if (chordString === 'REST') return
-  
-  // Validar caracteres permitidos
+
   if (!allowedChars.test(chordString)) {
     chordErrors.value[index] = 'Caracteres no válidos detectados'
-    // Eliminar caracteres no permitidos
     chord.chord = chordString.replace(/[^CDEFGABMmb#7913sus24altdimag/\\+oø-]/g, '')
     return
   }
-  
-  // Validar que el primer carácter sea una nota (C,D,E,F,G,A,B)
+
   if (chordString.length > 0 && !/^[CDEFGAB]/.test(chordString)) {
     chordErrors.value[index] = 'El primer carácter debe ser una nota (C,D,E,F,G,A,B)'
     return
   }
-  
-  // Limpiar error si todo está bien
+
   delete chordErrors.value[index]
 }
 
@@ -285,23 +288,19 @@ const handleCompassTypeChange = () => {
     localChords.value = [{ chord: 'R' }]
   } else if (compassType.value === 'space') {
     localChords.value = [{ chord: 'S' }]
-  } else {
-    // Si viene de otro tipo y no tiene acordes normales, reiniciar a C
-    if (localChords.value[0].chord === 'R' || localChords.value[0].chord === 'S') {
-      localChords.value = [{ chord: 'C', div: 1 }]
-    }
+  } else if (!localChords.value.length || localChords.value[0].chord === 'R' || localChords.value[0].chord === 'S') {
+    localChords.value = [{ chord: 'C', div: 1 }]
   }
+
   chordErrors.value = {}
 }
 
 const save = () => {
-  // Validar que no haya errores antes de guardar
-  const hasErrors = Object.keys(chordErrors.value).length > 0
-  if (hasErrors) {
+  if (Object.keys(chordErrors.value).length > 0) {
     alert('Por favor, corrija los errores antes de guardar')
     return
   }
-  
+
   store.updateCompass(props.sectionIndex, props.compassIndex, localChords.value)
   showEditModal.value = false
 }
@@ -323,6 +322,12 @@ const confirmDelete = () => {
 const copyCompass = () => {
   store.copyCompass(props.sectionIndex, props.compassIndex)
 }
+
+defineExpose({
+  openEditModal,
+  openDeleteModal,
+  copyCompass
+})
 </script>
 
 <style scoped>
@@ -347,38 +352,8 @@ const copyCompass = () => {
   left: 2px;
   right: 2px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   pointer-events: none;
-  flex-flow: wrap;
-}
-
-.static-visible {
-  pointer-events: auto;
-}
-
-.compass-edit-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 2px;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-}
-
-.compass-box:hover .compass-edit-btn,
-.compass-break-filler:hover .compass-edit-btn {
-  opacity: 0.6;
-}
-
-.compass-edit-btn:hover {
-  opacity: 1 !important;
-  color: #1976d2;
 }
 
 .compass-copy-btn {
@@ -396,35 +371,14 @@ const copyCompass = () => {
   pointer-events: auto;
 }
 
-.compass-box:hover .compass-copy-btn {
+.compass-box:hover .compass-copy-btn,
+.compass-break-filler:hover .compass-copy-btn {
   opacity: 0.6;
 }
 
 .compass-copy-btn:hover {
   opacity: 1 !important;
   color: #1976d2;
-}
-
-.compass-header .delete-btn-small {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 2px;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: auto;
-}
-
-.compass-box:hover .compass-header .delete-btn-small,
-.compass-break-filler:hover .delete-btn-small {
-  opacity: 0.6;
-}
-
-.compass-header .delete-btn-small:hover {
-  opacity: 1 !important;
-  color: red;
 }
 
 .chords-display {
@@ -437,7 +391,7 @@ const copyCompass = () => {
 }
 
 .repeat-symbol {
-    padding-top: 22px;
+  padding-top: 22px;
   font-size: 28px;
   font-weight: bold;
   text-align: center;
@@ -447,11 +401,10 @@ const copyCompass = () => {
   justify-content: center;
 }
 
-/* Break Implementation Styles */
 .compass-break-filler {
   flex-grow: 1;
   min-width: 0;
-  height: 50px; /* Match approximately compass-box height */
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -481,7 +434,6 @@ const copyCompass = () => {
   white-space: nowrap;
 }
 
-/* Modals */
 .modal-compass-edit {
   max-width: 90vw;
   max-height: 90vh;
@@ -535,7 +487,7 @@ const copyCompass = () => {
 
 .chord-input:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: #4caf50;
 }
 
 .input-with-help {
@@ -565,16 +517,6 @@ const copyCompass = () => {
   font-size: 20px;
 }
 
-.allowed-chars {
-  font-family: monospace;
-  font-size: 16px;
-  background: #f5f5f5;
-  padding: 12px;
-  border-radius: 4px;
-  margin-top: 8px;
-  word-break: break-all;
-}
-
 .error-text {
   display: block;
   margin-top: 4px;
@@ -601,7 +543,7 @@ const copyCompass = () => {
 
 .radio-option:hover {
   background-color: #f5f5f5;
-  border-color: #4CAF50;
+  border-color: #4caf50;
 }
 
 .radio-option input[type="radio"] {
@@ -612,7 +554,7 @@ const copyCompass = () => {
 
 .radio-option input[type="radio"]:checked + span {
   font-weight: bold;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .duration-radio-group {

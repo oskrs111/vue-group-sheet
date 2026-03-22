@@ -1,0 +1,26 @@
+{
+  "name": "vue-group-sheet-tutorial",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "node ../node_modules/vite/bin/vite.js",
+    "build": "node ../node_modules/vite/bin/vite.js build",
+    "preview": "node ../node_modules/vite/bin/vite.js preview",
+    "tutorial:run": "node ./run-agent.mjs --config ./config/example.config.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ffmpeg-static": "^5.2.0",
+    "openai": "^4.103.0",
+    "playwright": "^1.52.0",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.1.6"
+  }
+}

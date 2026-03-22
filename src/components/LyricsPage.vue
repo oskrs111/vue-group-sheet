@@ -1,6 +1,6 @@
 <template>
-  <div 
-    id="lyrics-page" 
+  <div
+    id="lyrics-page"
     class="lyrics-page"
     :class="isLyricsOverflowing ? 'out-of-bounds' : 'in-bounds'"
     ref="lyricsPageRef"
@@ -8,45 +8,41 @@
     <div class="lyrics-header">
       <h4>{{ store.header.center.top.name || 'Sin Título' }} - {{ store.header.center.bottom.author || 'Desconocido' }}</h4>
     </div>
-    
+
     <div class="lyrics-content">
       <template v-for="(item, index) in store.structure" :key="index">
-        <div 
+        <div
           v-if="!item.isBreak"
           class="lyrics-wrapper"
         >
-        <!-- Left Side: Structure ID -->
-        <div 
-          class="lyrics-id-container"
-          :style="{ 
-            backgroundColor: item.b_color, 
-            color: item.f_color,
-            borderRadius: item.shape === 'C' ? '40px' : '0'
-          }"
-        >
-          <span class="lyrics-id">{{ item.id }}</span>
-          <div class="lyrics-footer">
-            <span>{{ index + 1 }}</span>
-          </div>
-        </div>
-
-        <!-- Right Side: Content -->
-        <div class="lyrics-text-container">
-          <!-- View Mode -->
-          <div class="lyrics-view">
-            <div class="lyrics-text-display">
-              <pre class="lyrics-pre">{{ getLyricText(item.lyric) || '(Sin letra)' }}</pre>
+          <div
+            class="lyrics-id-container"
+            :style="{
+              backgroundColor: item.b_color,
+              color: item.f_color,
+              borderRadius: item.shape === 'C' ? '40px' : '0'
+            }"
+          >
+            <span class="lyrics-id">{{ item.id }}</span>
+            <div class="lyrics-footer">
+              <span>{{ index + 1 }}</span>
             </div>
-            <button class="lyrics-edit-btn" @click="startEditing(index, item.lyric)" title="Editar letra">
-              <span class="material-icons">edit</span>
-            </button>
+          </div>
+
+          <div class="lyrics-text-container">
+            <div class="lyrics-view">
+              <div class="lyrics-text-display">
+                <pre class="lyrics-pre">{{ getLyricText(item.lyric) || '(Sin letra)' }}</pre>
+              </div>
+              <button class="lyrics-edit-btn" @click="startEditing(index, item.lyric)" title="Editar letra">
+                <span class="material-icons">edit</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       </template>
     </div>
 
-    <!-- Export Footer -->
     <div v-if="store.exportFooterData" class="export-footer">
       <div class="footer-left">
         {{ store.exportFooterData.current }} / {{ store.exportFooterData.total }}
@@ -57,23 +53,31 @@
         </span>
       </div>
     </div>
-    
-    <!-- Lyrics Edit Modal -->
+
     <Teleport to="#modal-container">
       <div v-if="editingIndex !== -1" class="modal-overlay" @click.self="cancelEditing">
         <div class="modal-content lyrics-edit-modal">
           <div class="modal-header">Editar Letra - {{ store.structure[editingIndex]?.id }}</div>
           <div class="modal-body lyrics-modal-body">
-            <textarea 
-              v-model="editingText" 
+            <textarea
+              v-model="editingText"
               class="lyrics-modal-textarea"
               placeholder="Escribe la letra aquí..."
               ref="editTextarea"
             ></textarea>
           </div>
-          <div class="modal-footer">
-            <button class="secondary" @click="cancelEditing">Cancelar</button>
-            <button class="primary" @click="saveLyric(editingIndex)">Guardar</button>
+          <div class="modal-footer lyrics-edit-footer">
+            <button
+              class="secondary lyrics-format-btn"
+              title="Reemplazar saltos de línea por ' \\ ' (Ctrl+F)"
+              @click="formatEditingText"
+            >
+              Formatear
+            </button>
+            <div class="lyrics-edit-footer-actions">
+              <button class="secondary" @click="cancelEditing">Cancelar</button>
+              <button class="primary" @click="saveLyric(editingIndex)">Guardar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -82,7 +86,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onUnmounted } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 
 const store = useSheetStore()
@@ -93,26 +97,25 @@ const lyricsPageRef = ref(null)
 
 const isLyricsOverflowing = ref(false)
 
-// 297mm (1122.5px) + 40px de padding total + margen de error = 1167.5px
-const MAX_A4_HEIGHT_PX = 1167.5 
+const MAX_A4_HEIGHT_PX = 1167.5
 let resizeObserver = null
 
-// Base64 Helpers for Unicode support
 const toBase64 = (str) => {
   try {
     return window.btoa(unescape(encodeURIComponent(str)))
-  } catch (e) {
-    console.error('Error encoding to base64', e)
+  } catch (error) {
+    console.error('Error encoding to base64', error)
     return ''
   }
 }
 
 const fromBase64 = (str) => {
   if (!str) return ''
+
   try {
     return decodeURIComponent(escape(window.atob(str)))
-  } catch (e) {
-    console.error('Error decoding from base64', e)
+  } catch (error) {
+    console.error('Error decoding from base64', error)
     return ''
   }
 }
@@ -121,13 +124,16 @@ const getLyricText = (b64) => {
   return fromBase64(b64)
 }
 
+const formatEditingText = () => {
+  editingText.value = editingText.value.replace(/\r?\n/g, ' \\ ')
+}
+
 const startEditing = (index, currentB64) => {
   editingIndex.value = index
   editingText.value = fromBase64(currentB64)
+
   nextTick(() => {
-    if (editTextarea.value) {
-      editTextarea.value[0]?.focus()
-    }
+    editTextarea.value?.focus()
   })
 }
 
@@ -143,27 +149,41 @@ const saveLyric = (index) => {
   editingText.value = ''
 }
 
+const handleKeyDown = (event) => {
+  if (editingIndex.value === -1 || !(event.ctrlKey || event.metaKey)) {
+    return
+  }
+
+  if (event.key.toLowerCase() === 'f') {
+    event.preventDefault()
+    formatEditingText()
+  }
+}
+
 onMounted(() => {
   if (lyricsPageRef.value) {
     resizeObserver = new ResizeObserver(entries => {
-      for (let entry of entries) {
-         const rect = entry.target.getBoundingClientRect()
-         isLyricsOverflowing.value = rect.height > MAX_A4_HEIGHT_PX
+      for (const entry of entries) {
+        const rect = entry.target.getBoundingClientRect()
+        isLyricsOverflowing.value = rect.height > MAX_A4_HEIGHT_PX
       }
     })
     resizeObserver.observe(lyricsPageRef.value)
   }
+
+  window.addEventListener('keydown', handleKeyDown)
 })
 
 onUnmounted(() => {
   if (resizeObserver) {
     resizeObserver.disconnect()
   }
+
+  window.removeEventListener('keydown', handleKeyDown)
 })
 </script>
 
 <style scoped>
-/* Indicadores de sobrepaso visual A4 (solo visible en interfaz web) */
 .in-bounds:not(.pdf-export) {
   outline: 1px solid var(--ui-accent);
   box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
@@ -176,7 +196,6 @@ onUnmounted(() => {
   outline-offset: -1px;
 }
 
-/* Export Footer Styles */
 .export-footer {
   margin-top: auto;
   padding-top: 10px;
@@ -195,6 +214,20 @@ onUnmounted(() => {
 .footer-right {
   font-style: italic;
   text-align: right;
+}
+
+.lyrics-edit-footer {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lyrics-edit-footer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.lyrics-format-btn {
+  margin-right: auto;
 }
 
 .lyrics-page.pdf-export {

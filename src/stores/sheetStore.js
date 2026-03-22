@@ -13,6 +13,26 @@ const defaultSettings = {
   zoom_structure: 100
 }
 
+const MAX_UNDO_LEVELS = 10
+
+const cloneData = (value) => JSON.parse(JSON.stringify(value))
+
+const createUndoSnapshot = (song) => {
+  if (!song?.id) return null
+
+  return {
+    id: song.id,
+    name: song.name || 'Nueva Canción',
+    header: cloneData(song.header),
+    body: cloneData(song.body),
+    structure: cloneData(song.structure),
+    notes: cloneData(song.notes || []),
+    settings: { ...defaultSettings, ...(song.settings || {}) },
+    createdAt: song.createdAt || new Date().toISOString(),
+    updatedAt: song.updatedAt || new Date().toISOString()
+  }
+}
+
 export const useSheetStore = defineStore('sheet', {
   state: () => ({
     currentSongId: null,
@@ -50,10 +70,12 @@ export const useSheetStore = defineStore('sheet', {
     settings: { ...defaultSettings },
     copiedSection: null,
     copiedCompass: null,
+    copiedStructureItem: null,
     selectedSectionId: null,
     selectedStructureIndex: null,
     selectedCompass: null,
-    exportFooterData: null
+    exportFooterData: null,
+    undoHistory: []
   }),
 
   actions: {
@@ -69,45 +91,128 @@ export const useSheetStore = defineStore('sheet', {
       }
     },
 
-    moveStructureItem(fromIndex, toIndex) {
-      if (toIndex < 0 || toIndex >= this.structure.length) return
+    getStructureInsertTemplate(index = this.selectedStructureIndex) {
+      const firstSection = this.body[0]
+      if (!firstSection) return null
 
-      const item = this.structure[fromIndex]
-      this.structure.splice(fromIndex, 1)
-      this.structure.splice(toIndex, 0, item)
-
-      // Update selection if needed
-      if (this.selectedStructureIndex === fromIndex) {
-        this.selectedStructureIndex = toIndex
-      } else if (this.selectedStructureIndex === toIndex) {
-        this.selectedStructureIndex = fromIndex // Swapped logic roughly
+      const selectedItem = index !== null ? this.structure[index] : null
+      if (selectedItem && !selectedItem.isBreak) {
+        const matchingSection = this.body.find(section => section.id === selectedItem.id)
+        return {
+          id: selectedItem.id,
+          b_color: matchingSection?.b_color ?? selectedItem.b_color ?? firstSection.b_color,
+          f_color: matchingSection?.f_color ?? selectedItem.f_color ?? firstSection.f_color,
+          shape: selectedItem.shape ?? this.settings.shape_default
+        }
       }
 
-      this.saveToLocalStorage()
-    },
+      const lastItem = [...this.structure].reverse().find(item => !item.isBreak)
+      if (lastItem) {
+        const matchingSection = this.body.find(section => section.id === lastItem.id)
+        return {
+          id: lastItem.id,
+          b_color: matchingSection?.b_color ?? lastItem.b_color ?? firstSection.b_color,
+          f_color: matchingSection?.f_color ?? lastItem.f_color ?? firstSection.f_color,
+          shape: lastItem.shape ?? this.settings.shape_default
+        }
+      }
 
-    addStructureItemAt(index, side) { // side: 'left' (before) or 'right' (after)
-      if (this.body.length === 0) return
-
-      const firstSection = this.body[0]
-      const newItem = {
+      return {
         id: firstSection.id,
         b_color: firstSection.b_color,
         f_color: firstSection.f_color,
-        shape: this.settings.shape_default,
+        shape: this.settings.shape_default
+      }
+    },
+
+    createStructureItem(template) {
+      if (!template) return null
+
+      return {
+        id: template.id,
+        b_color: template.b_color,
+        f_color: template.f_color,
+        shape: template.shape ?? this.settings.shape_default,
         lyric: '',
         isBreak: false
       }
+    },
+
+    clearUndoHistory() {
+      this.undoHistory = []
+    },
+
+    pushUndoEntry(songSnapshot, operation = 'Actualizar canción') {
+      const snapshot = createUndoSnapshot(songSnapshot)
+      if (!snapshot) return
+
+      this.undoHistory.push({
+        timestamp: new Date().toISOString(),
+        operation,
+        snapshot
+      })
+
+      if (this.undoHistory.length > MAX_UNDO_LEVELS) {
+        this.undoHistory.shift()
+      }
+    },
+
+    undoLastChange() {
+      if (this.undoHistory.length === 0) return null
+
+      const entry = this.undoHistory.pop()
+      const snapshot = createUndoSnapshot(entry.snapshot)
+      if (!snapshot) return null
+
+      const registry = this.getSongsRegistry()
+      registry.songs[snapshot.id] = cloneData(snapshot)
+      registry.lastSongId = snapshot.id
+      this.saveSongsRegistry(registry)
+
+      this.header = cloneData(snapshot.header)
+      this.body = this.migrateDivValues(cloneData(snapshot.body))
+      this.structure = cloneData(snapshot.structure)
+      this.notes = cloneData(snapshot.notes || [])
+      this.settings = { ...defaultSettings, ...(snapshot.settings || {}) }
+      this.currentSongId = snapshot.id
+      this.selectedSectionId = null
+      this.selectedStructureIndex = null
+      this.selectedCompass = null
+
+      return entry
+    },
+
+    moveStructureItem(fromIndex, toIndex) {
+      if (toIndex < 0 || toIndex >= this.structure.length) return
+
+      const [item] = this.structure.splice(fromIndex, 1)
+      this.structure.splice(toIndex, 0, item)
+
+      if (this.selectedStructureIndex === fromIndex) {
+        this.selectedStructureIndex = toIndex
+      } else if (this.selectedStructureIndex !== null) {
+        if (fromIndex < toIndex && this.selectedStructureIndex > fromIndex && this.selectedStructureIndex <= toIndex) {
+          this.selectedStructureIndex--
+        } else if (fromIndex > toIndex && this.selectedStructureIndex >= toIndex && this.selectedStructureIndex < fromIndex) {
+          this.selectedStructureIndex++
+        }
+      }
+
+      this.saveToLocalStorage('Reordenar estructura')
+    },
+
+    addStructureItemAt(index, side) { // side: 'left' (before) or 'right' (after)
+      const newItem = this.createStructureItem(this.getStructureInsertTemplate(index))
+      if (!newItem) return
 
       const insertIndex = side === 'left' ? index : index + 1
       this.structure.splice(insertIndex, 0, newItem)
 
-      // Select the new item
       this.selectedStructureIndex = insertIndex
       this.selectedSectionId = null
       this.selectedCompass = null
 
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Añadir elemento de estructura')
     },
 
     deleteStructureItem(index) {
@@ -117,32 +222,32 @@ export const useSheetStore = defineStore('sheet', {
       } else if (this.selectedStructureIndex > index) {
         this.selectedStructureIndex--
       }
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Eliminar elemento de estructura')
     },
 
     updateTempo(value) {
       this.header.left.top.tempo = value
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Actualizar tempo')
     },
 
     updateSignature(value) {
       this.header.left.bottom.signature = value
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Actualizar compás')
     },
 
     updateName(value) {
       this.header.center.top.name = value
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Actualizar título')
     },
 
     updateAuthor(value) {
       this.header.center.bottom.author = value
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Actualizar autor')
     },
 
     updateTone(value) {
       this.header.right.top.tone = value
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Actualizar tono')
     },
 
     addSection() {
@@ -179,7 +284,7 @@ export const useSheetStore = defineStore('sheet', {
           }
         ]
       })
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Añadir sección')
     },
 
     updateSection(index, data) {
@@ -209,7 +314,7 @@ export const useSheetStore = defineStore('sheet', {
           item.f_color = data.f_color || item.f_color
         }
       })
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Editar sección')
     },
 
     deleteSection(index) {
@@ -228,7 +333,7 @@ export const useSheetStore = defineStore('sheet', {
         this.selectedCompass.sIndex--;
       }
 
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Eliminar sección')
     },
 
     copySection(index) {
@@ -257,7 +362,7 @@ export const useSheetStore = defineStore('sheet', {
 
       // Insertar después de la sección indicada
       this.body.splice(afterIndex + 1, 0, newSection)
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Pegar sección')
     },
 
     moveSectionUp(index) {
@@ -266,7 +371,7 @@ export const useSheetStore = defineStore('sheet', {
         const sectionCopy = JSON.parse(JSON.stringify(this.body[index]))
         this.body.splice(index, 1)
         this.body.splice(index - 1, 0, sectionCopy)
-        this.saveToLocalStorage()
+        this.saveToLocalStorage('Reordenar sección')
       }
     },
 
@@ -276,7 +381,7 @@ export const useSheetStore = defineStore('sheet', {
         const sectionCopy = JSON.parse(JSON.stringify(this.body[index]))
         this.body.splice(index, 1)
         this.body.splice(index + 1, 0, sectionCopy)
-        this.saveToLocalStorage()
+        this.saveToLocalStorage('Reordenar sección')
       }
     },
 
@@ -286,7 +391,7 @@ export const useSheetStore = defineStore('sheet', {
           { chord: 'C', div: 1 }
         ]
       })
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Añadir compás')
     },
 
     deleteCompass(sectionIndex, compassIndex) {
@@ -296,13 +401,13 @@ export const useSheetStore = defineStore('sheet', {
       } else if (this.selectedCompass && this.selectedCompass.sIndex === sectionIndex && this.selectedCompass.cIndex > compassIndex) {
         this.selectedCompass.cIndex--;
       }
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Eliminar compás')
     },
 
     updateCompass(sectionIndex, compassIndex, chords) {
       // Crear copia profunda de los acordes para evitar referencias compartidas
       this.body[sectionIndex].compass[compassIndex].chords = JSON.parse(JSON.stringify(chords))
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Editar compás')
     },
 
     copyCompass(sectionIndex, compassIndex) {
@@ -316,22 +421,35 @@ export const useSheetStore = defineStore('sheet', {
 
       const newCompass = JSON.parse(JSON.stringify(this.copiedCompass))
       this.body[sectionIndex].compass.push(newCompass)
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Pegar compás')
+    },
+
+    copyStructureItem(index) {
+      if (index === null || index < 0 || index >= this.structure.length) return
+      this.copiedStructureItem = JSON.parse(JSON.stringify(this.structure[index]))
+    },
+
+    pasteStructureItem(index = this.selectedStructureIndex) {
+      if (!this.copiedStructureItem) return
+
+      const insertIndex = index === null ? this.structure.length : index + 1
+      const newItem = JSON.parse(JSON.stringify(this.copiedStructureItem))
+      this.structure.splice(insertIndex, 0, newItem)
+      this.selectedStructureIndex = insertIndex
+      this.selectedSectionId = null
+      this.selectedCompass = null
+      this.saveToLocalStorage('Pegar elemento de estructura')
     },
 
     addStructureItem() {
-      if (this.body.length > 0) {
-        const firstSection = this.body[0]
-        this.structure.push({
-          id: firstSection.id,
-          b_color: firstSection.b_color,
-          f_color: firstSection.f_color,
-          shape: this.settings.shape_default,
-          lyric: '',
-          isBreak: false
-        })
-        this.saveToLocalStorage()
-      }
+      const newItem = this.createStructureItem(this.getStructureInsertTemplate())
+      if (!newItem) return
+
+      this.structure.push(newItem)
+      this.selectedStructureIndex = this.structure.length - 1
+      this.selectedSectionId = null
+      this.selectedCompass = null
+      this.saveToLocalStorage('Añadir elemento de estructura')
     },
 
     updateStructureItem(index, data) {
@@ -343,12 +461,7 @@ export const useSheetStore = defineStore('sheet', {
       if (data.lyric !== undefined) {
         this.structure[index].lyric = data.lyric
       }
-      this.saveToLocalStorage()
-    },
-
-    deleteStructureItem(index) {
-      this.structure.splice(index, 1)
-      this.saveToLocalStorage()
+      this.saveToLocalStorage(data.lyric !== undefined && Object.keys(newData).length === 1 ? 'Editar letra' : 'Editar elemento de estructura')
     },
 
     addNote() {
@@ -357,22 +470,22 @@ export const useSheetStore = defineStore('sheet', {
         id: newId,
         text: 'Nueva nota'
       })
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Añadir nota')
     },
 
     updateNote(index, text) {
       this.notes[index].text = text
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Editar nota')
     },
 
     deleteNote(index) {
       this.notes.splice(index, 1)
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Eliminar nota')
     },
 
     updateSettings(settings) {
       this.settings = { ...this.settings, ...settings }
-      this.saveToLocalStorage()
+      this.saveToLocalStorage('Actualizar ajustes')
     },
 
     getSongsRegistry() {
@@ -524,7 +637,7 @@ export const useSheetStore = defineStore('sheet', {
       }
     },
 
-    saveToLocalStorage() {
+    saveToLocalStorage(operation = 'Actualizar canción') {
       // Persistir sólo si la canción tiene id asignado
       if (!this.currentSongId) {
         return
@@ -532,8 +645,12 @@ export const useSheetStore = defineStore('sheet', {
 
       const registry = this.getSongsRegistry()
       const now = new Date().toISOString()
-      const existingSong = registry.songs[this.currentSongId] || {}
+      const existingSong = registry.songs[this.currentSongId] || null
       const createdAt = existingSong.createdAt || now
+
+      if (existingSong?.id) {
+        this.pushUndoEntry(existingSong, operation)
+      }
 
       registry.songs[this.currentSongId] = this.constructSongObject(createdAt, now)
 
@@ -637,14 +754,13 @@ export const useSheetStore = defineStore('sheet', {
       }
     },
 
-    importData(data) {
-      // Crear copias profundas para evitar referencias compartidas
-      this.header = JSON.parse(JSON.stringify(data.header))
-      this.body = JSON.parse(JSON.stringify(data.body))
-      this.structure = JSON.parse(JSON.stringify(data.structure))
-      this.notes = JSON.parse(JSON.stringify(data.notes))
+    importData(data, options = {}) {
+      this.header = cloneData(data.header)
+      this.body = cloneData(data.body)
+      this.structure = cloneData(data.structure)
+      this.notes = cloneData(data.notes || [])
       this.settings = { ...defaultSettings, ...(data.settings || {}) }
-      this.saveToLocalStorage()
+      this.saveToLocalStorage(options.operation || 'Importar datos')
     },
 
     // Sistema de gestión de múltiples canciones
@@ -658,7 +774,7 @@ export const useSheetStore = defineStore('sheet', {
       })
     },
 
-    saveSongAs(songName) {
+    saveSongAs(songName, operation = 'Guardar canción') {
       if (!songName || songName.trim() === '') {
         throw new Error('El nombre de la canción no puede estar vacío')
       }
@@ -669,12 +785,17 @@ export const useSheetStore = defineStore('sheet', {
 
       let songId = this.currentSongId
       let createdAt
+      const existingSong = songId ? registry.songs[songId] || null : null
 
       if (!songId || !registry.songs[songId]) {
         createdAt = now
         songId = md5(createdAt)
       } else {
         createdAt = registry.songs[songId].createdAt || now
+      }
+
+      if (existingSong?.id) {
+        this.pushUndoEntry(existingSong, operation)
       }
 
       registry.songs[songId] = {
@@ -710,6 +831,10 @@ export const useSheetStore = defineStore('sheet', {
       this.notes = JSON.parse(JSON.stringify(song.notes || []))
       this.settings = { ...defaultSettings, ...(song.settings || {}) }
       this.currentSongId = song.id
+      this.clearUndoHistory()
+      this.selectedSectionId = null
+      this.selectedStructureIndex = null
+      this.selectedCompass = null
     },
 
     deleteSong(songId) {
@@ -766,6 +891,10 @@ export const useSheetStore = defineStore('sheet', {
       ]
 
       this.notes = []
+      this.selectedSectionId = null
+      this.selectedStructureIndex = null
+      this.selectedCompass = null
+      this.clearUndoHistory()
 
       // No guardar automáticamente para evitar sobrescribir
     },
@@ -782,7 +911,6 @@ export const useSheetStore = defineStore('sheet', {
         this.selectedStructureIndex = null
         this.selectedCompass = null
       }
-      this.saveToLocalStorage()
     },
 
     setSelectedCompass(sectionIndex, compassIndex) {

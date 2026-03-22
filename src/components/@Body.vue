@@ -24,6 +24,7 @@
         :section="section"
         :index="index"
         :totalSections="store.body.length"
+        ref="sectionRefs"
       />
     </div>
 
@@ -67,6 +68,7 @@ import SectionComponent from './@Section.vue'
 import ColorPickerWithHistory from './ColorPickerWithHistory.vue'
 
 const store = useSheetStore()
+const sectionRefs = ref([])
 const selectedSectionIndex = ref(-1)
 const showEditModal = ref(false)
 const localSectionData = ref(null)
@@ -90,7 +92,13 @@ const saveSection = () => {
 }
 
 defineExpose({
-  editSection
+  editSection,
+  editCompass: (sectionIndex, compassIndex) => {
+    sectionRefs.value[sectionIndex]?.openCompassEditor(compassIndex)
+  },
+  deleteCompass: (sectionIndex, compassIndex) => {
+    sectionRefs.value[sectionIndex]?.openCompassDelete(compassIndex)
+  }
 })
 
 const addSection = () => {

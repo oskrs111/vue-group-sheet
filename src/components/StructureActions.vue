@@ -20,12 +20,19 @@
       <span class="material-icons">playlist_add</span>
       <span class="btn-label">Añadir Der</span>
     </button>
+    <button @click="copyItem" class="action-btn" title="Copiar">
+      <span class="material-icons">content_copy</span>
+      <span class="btn-label">Copiar</span>
+    </button>
+    <button @click="pasteItem" class="action-btn" :disabled="!hasCopiedItem" title="Pegar">
+      <span class="material-icons">content_paste</span>
+      <span class="btn-label">Pegar</span>
+    </button>
     <button @click="showDeleteModal = true" class="action-btn danger" title="Eliminar">
       <span class="material-icons">delete</span>
       <span class="btn-label">Eliminar</span>
     </button>
 
-    <!-- Delete Confirmation Modal -->
     <Teleport to="#modal-container">
       <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
         <div class="modal-content">
@@ -44,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 
 const store = useSheetStore()
@@ -54,15 +61,13 @@ const emit = defineEmits(['edit-request'])
 const selectedIndex = computed(() => store.selectedStructureIndex)
 
 const isValidSelection = computed(() => {
-  return selectedIndex.value !== null && 
-         selectedIndex.value >= 0 && 
-         selectedIndex.value < store.structure.length
+  return selectedIndex.value !== null && selectedIndex.value >= 0 && selectedIndex.value < store.structure.length
 })
 
 const isFirst = computed(() => selectedIndex.value === 0)
 const isLast = computed(() => selectedIndex.value === store.structure.length - 1)
+const hasCopiedItem = computed(() => store.copiedStructureItem !== null)
 
-// Actions
 const editItem = () => {
   if (isValidSelection.value) {
     emit('edit-request', selectedIndex.value)
@@ -93,12 +98,55 @@ const addRight = () => {
   }
 }
 
+const copyItem = () => {
+  if (isValidSelection.value) {
+    store.copyStructureItem(selectedIndex.value)
+  }
+}
+
+const pasteItem = () => {
+  if (isValidSelection.value && hasCopiedItem.value) {
+    store.pasteStructureItem(selectedIndex.value)
+  }
+}
+
 const confirmDelete = () => {
   if (isValidSelection.value) {
     store.deleteStructureItem(selectedIndex.value)
     showDeleteModal.value = false
   }
 }
+
+const isTypingTarget = () => {
+  const activeElement = document.activeElement
+  const tagName = activeElement?.tagName?.toLowerCase()
+
+  return activeElement?.isContentEditable || tagName === 'input' || tagName === 'textarea' || tagName === 'select'
+}
+
+const handleKeyDown = (event) => {
+  if (!(event.ctrlKey || event.metaKey) || isTypingTarget() || !isValidSelection.value) {
+    return
+  }
+
+  const key = event.key.toLowerCase()
+
+  if (key === 'c') {
+    event.preventDefault()
+    copyItem()
+  } else if (key === 'v' && hasCopiedItem.value) {
+    event.preventDefault()
+    pasteItem()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <style scoped>

@@ -19,6 +19,7 @@
           :compass="compass"
           :sectionIndex="index"
           :compassIndex="cIndex"
+          ref="compassRefs"
         />
       </div>
     </div>
@@ -29,7 +30,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import CompassComponent from './@Compass.vue'
 
@@ -40,6 +41,7 @@ const props = defineProps({
 })
 
 const store = useSheetStore()
+const compassRefs = ref([])
 const isSelected = computed(() => store.selectedSectionId === props.section.id)
 
 const selectSection = (event) => {
@@ -68,6 +70,19 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
+})
+
+const openCompassEditor = (compassIndex) => {
+  compassRefs.value[compassIndex]?.openEditModal()
+}
+
+const openCompassDelete = (compassIndex) => {
+  compassRefs.value[compassIndex]?.openDeleteModal()
+}
+
+defineExpose({
+  openCompassEditor,
+  openCompassDelete
 })
 </script>
 

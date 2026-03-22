@@ -12,6 +12,13 @@ node_modules
 dist-ssr
 *.local
 
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+TODO.*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

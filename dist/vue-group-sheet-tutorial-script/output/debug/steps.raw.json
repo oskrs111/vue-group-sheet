@@ -1,0 +1,186 @@
+[
+  {
+    "id": "step-001",
+    "stepNumber": 1,
+    "phaseId": "open-script",
+    "phaseTitle": "Abrir Script",
+    "title": "Abrir Script 1",
+    "description": "Abrir la función Script.",
+    "lessonTitle": "Abrir el editor de script",
+    "lessonText": "La vista Script reúne toda la canción en un único texto. Es la forma más rápida de crear o revisar una hoja completa sin editar compás por compás.",
+    "codeSnippet": "",
+    "action": "click",
+    "selector": "[data-vgst-id=\"vgst-9\"]",
+    "actionPayload": {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "textIncludes": "Script"
+      },
+      "description": "Abrir la función Script.",
+      "selector": "[data-vgst-id=\"vgst-9\"]"
+    },
+    "execution": {
+      "ok": true,
+      "action": "click",
+      "resolvedTarget": "role=button[text*=\"Script\"]"
+    },
+    "beforeStateHash": "e55b0f70c873a8840ed6c4754f6b9b789951b6fc",
+    "afterStateHash": "815453427a579d80e9226b8c0d2b19c8ad8724be",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\01-open-script-step-001-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\01-open-script-step-001-after.png",
+    "beforeScreenshotRelative": "raw/01-open-script-step-001-before.png",
+    "afterScreenshotRelative": "raw/01-open-script-step-001-after.png",
+    "gifPath": null,
+    "timestamp": "2026-03-22T16:27:59.045Z"
+  },
+  {
+    "id": "step-002",
+    "stepNumber": 2,
+    "phaseId": "sections",
+    "phaseTitle": "Secciones",
+    "title": "Secciones 2",
+    "description": "Rellenar el bloque Sections con las secciones de la canción.",
+    "lessonTitle": "Escribir el bloque Sections",
+    "lessonText": "Empieza por Sections:. Cada línea define una sección y sus compases. Aquí se cargan In, A, B y C, que serán la base del resto de la canción.",
+    "codeSnippet": "Sections:\nIn=|G|\nA=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|\nB=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|\nC=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|",
+    "action": "type",
+    "selector": "[data-vgst-id=\"vgst-1\"]",
+    "value": "Sections:\nIn=|G|\nA=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|\nB=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|\nC=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|\n\nStructure:\n\nLyrics:\n",
+    "actionPayload": {
+      "action": "type",
+      "target": {
+        "type": "textarea",
+        "placeholderIncludes": "Escribe tu script"
+      },
+      "value": "Sections:\nIn=|G|\nA=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|\nB=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|\nC=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|\n\nStructure:\n\nLyrics:\n",
+      "revealText": "Sections:",
+      "description": "Rellenar el bloque Sections con las secciones de la canción.",
+      "selector": "[data-vgst-id=\"vgst-1\"]"
+    },
+    "execution": {
+      "ok": true,
+      "action": "type",
+      "resolvedTarget": "placeholder*=\"Escribe tu script\""
+    },
+    "beforeStateHash": "815453427a579d80e9226b8c0d2b19c8ad8724be",
+    "afterStateHash": "4c8f3d2647daf3e752fc52b4dad9e40a504668a9",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\02-sections-step-002-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\02-sections-step-002-after.png",
+    "beforeScreenshotRelative": "raw/02-sections-step-002-before.png",
+    "afterScreenshotRelative": "raw/02-sections-step-002-after.png",
+    "gifPath": null,
+    "timestamp": "2026-03-22T16:28:00.200Z"
+  },
+  {
+    "id": "step-003",
+    "stepNumber": 3,
+    "phaseId": "structure",
+    "phaseTitle": "Estructura",
+    "title": "Estructura 3",
+    "description": "Completar la estructura de la canción dentro del script.",
+    "lessonTitle": "Añadir Structure",
+    "lessonText": "Cuando las secciones ya están definidas, añade Structure: para fijar el orden real de interpretación. En este caso la canción sigue In, A, A, B y C.",
+    "codeSnippet": "Structure:\nIn,A,A,B,C",
+    "action": "type",
+    "selector": "[data-vgst-id=\"vgst-1\"]",
+    "value": "Sections:\nIn=|G|\nA=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|\nB=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|\nC=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|\n\nStructure:\nIn,A,A,B,C\n\nLyrics:\n",
+    "actionPayload": {
+      "action": "type",
+      "target": {
+        "type": "textarea",
+        "placeholderIncludes": "Escribe tu script"
+      },
+      "value": "Sections:\nIn=|G|\nA=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|\nB=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|\nC=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|\n\nStructure:\nIn,A,A,B,C\n\nLyrics:\n",
+      "revealText": "Structure:",
+      "description": "Completar la estructura de la canción dentro del script.",
+      "selector": "[data-vgst-id=\"vgst-1\"]"
+    },
+    "execution": {
+      "ok": true,
+      "action": "type",
+      "resolvedTarget": "placeholder*=\"Escribe tu script\""
+    },
+    "beforeStateHash": "4c8f3d2647daf3e752fc52b4dad9e40a504668a9",
+    "afterStateHash": "a4b62fc07e58941058bc1b991a1fa0ca69990e65",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\03-structure-step-003-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\03-structure-step-003-after.png",
+    "beforeScreenshotRelative": "raw/03-structure-step-003-before.png",
+    "afterScreenshotRelative": "raw/03-structure-step-003-after.png",
+    "gifPath": null,
+    "timestamp": "2026-03-22T16:28:01.211Z"
+  },
+  {
+    "id": "step-004",
+    "stepNumber": 4,
+    "phaseId": "lyrics",
+    "phaseTitle": "Letras",
+    "title": "Letras 4",
+    "description": "Completar las letras dentro del script.",
+    "lessonTitle": "Completar Lyrics",
+    "lessonText": "Por último se añade Lyrics:. Cada entrada se queda ligada a una aparición de la sección en la estructura, así que el script ya contiene acordes, orden y texto.",
+    "codeSnippet": "Lyrics:\nIn=\nA=At the dark end of the street / That's where we always meet / Hiding in shadows where we don't belong / Living in darkness to hide our wrong / You and me / At the dark end / Of the street / You and me\nA=I know time is gonna take its toll / We have to pay for the love we stole / It's a sin, and we know it's wrong / Oh, but our love keeps coming on strong / Steal away / To the dark end / Of the street\nB=They're gonna find us / They're gonna find us / They're gonna find us, Lord, someday / You and me / At the dark end / Of the street / You and me\nC=And when the daylight hours roll 'round / And by chance we're both downtown / If we should meet, just walk on by / Oh, darling, please, don't cry / Tonight, we'll meet / At the dark end / Of the street",
+    "action": "type",
+    "selector": "[data-vgst-id=\"vgst-1\"]",
+    "value": "Sections:\nIn=|G|\nA=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|\nB=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|\nC=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|\n\nStructure:\nIn,A,A,B,C\n\nLyrics:\nIn=\nA=At the dark end of the street / That's where we always meet / Hiding in shadows where we don't belong / Living in darkness to hide our wrong / You and me / At the dark end / Of the street / You and me\nA=I know time is gonna take its toll / We have to pay for the love we stole / It's a sin, and we know it's wrong / Oh, but our love keeps coming on strong / Steal away / To the dark end / Of the street\nB=They're gonna find us / They're gonna find us / They're gonna find us, Lord, someday / You and me / At the dark end / Of the street / You and me\nC=And when the daylight hours roll 'round / And by chance we're both downtown / If we should meet, just walk on by / Oh, darling, please, don't cry / Tonight, we'll meet / At the dark end / Of the street",
+    "actionPayload": {
+      "action": "type",
+      "target": {
+        "type": "textarea",
+        "placeholderIncludes": "Escribe tu script"
+      },
+      "value": "Sections:\nIn=|G|\nA=|G..,F#m..|Em|G..,F#m..|Em|G..,C.,D.|G|C..,D..|G..,C..|G|C..,D..|G..,C..|G..,D..|\nB=|G|F#m|Em|G..,C..|G|C..,D..|G..,C..|G..,Eb..|\nC=|Ab..,Gm..|Fm|Ab..,Gm..|Fm|Ab..,Db.,Eb.|Ab|Db..,Eb..|Ab..,Db..|Ab|Db..,Eb..|Ab..,Db..|Db..,Ab..|\n\nStructure:\nIn,A,A,B,C\n\nLyrics:\nIn=\nA=At the dark end of the street / That's where we always meet / Hiding in shadows where we don't belong / Living in darkness to hide our wrong / You and me / At the dark end / Of the street / You and me\nA=I know time is gonna take its toll / We have to pay for the love we stole / It's a sin, and we know it's wrong / Oh, but our love keeps coming on strong / Steal away / To the dark end / Of the street\nB=They're gonna find us / They're gonna find us / They're gonna find us, Lord, someday / You and me / At the dark end / Of the street / You and me\nC=And when the daylight hours roll 'round / And by chance we're both downtown / If we should meet, just walk on by / Oh, darling, please, don't cry / Tonight, we'll meet / At the dark end / Of the street",
+      "revealText": "Lyrics:",
+      "description": "Completar las letras dentro del script.",
+      "selector": "[data-vgst-id=\"vgst-1\"]"
+    },
+    "execution": {
+      "ok": true,
+      "action": "type",
+      "resolvedTarget": "placeholder*=\"Escribe tu script\""
+    },
+    "beforeStateHash": "a4b62fc07e58941058bc1b991a1fa0ca69990e65",
+    "afterStateHash": "2b1abaeca2a7324422c99393647c1382b2bb4aea",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\04-lyrics-step-004-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\04-lyrics-step-004-after.png",
+    "beforeScreenshotRelative": "raw/04-lyrics-step-004-before.png",
+    "afterScreenshotRelative": "raw/04-lyrics-step-004-after.png",
+    "gifPath": null,
+    "timestamp": "2026-03-22T16:28:02.238Z"
+  },
+  {
+    "id": "step-005",
+    "stepNumber": 5,
+    "phaseId": "apply-script",
+    "phaseTitle": "Aplicar",
+    "title": "Aplicar 5",
+    "description": "Aplicar el script y construir la canción.",
+    "lessonTitle": "Aplicar el script",
+    "lessonText": "Pulsa Aplicar para convertir el texto en la canción editable. El editor crea de una vez las secciones, la estructura y las letras a partir del script final.",
+    "codeSnippet": "",
+    "action": "click",
+    "selector": "[data-vgst-id=\"vgst-3\"]",
+    "actionPayload": {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "textIncludes": "Aplicar"
+      },
+      "description": "Aplicar el script y construir la canción.",
+      "selector": "[data-vgst-id=\"vgst-3\"]"
+    },
+    "execution": {
+      "ok": true,
+      "action": "click",
+      "resolvedTarget": "role=button[text*=\"Aplicar\"]"
+    },
+    "beforeStateHash": "2b1abaeca2a7324422c99393647c1382b2bb4aea",
+    "afterStateHash": "b0fdb407238817da7633aa1b0de71f6e4c6db38f",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\05-apply-script-step-005-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\05-apply-script-step-005-after.png",
+    "beforeScreenshotRelative": "raw/05-apply-script-step-005-before.png",
+    "afterScreenshotRelative": "raw/05-apply-script-step-005-after.png",
+    "gifPath": null,
+    "timestamp": "2026-03-22T16:28:02.867Z"
+  }
+]
