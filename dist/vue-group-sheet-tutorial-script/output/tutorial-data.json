@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Tutorial #1 - Crear una canción con Script",
-    "generatedAt": "2026-03-22T16:28:07.184Z"
+    "generatedAt": "2026-03-22T18:13:40.639Z"
   },
   "slides": [
     {
@@ -61,6 +61,16 @@
       "phaseTitle": "Aplicar",
       "gifPath": "gifs/step-005.gif",
       "codeSnippet": ""
+    },
+    {
+      "id": "script-syntax-reference",
+      "kind": "appendix",
+      "title": "Sintaxis completa del Script",
+      "eyebrow": "Referencia final",
+      "body": "Esta hoja final resume la sintaxis completa del pseudo codigo del Script para que puedas usarla como referencia rapida mientras editas canciones.",
+      "phaseTitle": "Pseudo codigo",
+      "gifPath": "",
+      "codeSnippet": "Sections:\nID=|compas1|compas2|...|xN\n\nNotacion dentro de un compas:\n- Barras |...| delimitan cada compas\n- Comas separan varios acordes dentro del mismo compas\n- Duraciones:\n  C      redonda\n  C.     negra\n  C..    blanca\n  C...   blanca con puntillo\n- Especiales:\n  %      repite el acorde anterior\n  _      silencio\n  /      compas de salto de linea visual\n- xN al final de la seccion indica repeticiones\n\nEjemplo:\nA=|G..,F#m..|Em|G..,C.,D.|G|x2\n\nStructure:\nID,ID,ID,/,ID\n\nReglas:\n- Usa IDs definidos en Sections\n- / inserta un salto de linea visual\n\nEjemplo:\nIn,A,A,B,C\n\nLyrics:\nID=Texto\nID=Texto siguiente\n\nReglas:\n- Cada entrada empieza por ID=\n- Puedes escribir texto en varias lineas\n- Si una seccion aparece varias veces en Structure, añade varias entradas Lyrics para ese mismo ID en el mismo orden\n\nEjemplo:\nLyrics:\nIn=\nA=Primera vuelta\nA=Segunda vuelta\nB=Puente\nC=Final"
     }
   ],
   "steps": [

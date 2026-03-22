@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { extname, isAbsolute, resolve } from "node:path";
 import { writeJson, writeText } from "../shared/fs-utils.js";
 
 function escapeHtml(value) {
@@ -7,6 +9,36 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function getMimeType(assetPath) {
+  const extension = extname(assetPath).toLowerCase();
+
+  switch (extension) {
+    case ".gif":
+      return "image/gif";
+    case ".jpg":
+    case ".jpeg":
+      return "image/jpeg";
+    case ".png":
+      return "image/png";
+    case ".svg":
+      return "image/svg+xml";
+    case ".webp":
+      return "image/webp";
+    default:
+      return "application/octet-stream";
+  }
+}
+
+function inlineAssetPath(assetPath, outputRootDir) {
+  if (!assetPath) return "";
+
+  const resolvedPath = isAbsolute(assetPath) ? assetPath : resolve(outputRootDir, assetPath);
+  if (!existsSync(resolvedPath)) return assetPath;
+
+  const encodedFile = readFileSync(resolvedPath).toString("base64");
+  return `data:${getMimeType(resolvedPath)};base64,${encodedFile}`;
 }
 
 function buildSlides(config, steps) {
@@ -65,7 +97,7 @@ function buildTutorialData(config, steps) {
   };
 }
 
-function buildSlideMarkup(slide, index, totalSlides) {
+function buildSlideMarkup(slide, index, totalSlides, outputRootDir) {
   if (slide.kind === "intro") {
     return `
       <section class="slide" data-slide-index="${index}">
@@ -77,7 +109,7 @@ function buildSlideMarkup(slide, index, totalSlides) {
             <div class="intro-footer">Slide ${index + 1} / ${totalSlides}</div>
           </div>
           <div class="intro-media">
-            ${slide.logoPath ? `<img class="intro-logo" src="${escapeHtml(slide.logoPath)}" alt="Group Sheet Editor logo" />` : ""}
+            ${slide.logoPath ? `<img class="intro-logo" src="${escapeHtml(inlineAssetPath(slide.logoPath, outputRootDir))}" alt="Group Sheet Editor logo" />` : ""}
           </div>
         </div>
       </section>
@@ -87,7 +119,7 @@ function buildSlideMarkup(slide, index, totalSlides) {
   const mediaMarkup = slide.gifPath
     ? `
         <div class="slide-media">
-          <img src="${escapeHtml(slide.gifPath)}" alt="${escapeHtml(slide.title)}" />
+          <img src="${escapeHtml(inlineAssetPath(slide.gifPath, outputRootDir))}" alt="${escapeHtml(slide.title)}" />
         </div>
       `
     : "";
@@ -116,7 +148,7 @@ function buildSlideMarkup(slide, index, totalSlides) {
 
 function buildHtml(config, tutorialData) {
   const slidesMarkup = tutorialData.slides
-    .map((slide, index) => buildSlideMarkup(slide, index, tutorialData.slides.length))
+    .map((slide, index) => buildSlideMarkup(slide, index, tutorialData.slides.length, config.output.rootDir))
     .join("");
 
   return `<!doctype html>

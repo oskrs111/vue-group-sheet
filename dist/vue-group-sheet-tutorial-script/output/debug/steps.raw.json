@@ -26,13 +26,13 @@
       "resolvedTarget": "role=button[text*=\"Script\"]"
     },
     "beforeStateHash": "e55b0f70c873a8840ed6c4754f6b9b789951b6fc",
-    "afterStateHash": "815453427a579d80e9226b8c0d2b19c8ad8724be",
-    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\01-open-script-step-001-before.png",
-    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\01-open-script-step-001-after.png",
+    "afterStateHash": "6dd225d740b20c6525703b15c0dc26f3008240db",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\01-open-script-step-001-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\01-open-script-step-001-after.png",
     "beforeScreenshotRelative": "raw/01-open-script-step-001-before.png",
     "afterScreenshotRelative": "raw/01-open-script-step-001-after.png",
     "gifPath": null,
-    "timestamp": "2026-03-22T16:27:59.045Z"
+    "timestamp": "2026-03-22T18:02:20.034Z"
   },
   {
     "id": "step-002",
@@ -63,14 +63,14 @@
       "action": "type",
       "resolvedTarget": "placeholder*=\"Escribe tu script\""
     },
-    "beforeStateHash": "815453427a579d80e9226b8c0d2b19c8ad8724be",
-    "afterStateHash": "4c8f3d2647daf3e752fc52b4dad9e40a504668a9",
-    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\02-sections-step-002-before.png",
-    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\02-sections-step-002-after.png",
+    "beforeStateHash": "6dd225d740b20c6525703b15c0dc26f3008240db",
+    "afterStateHash": "ca0d6809832f0741e4461401b8c0bd751aaa3fef",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\02-sections-step-002-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\02-sections-step-002-after.png",
     "beforeScreenshotRelative": "raw/02-sections-step-002-before.png",
     "afterScreenshotRelative": "raw/02-sections-step-002-after.png",
     "gifPath": null,
-    "timestamp": "2026-03-22T16:28:00.200Z"
+    "timestamp": "2026-03-22T18:02:21.230Z"
   },
   {
     "id": "step-003",
@@ -101,14 +101,14 @@
       "action": "type",
       "resolvedTarget": "placeholder*=\"Escribe tu script\""
     },
-    "beforeStateHash": "4c8f3d2647daf3e752fc52b4dad9e40a504668a9",
-    "afterStateHash": "a4b62fc07e58941058bc1b991a1fa0ca69990e65",
-    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\03-structure-step-003-before.png",
-    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\03-structure-step-003-after.png",
+    "beforeStateHash": "ca0d6809832f0741e4461401b8c0bd751aaa3fef",
+    "afterStateHash": "6cd3c169bdc7e23dda8f7bd6dc0ed6de760556ab",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\03-structure-step-003-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\03-structure-step-003-after.png",
     "beforeScreenshotRelative": "raw/03-structure-step-003-before.png",
     "afterScreenshotRelative": "raw/03-structure-step-003-after.png",
     "gifPath": null,
-    "timestamp": "2026-03-22T16:28:01.211Z"
+    "timestamp": "2026-03-22T18:02:22.362Z"
   },
   {
     "id": "step-004",
@@ -139,14 +139,14 @@
       "action": "type",
       "resolvedTarget": "placeholder*=\"Escribe tu script\""
     },
-    "beforeStateHash": "a4b62fc07e58941058bc1b991a1fa0ca69990e65",
-    "afterStateHash": "2b1abaeca2a7324422c99393647c1382b2bb4aea",
-    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\04-lyrics-step-004-before.png",
-    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\04-lyrics-step-004-after.png",
+    "beforeStateHash": "6cd3c169bdc7e23dda8f7bd6dc0ed6de760556ab",
+    "afterStateHash": "0060ec4ca15b585193d2a24aef08082b452761d0",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\04-lyrics-step-004-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\04-lyrics-step-004-after.png",
     "beforeScreenshotRelative": "raw/04-lyrics-step-004-before.png",
     "afterScreenshotRelative": "raw/04-lyrics-step-004-after.png",
     "gifPath": null,
-    "timestamp": "2026-03-22T16:28:02.238Z"
+    "timestamp": "2026-03-22T18:02:23.472Z"
   },
   {
     "id": "step-005",
@@ -174,13 +174,13 @@
       "action": "click",
       "resolvedTarget": "role=button[text*=\"Aplicar\"]"
     },
-    "beforeStateHash": "2b1abaeca2a7324422c99393647c1382b2bb4aea",
+    "beforeStateHash": "0060ec4ca15b585193d2a24aef08082b452761d0",
     "afterStateHash": "b0fdb407238817da7633aa1b0de71f6e4c6db38f",
-    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\05-apply-script-step-005-before.png",
-    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial\\output\\raw\\05-apply-script-step-005-after.png",
+    "beforeScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\05-apply-script-step-005-before.png",
+    "afterScreenshotPath": "D:\\GitHub\\vue-group-sheet\\vue-group-sheet-tutorial-script\\output\\raw\\05-apply-script-step-005-after.png",
     "beforeScreenshotRelative": "raw/05-apply-script-step-005-before.png",
     "afterScreenshotRelative": "raw/05-apply-script-step-005-after.png",
     "gifPath": null,
-    "timestamp": "2026-03-22T16:28:02.867Z"
+    "timestamp": "2026-03-22T18:02:24.127Z"
   }
 ]

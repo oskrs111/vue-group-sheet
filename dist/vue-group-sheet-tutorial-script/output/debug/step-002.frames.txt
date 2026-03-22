@@ -1,5 +1,5 @@
-file 'D:/GitHub/vue-group-sheet/vue-group-sheet-tutorial/output/raw/02-sections-step-002-before.png'
+file 'D:/GitHub/vue-group-sheet/vue-group-sheet-tutorial-script/output/raw/02-sections-step-002-before.png'
 duration 0.90
-file 'D:/GitHub/vue-group-sheet/vue-group-sheet-tutorial/output/raw/02-sections-step-002-after.png'
+file 'D:/GitHub/vue-group-sheet/vue-group-sheet-tutorial-script/output/raw/02-sections-step-002-after.png'
 duration 1.35
-file 'D:/GitHub/vue-group-sheet/vue-group-sheet-tutorial/output/raw/02-sections-step-002-after.png'
+file 'D:/GitHub/vue-group-sheet/vue-group-sheet-tutorial-script/output/raw/02-sections-step-002-after.png'
