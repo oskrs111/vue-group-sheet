@@ -541,11 +541,23 @@ const filteredSongsList = computed(() => {
   return list
 })
 
+const syncLoadDialogFilters = () => {
+  if (!filterCollection.value) return
+
+  const collectionExists = collectionStore.collections.some(
+    collection => collection.id === filterCollection.value
+  )
+
+  if (!collectionExists) {
+    filterCollection.value = ''
+  }
+}
+
 const openLoadDialog = () => {
   collectionStore.loadCollections()
   searchQuery.value = ''
-  filterCollection.value = ''
-  sortBy.value = 'date'
+  selectedSongId.value = null
+  syncLoadDialogFilters()
   showLoadDialog.value = true
 }
 
