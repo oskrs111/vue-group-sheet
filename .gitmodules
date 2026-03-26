@@ -1,6 +1,6 @@
 [submodule "vue-group-sheet-tutorial-script"]
 	path = vue-group-sheet-tutorial-script
-	url = ./vue-group-sheet-tutorial-script
+	url = ../vue-group-sheet-tutorial-script
 [submodule "vue-group-sheet-desktop"]
 	path = vue-group-sheet-desktop
-	url = ./vue-group-sheet-desktop
+	url = ../vue-group-sheet-desktop
