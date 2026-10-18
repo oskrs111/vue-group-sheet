@@ -7,9 +7,17 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules/*
-# dist
-dist-ssr
+# Dependencies, builds and caches
+node_modules/
+dist/
+dist-ssr/
+.vite/
+.cache/
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+*.tsbuildinfo
 *.local
 
 # Environment files and secrets
@@ -17,13 +25,34 @@ dist-ssr
 .env.*
 !.env.example
 !**/.env.example
+*.key
+*.pem
+*.p12
+*.pfx
 TODO.*
+
+# Local documents, settings and temporary files
+/Songs/
+/Collections/
+/Exported/
+/Backup/
+*.gse
+*.col
+*.backup
+workspace-settings.json
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
+Desktop.ini
 *.suo
 *.ntvs*
 *.njsproj

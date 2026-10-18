@@ -5,15 +5,15 @@
       <div class="header-controls">
         <div class="zoom-control">
           <button @click="decreaseZoom" class="zoom-btn" title="Reducir zoom">
-            <span class="material-icons">zoom_out</span>
+            <AppIcon name="zoom_out" />
           </button>
           <span class="zoom-label">{{ store.settings.zoom_structure }}%</span>
           <button @click="increaseZoom" class="zoom-btn" title="Aumentar zoom">
-            <span class="material-icons">zoom_in</span>
+            <AppIcon name="zoom_in" />
           </button>
         </div>
-        <button @click="addStructureItem" class="add-btn">
-          <span class="material-icons">add</span>
+        <button @click="addStructureItem" class="add-btn" aria-label="Añadir parte a la estructura" title="Añadir parte">
+          <AppIcon name="add" />
         </button>
       </div>
     </div>

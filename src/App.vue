@@ -2,7 +2,7 @@
   <div v-if="isEpubMode" class="epub-preview-container">
     <div class="epub-controls">
       <button @click="generateAndDownloadEpub" :disabled="isGenerating" class="download-btn">
-        {{ isGenerating ? "Generando..." : "Descargar EPUB (Kindle Optimized)" }}
+        {{ isGenerating ? "Generando…" : "Descargar EPUB para Kindle" }}
       </button>
     </div>
     <div class="preview-scroll-area">
@@ -11,52 +11,37 @@
     </div>
   </div>
   <div v-else id="app-layout">
-    <!-- Splash Screen -->
-    <Teleport to="body">
-      <Transition name="splash-fade">
-        <div v-if="showSplash" class="splash-overlay">
-          <!-- Neon background blobs -->
-          <div class="splash-blob splash-blob-1"></div>
-          <div class="splash-blob splash-blob-2"></div>
-          <div class="splash-blob splash-blob-3"></div>
-
-          <div class="splash-card">
-            <div class="splash-main-content">
-              <img class="splash-logo" :src="splashLogo" alt="Group Sheet Editor logo" />
-              <div class="splash-details">
-                <div class="splash-title-row">
-                  <h1 class="splash-title">Group Sheet Editor</h1>
-                  <div class="splash-meta">
-                    <span class="splash-badge">Alpha Release</span>
-                    <span class="splash-version">v0.0.2 Build 1</span>
-                  </div>
-                </div>
-                <p class="splash-author">by Oscar Sanz</p>
-                <a class="splash-link" href="https://github.com/oskrs111" target="_blank" rel="noopener">github.com/oskrs111</a>
-              </div>
-            </div>
-            <div class="splash-progress-track">
-              <div class="splash-progress-bar"></div>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
+    <WorkspaceHeader :library-open="showLibrary" @library="toolbarRef?.openLibrary()" @toggle-library="showLibrary = !showLibrary" @fit="fitDocument" @integrity="checkCollections" />
     <div id="toolbar" class="toolbar-container">
-      <Toolbar />
+      <Toolbar ref="toolbarRef" />
     </div>
-    <div id="main" class="main-container">
-      <div class="section-actions-container">
+    <div class="workspace-body">
+    <main id="main" class="main-container" aria-label="Editor de la canción">
+      <div class="document-toolbar">
+        <div class="document-heading">
+          <AppIcon name="description" />
+          <h1 class="document-title">{{ store.header.center.top.name || 'Nueva canción' }}</h1>
+          <span class="document-format">A4 · {{ store.settings.page_orientation === 'V' ? 'Vertical' : 'Horizontal' }}</span>
+        </div>
+        <div class="zoom-controls" role="group" aria-label="Zoom del documento">
+          <button type="button" :disabled="sheetZoom <= 25" @click="changeZoom(-10)" aria-label="Alejar documento" title="Alejar"><AppIcon name="remove" /></button>
+          <output aria-live="polite">{{ sheetZoom }}%</output>
+          <button type="button" :disabled="sheetZoom >= 150" @click="changeZoom(10)" aria-label="Acercar documento" title="Acercar"><AppIcon name="add" /></button>
+          <button type="button" class="fit-button" @click="fitDocument" aria-label="Ajustar documento al espacio disponible" title="Ajustar a la ventana"><AppIcon name="fit" /><span>Ajustar</span></button>
+        </div>
+      </div>
+      <div v-if="hasSelection" class="section-actions-container" aria-label="Acciones de la selección">
         <SectionActions @edit="handleEditSection" />
         <CompassActions @edit-request="handleEditCompassRequest" @delete-request="handleDeleteCompassRequest" />
         <StructureActions @edit-request="handleEditStructureRequest" />
       </div>
-      <div id="page-wrapper" class="page-wrapper">
+      <div id="page-wrapper" class="page-wrapper" ref="pageWrapperRef">
+        <div class="paper-stage" :style="{ '--paper-zoom': sheetZoom / 100 }">
         <div
           :class="[pageClass, store.settings.page_orientation === 'V' ? (isSheetOverflowing ? 'out-of-bounds' : 'in-bounds') : '']"
           id="sheet-page"
           ref="sheetPageRef"
-          :style="{ '--sheet-font-family': fontFamily }"
+          :style="sheetFontStyles"
         >
           <HeaderComponent />
           <BodyComponent ref="bodyComponent" />
@@ -71,42 +56,27 @@
             </div>
           </div>
         </div>
-        <LyricsPage v-if="store.settings.show_lyrics" :class="pageClass" :style="{ '--sheet-font-family': fontFamily }" />
+        <LyricsPage v-if="store.settings.show_lyrics" :class="pageClass" :style="sheetFontStyles" />
+        </div>
       </div>
       <footer class="undo-status-footer">
-        {{ undoStatusText }}
+        <span class="save-status" :class="{ draft: !store.currentSongId }">{{ store.currentSongId ? 'Autoguardado activo' : 'Borrador sin guardar' }}</span>
+        <span class="undo-description">{{ undoStatusText }}</span>
+        <span>{{ isSheetOverflowing ? 'Contenido fuera de página' : `${store.body.length} ${store.body.length === 1 ? 'sección' : 'secciones'} · ${store.structure.filter(item => !item.isBreak).length} ${store.structure.filter(item => !item.isBreak).length === 1 ? 'parte' : 'partes'}` }}</span>
       </footer>
+    </main>
+    <button v-if="showLibrary" class="library-scrim" type="button" aria-label="Cerrar biblioteca" @click="showLibrary = false"></button>
+    <CollectionContainer v-if="showLibrary" :compact="isCompact" @close="showLibrary = false" @open-song="toolbarRef?.openSong($event)" @save-song="toolbarRef?.openSave()" />
     </div>
-    <CollectionContainer />
     <ToastProvider />
+    <Teleport to="#modal-container">
+      <CollectionIntegrityModal v-if="collectionStore.integrityReportOpen" @close="collectionStore.integrityReportOpen = false" @recheck="checkCollections" />
+    </Teleport>
   </div>
 </template>
 
 <style>
-:root {
-  --sheet-font-family: "Libre Baskerville", serif;
-}
-
-#app-layout {
-  display: flex;
-  width: 100%;
-}
-
-/* Indicadores de sobrepaso visual A4 (solo visible en interfaz web) */
-.in-bounds:not(.pdf-export) {
-  outline: 1px solid var(--ui-accent);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
-  outline-offset: -1px;
-}
-
-.out-of-bounds:not(.pdf-export) {
-  outline: 1px dashed var(--ui-danger);
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-  outline-offset: -1px;
-}
-
 #sheet-page {
-  font-family: var(--sheet-font-family);
   transition: outline 0.3s ease;
 }
 
@@ -115,32 +85,32 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #f0f0f0;
+  background: var(--ms-bg);
 }
 
 .epub-controls {
   padding: 15px;
-  background: #333;
-  color: white;
+  background: var(--ms-surface);
+  border-bottom: 1px solid var(--ms-border);
+  color: var(--ms-text);
   display: flex;
   justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   z-index: 100;
 }
 
 .download-btn {
-  background: #4caf50;
+  background: var(--ms-accent);
   color: white;
   border: none;
   padding: 10px 20px;
-  font-size: 1.1em;
-  border-radius: 4px;
+  font-size: 14px;
+  border-radius: var(--ms-radius-sm);
   cursor: pointer;
   font-weight: bold;
 }
 
 .download-btn:disabled {
-  background: #666;
+  background: var(--ms-text-muted);
   cursor: not-allowed;
 }
 
@@ -152,15 +122,6 @@
   justify-content: center;
 }
 
-.section-actions-container {
-  display: flex;
-  flex-wrap: wrap; /* Allow wrapping if needed */
-  width: 100%;
-  position: sticky;
-  top: 0;
-  z-index: 90;
-  background-color: #f5f5f5; /* Match toolbar bg */
-}
 /* Export Footer Styles */
 .export-footer {
   margin-top: auto; /* Push to bottom of flex container */
@@ -182,23 +143,11 @@
   text-align: right;
 }
 
-.undo-status-footer {
-  padding: 8px 20px 10px;
-  border-top: 1px solid var(--ui-border);
-  background: var(--ui-bg-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--ui-text-secondary);
-  font-size: 12px;
-  text-align: left;
-  width:100%;
-}
 
-/* PDF Export A4 Enrures */
+
+/* PDF Export - A4 */
 #sheet-page.pdf-export {
-  width: 210mm !important;
-  min-height: auto !important; /* Permitir que el contenido dicte la altura, evitando páginas extra */
-  padding: 15mm !important;
+  min-height: unset !important;
   margin: 0 !important;
   box-sizing: border-box !important;
   display: flex !important;
@@ -208,222 +157,19 @@
   box-shadow: none !important;
   outline: 0 !important;
   outline-width: 0 !important;
-  overflow: hidden !important; /* Cortar cualquier micro-desbordamiento que genere páginas en blanco */
+  overflow: hidden !important;
 }
 
-/* ===================== */
-/* === SPLASH SCREEN === */
-/* ===================== */
-.splash-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ui-bg-base);
-  overflow: hidden;
-}
-
-/* Neon ambient blobs */
-.splash-blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(80px);
-  opacity: 0.35;
-  animation: blobPulse 6s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-.splash-blob-1 {
-  width: 380px;
-  height: 380px;
-  background: #3b82f6;
-  top: -80px;
-  left: -80px;
-  animation-delay: 0s;
-}
-.splash-blob-2 {
-  width: 300px;
-  height: 300px;
-  background: #6366f1;
-  bottom: -60px;
-  right: -60px;
-  animation-delay: -2s;
-}
-.splash-blob-3 {
-  width: 200px;
-  height: 200px;
-  background: #38bdf8;
-  top: 50%;
-  left: 55%;
-  animation-delay: -4s;
-}
-
-@keyframes blobPulse {
-  from {
-    transform: scale(1) translate(0, 0);
-  }
-  to {
-    transform: scale(1.15) translate(20px, -20px);
-  }
-}
-
-.splash-card {
-  position: relative;
-  background: rgba(24, 24, 27, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 40px 48px;
-  display: flex;
-  flex-direction: column;
-  box-shadow:
-    0 0 40px rgba(59, 130, 246, 0.2),
-    0 25px 50px rgba(0, 0, 0, 0.6);
-  min-width: 540px;
-  animation: splashCardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.splash-main-content {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 32px;
-  width: 100%;
-}
-
-.splash-details {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.splash-logo {
-  width: 112px;
-  height: 112px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 24px rgba(59, 130, 246, 0.45));
-}
-
-@keyframes splashCardIn {
-  from {
-    opacity: 0;
-    transform: translateY(24px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.splash-title-row {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-}
-
-.splash-title {
-  margin: 0;
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: var(--ui-text-primary);
-  font-family: "Geist", "Inter", system-ui, sans-serif;
-  letter-spacing: -0.5px;
-  text-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
-}
-
-.splash-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.splash-badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  color: var(--ui-accent-hover);
-  border-radius: 9999px;
-  padding: 3px 10px;
-  white-space: nowrap;
-  width: fit-content;
-}
-
-.splash-version {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--ui-text-secondary);
-  opacity: 0.8;
-  font-family: "Geist", monospace;
-}
-
-.splash-author {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--ui-text-secondary);
-  font-family: "Geist", "Inter", system-ui, sans-serif;
-}
-
-.splash-link {
-  font-size: 0.8rem;
-  color: var(--ui-accent);
-  text-decoration: none;
-  transition: color 0.2s;
-  font-family: "Geist", monospace, sans-serif;
-}
-.splash-link:hover {
-  color: var(--ui-accent-hover);
-  text-decoration: underline;
-}
-
-.splash-progress-track {
-  margin-top: 20px;
-  width: 100%;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.splash-progress-bar {
-  height: 100%;
-  width: 0%;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, var(--ui-accent), #38bdf8);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
-  animation: splashProgress 5s linear forwards;
-}
-
-@keyframes splashProgress {
-  from {
-    width: 0%;
-  }
-  to {
-    width: 100%;
-  }
-}
-
-/* Fade-out transition */
-.splash-fade-leave-active {
-  transition:
-    opacity 0.6s ease,
-    transform 0.6s ease;
-}
-.splash-fade-leave-to {
-  opacity: 0;
-  transform: scale(1.03);
-}
 </style>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick, watch, provide } from "vue";
 import { useSheetStore } from "./stores/sheetStore";
+import { useCollectionStore } from "./stores/collectionStore";
+import { useNotificationStore } from "./stores/notificationStore";
+import CollectionIntegrityModal from "./components/CollectionIntegrityModal.vue";
 import Toolbar from "./components/Toolbar.vue";
+import WorkspaceHeader from "./components/WorkspaceHeader.vue";
 import HeaderComponent from "./components/$Header.vue";
 import BodyComponent from "./components/@Body.vue";
 import StructureComponent from "./components/$Structure.vue";
@@ -434,33 +180,59 @@ import StructureActions from "./components/StructureActions.vue";
 import CollectionContainer from "./components/CollectionContainer.vue";
 import EpubPage from "./components/EpubPage.vue";
 import LyricsPage from "./components/LyricsPage.vue";
-import html2canvas from "html2canvas";
-import { saveAs } from "file-saver";
+import { toBlob, getFontEmbedCSS } from "html-to-image";
+import { saveExport as saveAs } from "./utils/saveExport";
+import { prepareScoreExport } from "./utils/scoreLayout";
+import { CHORD_FONT_KEY, getSheetFont, getSheetFontStyles } from "./utils/sheetFonts";
 import ToastProvider from "./components/UI/ToastProvider.vue";
-import splashLogo from "./asset/gse_logo_256x256.png";
 
 const store = useSheetStore();
+const collectionStore = useCollectionStore();
+const checkCollections = async () => {
+  collectionStore.integrityReportOpen = true;
+  try {
+    await collectionStore.recheckIntegrity();
+  } catch (error) {
+    useNotificationStore().addToast('No se pudo comprobar la biblioteca: ' + error.message, 'error');
+  }
+};
+watch(() => JSON.stringify(collectionStore.integrityIssues), () => {
+  if (collectionStore.integrityIssues.length) collectionStore.integrityReportOpen = true;
+});
+const toolbarRef = ref(null);
+const pageWrapperRef = ref(null);
+const showLibrary = ref(window.innerWidth > 1100);
+const isCompact = ref(window.innerWidth <= 1100);
+const sheetZoom = ref(100);
+const autoFit = ref(true);
+const hasSelection = computed(() => store.selectedSectionId !== null || store.selectedCompass !== null || store.selectedStructureIndex !== null);
+let viewportObserver;
+const fitDocument = () => {
+  autoFit.value = true;
+  const paperWidth = store.settings.page_orientation === 'V' ? 794 : 1123;
+  sheetZoom.value = Math.max(25, Math.min(100, Math.floor(((pageWrapperRef.value?.clientWidth || window.innerWidth) - 64) / paperWidth * 100)));
+};
+const changeZoom = delta => {
+  autoFit.value = false;
+  sheetZoom.value = Math.max(25, Math.min(150, sheetZoom.value + delta));
+};
+watch(() => store.settings.page_orientation, () => { if (autoFit.value) nextTick(fitDocument); });
 const bodyComponent = ref(null);
 const structureComponent = ref(null);
 const sheetPageRef = ref(null);
 const isEpubMode = ref(false);
 const epubData = ref(null);
 const isGenerating = ref(false);
-const showSplash = ref(false);
 const isSheetOverflowing = ref(false);
 
-// 297mm (1122.5px) + 20px padding superior + 20px padding inferior = 1162.5px.
-// Añadimos una tolerancia de 5px para evitar falsos positivos por redondeo de píxeles: 1167.5px.
-const MAX_A4_HEIGHT_PX = 1167.5;
 let resizeObserver = null;
 
 const pageClass = computed(() => {
   return store.settings.page_orientation === "V" ? "page-vertical" : "page-horizontal";
 });
 
-const fontFamily = computed(() => {
-  return store.settings.font_family || "Libre Baskerville";
-});
+const sheetFontStyles = computed(() => getSheetFontStyles(store.settings));
+provide(CHORD_FONT_KEY, computed(() => getSheetFont(store.settings)));
 
 const undoStatusText = computed(() => {
   const levelCount = store.undoHistory.length;
@@ -520,14 +292,13 @@ const generateAndDownloadEpub = async () => {
 
     // Wait slightly for fonts/rendering
     await nextTick();
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+    await prepareScoreExport(element);
 
-    const canvas = await html2canvas(element, {
-      scale: 2, // Retain good quality
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff",
-    });
+    // Pre-embeber fuentes para captura fiel
+    const fontEmbedCSS = await getFontEmbedCSS(element);
 
     // 2. Capture Logic with visual toggling
 
@@ -541,13 +312,13 @@ const generateAndDownloadEpub = async () => {
     // A. Capture Main Sheet (Lyrics hidden)
     if (lyricsSection) lyricsSection.style.display = "none";
 
-    const canvasMain = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
+    mainBlob = await toBlob(element, {
+      quality: 0.9,
+      pixelRatio: 2,
       backgroundColor: "#ffffff",
+      fontEmbedCSS,
+      type: "image/jpeg",
     });
-    mainBlob = await new Promise((resolve) => canvasMain.toBlob(resolve, "image/jpeg", 0.9));
 
     const imageBlobs = [mainBlob];
 
@@ -561,13 +332,13 @@ const generateAndDownloadEpub = async () => {
         // Wait a tick for layout update
         await nextTick();
 
-        const canvasLyrics = await html2canvas(element, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
+        lyricsBlob = await toBlob(element, {
+          quality: 0.9,
+          pixelRatio: 2,
           backgroundColor: "#ffffff",
+          fontEmbedCSS,
+          type: "image/jpeg",
         });
-        lyricsBlob = await new Promise((resolve) => canvasLyrics.toBlob(resolve, "image/jpeg", 0.9));
         imageBlobs.push(lyricsBlob);
       } catch (e) {
         console.error("Error capturing epub lyrics", e);
@@ -591,10 +362,10 @@ const generateAndDownloadEpub = async () => {
     const epubBlob = await generator.generateFromImages(imageBlobs);
 
     // 4. Download
-    saveAs(epubBlob, `${epubData.value.header.center.top.name || "sheet"}.epub`);
+    await saveAs(epubBlob, `${epubData.value.header.center.top.name || "sheet"}.epub`);
   } catch (error) {
     console.error("Error generating EPUB:", error);
-    alert("Error generating EPUB: " + error.message);
+    useNotificationStore().addToast("No se pudo generar el EPUB: " + error.message, 'error');
   } finally {
     isGenerating.value = false;
     // Safety restore in case of error mid-flow
@@ -620,13 +391,10 @@ onMounted(() => {
       console.error("Error loading EPUB data", e);
     }
   } else {
-    // Mostrar splash screen 5 segundos
-    showSplash.value = true;
-    setTimeout(() => {
-      showSplash.value = false;
-    }, 5000);
-
     store.initializeApp();
+
+    viewportObserver = new ResizeObserver(() => { isCompact.value = window.innerWidth <= 1100; if (autoFit.value) fitDocument(); });
+    if (pageWrapperRef.value) viewportObserver.observe(pageWrapperRef.value);
 
     // Configurar ResizeObserver para vigilar altura del A4
     if (sheetPageRef.value) {
@@ -634,12 +402,12 @@ onMounted(() => {
         for (let entry of entries) {
           // Evaluamos si el render actual superó el equivalente a ~297mm reales en píxeles.
           // getBoundingClientRect().height da el tamaño real pos-transform/zoom.
-          const rect = entry.target.getBoundingClientRect();
-          isSheetOverflowing.value = rect.height > MAX_A4_HEIGHT_PX;
+          isSheetOverflowing.value = entry.target.scrollHeight > entry.target.clientHeight + 2;
         }
       });
       resizeObserver.observe(sheetPageRef.value);
     }
   }
 });
+onUnmounted(() => { resizeObserver?.disconnect(); viewportObserver?.disconnect(); });
 </script>

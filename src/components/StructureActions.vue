@@ -1,48 +1,48 @@
 <template>
   <div v-if="isValidSelection" class="structure-actions-toolbar">
     <button @click="editItem" class="action-btn" title="Editar">
-      <span class="material-icons">edit</span>
+      <AppIcon name="edit" />
       <span class="btn-label">Editar</span>
     </button>
     <button @click="moveLeft" class="action-btn" :disabled="isFirst" title="Mover a la izquierda">
-      <span class="material-icons">arrow_left</span>
+      <AppIcon name="arrow_left" />
       <span class="btn-label">Mover Izq</span>
     </button>
     <button @click="moveRight" class="action-btn" :disabled="isLast" title="Mover a la derecha">
-      <span class="material-icons">arrow_right</span>
+      <AppIcon name="arrow_right" />
       <span class="btn-label">Mover Der</span>
     </button>
     <button @click="addLeft" class="action-btn" title="Añadir a la izquierda">
-      <span class="material-icons">playlist_add</span>
+      <AppIcon name="playlist_add" />
       <span class="btn-label">Añadir Izq</span>
     </button>
     <button @click="addRight" class="action-btn" title="Añadir a la derecha">
-      <span class="material-icons">playlist_add</span>
+      <AppIcon name="playlist_add" />
       <span class="btn-label">Añadir Der</span>
     </button>
     <button @click="copyItem" class="action-btn" title="Copiar">
-      <span class="material-icons">content_copy</span>
+      <AppIcon name="content_copy" />
       <span class="btn-label">Copiar</span>
     </button>
     <button @click="pasteItem" class="action-btn" :disabled="!hasCopiedItem" title="Pegar">
-      <span class="material-icons">content_paste</span>
+      <AppIcon name="content_paste" />
       <span class="btn-label">Pegar</span>
     </button>
     <button @click="showDeleteModal = true" class="action-btn danger" title="Eliminar">
-      <span class="material-icons">delete</span>
+      <AppIcon name="delete" />
       <span class="btn-label">Eliminar</span>
     </button>
 
     <Teleport to="#modal-container">
-      <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+      <div v-dialog v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
         <div class="modal-content">
-          <div class="modal-header">Confirmar Eliminación</div>
+          <div class="modal-header">Eliminar parte de la estructura</div>
           <div class="modal-body">
-            <p>¿Está seguro de que desea eliminar este elemento de la estructura?</p>
+            <p>Se quitará esta aparición de la estructura. La sección seguirá disponible en la canción.</p>
           </div>
           <div class="modal-footer">
             <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
-            <button class="primary" @click="confirmDelete">Eliminar</button>
+            <button class="primary" @click="confirmDelete">Eliminar parte</button>
           </div>
         </div>
       </div>
@@ -169,7 +169,7 @@ onUnmounted(() => {
   background: transparent;
   border: 1px solid var(--ui-border);
   color: var(--ui-text-primary);
-  border-radius: 9999px;
+  border-radius: var(--ms-radius-sm);
   cursor: pointer;
   font-size: 13px;
   transition: all 0.3s ease;
@@ -178,7 +178,7 @@ onUnmounted(() => {
 
 .action-btn:hover:not(:disabled) {
   background: var(--ui-bg-hover);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--ms-surface-subtle);
   filter: brightness(1.1);
 }
 

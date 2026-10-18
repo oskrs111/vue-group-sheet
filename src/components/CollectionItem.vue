@@ -1,28 +1,35 @@
 <template>
   <div class="collection-item">
+    <div class="collection-card-heading">
+    <span class="collection-art"><AppIcon name="book" /></span>
     <div class="collection-info">
       <span class="collection-name">{{ collection.name }}</span>
-      <span class="collection-count">{{ collection.songs.length }} canciones</span>
+      <span class="collection-count">{{ collection.songs.length }} {{ collection.songs.length === 1 ? 'canción' : 'canciones' }}</span>
     </div>
+    <button type="button" class="collection-open" @click="showEditModal = true" :aria-label="`Editar colección ${collection.name}`" title="Editar colección"><AppIcon name="chevron_right" /></button>
+    </div>
+    <button v-if="integrityIssue" type="button" class="collection-integrity-warning" @click="store.integrityReportOpen = true">
+      <AppIcon name="warning" /> {{ integrityIssue.missingSongs.length }} {{ integrityIssue.missingSongs.length === 1 ? 'referencia ausente' : 'referencias ausentes' }} · Revisar
+    </button>
     
     <div class="collection-actions">
       <button @click="showEditModal = true" title="Editar" class="action-btn">
-        <span class="material-icons">edit</span>
+        <AppIcon name="edit" />
       </button>
       <button @click="duplicate" title="Duplicar" class="action-btn">
-        <span class="material-icons">content_copy</span>
+        <AppIcon name="content_copy" />
       </button>
       <button @click="exportJSON" title="Exportar .col" class="action-btn">
-        <span class="material-icons">file_download</span>
+        <AppIcon name="file_download" />
       </button>
       <button @click="exportCollectionPDF" title="Exportar PDF" class="action-btn" :disabled="isExporting">
-        <span class="material-icons">{{ isExporting ? 'hourglass_empty' : 'picture_as_pdf' }}</span>
+        <AppIcon :name="isExporting ? 'hourglass_empty' : 'picture_as_pdf'" />
       </button>
       <button @click="exportEPUB" title="Exportar EPUB" class="action-btn" :disabled="isExporting">
-        <span class="material-icons">book</span>
+        <AppIcon name="book" />
       </button>
       <button @click="confirmDelete" title="Eliminar" class="action-btn danger">
-        <span class="material-icons">delete</span>
+        <AppIcon name="delete" />
       </button>
     </div>
 
@@ -33,12 +40,17 @@
         @close="showEditModal = false" 
       />
       <ConfirmDialog
+        :key="confirmState.id"
         v-model="confirmState.show"
         :title="confirmState.title"
         :message="confirmState.message"
         :confirmText="confirmState.confirmText"
+        :cancelText="confirmState.cancelText"
+        :alternativeText="confirmState.alternativeText"
+        :alternativeDanger="confirmState.alternativeDanger"
         :isDanger="confirmState.isDanger"
         @confirm="confirmState.onConfirm"
+        @alternative="confirmState.onAlternative"
         @cancel="confirmState.onCancel"
       />
     </Teleport>
@@ -51,15 +63,19 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, computed } from 'vue'
 import { useCollectionStore } from '../stores/collectionStore'
 import { useSheetStore } from '../stores/sheetStore'
 import CollectionEditModal from './CollectionEditModal.vue'
-import html2canvas from 'html2canvas'
+import { toPng, toBlob, getFontEmbedCSS } from 'html-to-image'
 import { jsPDF } from 'jspdf'
-import { saveAs } from 'file-saver'
+import { saveExport as saveAs } from '../utils/saveExport'
 import { useNotificationStore } from '../stores/notificationStore'
 import ConfirmDialog from './UI/ConfirmDialog.vue'
+import { useConfirmDialog } from '../composables/useConfirmDialog'
+import { lyricsExportOptions } from '../utils/dialogChoices'
+import { prepareScoreExport } from '../utils/scoreLayout'
+import appLogoUrl from '../asset/gse_logo_256x256.png'
 
 const props = defineProps({
   collection: {
@@ -74,30 +90,9 @@ const notification = useNotificationStore()
 const showEditModal = ref(false)
 const isExporting = ref(false)
 const pdfContainer = ref(null)
+const integrityIssue = computed(() => store.integrityIssues.find(issue => issue.collectionId === props.collection.id))
 
-const confirmState = ref({
-  show: false,
-  title: '',
-  message: '',
-  confirmText: 'Aceptar',
-  isDanger: false,
-  onConfirm: () => {},
-  onCancel: () => {}
-})
-
-const askConfirm = (options) => {
-  return new Promise((resolve) => {
-    confirmState.value = {
-      show: true,
-      title: options.title || 'Confirmar',
-      message: options.message || '¿Estás seguro?',
-      confirmText: options.confirmText || 'Aceptar',
-      isDanger: options.isDanger || false,
-      onConfirm: () => resolve(true),
-      onCancel: () => resolve(false)
-    }
-  })
-}
+const { confirmState, askConfirm } = useConfirmDialog()
 
 const duplicate = () => {
   store.duplicateCollection(props.collection.id)
@@ -105,10 +100,10 @@ const duplicate = () => {
 
 const confirmDelete = async () => {
   const confirmed = await askConfirm({
-    title: 'Eliminar Colección',
-    message: `¿Eliminar la colección "${props.collection.name}"?`,
+    title: 'Eliminar colección',
+    message: `Se eliminará la colección «${props.collection.name}». Sus canciones seguirán en la biblioteca.`,
     isDanger: true,
-    confirmText: 'Eliminar'
+    confirmText: 'Eliminar colección'
   })
   
   if (confirmed) {
@@ -132,8 +127,36 @@ const getExportFileName = () => {
     return `${name}_${dateTime}`
 }
 
+const loadImage = (src) => new Promise((resolve, reject) => {
+  const image = new Image()
+  image.onload = () => resolve(image)
+  image.onerror = reject
+  image.src = src
+})
+
+const truncatePdfText = (pdf, text, maxWidth) => {
+  if (pdf.getTextWidth(text) <= maxWidth) return text
+  let truncated = text
+  while (truncated.length && pdf.getTextWidth(`${truncated}…`) > maxWidth) {
+    truncated = truncated.slice(0, -1)
+  }
+  return `${truncated}…`
+}
+
+const prepareExport = () => {
+  try {
+    return store.exportCollection(props.collection.id)
+  } catch (error) {
+    notification.addToast(error.message, error.code === 'MISSING_COLLECTION_SONGS' ? 'warning' : 'error', 6000)
+    return null
+  }
+}
+
 const exportCollectionPDF = async () => {
-  if (props.collection.songs.length === 0) {
+  const exportTrigger = document.activeElement
+  const data = prepareExport()
+  if (!data) return
+  if (data.collection.songs.length === 0) {
     notification.addToast('La colección está vacía', 'warning')
     return
   }
@@ -142,11 +165,11 @@ const exportCollectionPDF = async () => {
   await nextTick()
 
   try {
-    const songsRegistry = sheetStore.getSongsRegistry()
+    const songsRegistry = { songs: Object.fromEntries(data.songs.map(song => [song.id, song])) }
     
     // Recopilar metadatos de todas las canciones primero
     const coverList = []
-    for (const songId of props.collection.songs) {
+    for (const songId of data.collection.songs) {
       if (songsRegistry.songs[songId]) {
         const s = songsRegistry.songs[songId]
         const name = s.header?.center?.top?.name || 'Sin nombre'
@@ -165,14 +188,15 @@ const exportCollectionPDF = async () => {
 
     const pdfWidth = pdf.internal.pageSize.getWidth()
     const pdfHeight = pdf.internal.pageSize.getHeight()
+    const logo = await loadImage(appLogoUrl)
     
     // --- PORTADA ---
-    let yPos = pdfHeight / 3 - 20
+    let yPos = 32
     
     pdf.setFont("helvetica", "bold")
-    pdf.setFontSize(24)
+    pdf.setFontSize(20)
     pdf.text(props.collection.name, pdfWidth / 2, yPos, { align: "center" })
-    yPos += 15
+    yPos += 12
 
     pdf.setFont("helvetica", "normal")
     pdf.setFontSize(12)
@@ -180,25 +204,38 @@ const exportCollectionPDF = async () => {
       year: 'numeric', month: 'long', day: 'numeric' 
     })
     pdf.text(`Exportado el ${dateStr}`, pdfWidth / 2, yPos, { align: "center" })
-    yPos += 10
+    yPos += 8
     
     pdf.setFontSize(10)
-    pdf.text(`${props.collection.songs.length} canciones`, pdfWidth / 2, yPos, { align: "center" })
-    yPos += 20
+    pdf.text(`${data.collection.songs.length} canciones`, pdfWidth / 2, yPos, { align: "center" })
+    yPos += 14
 
     // LISTA DE CANCIONES (TOC)
-    pdf.setFontSize(11)
+    pdf.setFontSize(8)
     pdf.setFont("helvetica", "normal")
-    
+
+    const columnWidth = 82
+    const leftX = 18
+    const rightX = pdfWidth / 2 + 5
+    const rowsPerColumn = Math.ceil(coverList.length / 2)
+    const rowHeight = 6.25
+
     coverList.forEach((item, index) => {
-      // Simple pagination check for cover? 
-      // For now assume it fits or user accepts overflow on simple covers.
-      // If we go past page, we stop (simple MVP)
-      if (yPos < pdfHeight - 20) {
-        pdf.text(item, pdfWidth / 2, yPos, { align: "center" })
-        yPos += 7
-      }
+      const column = Math.floor(index / rowsPerColumn)
+      const row = index % rowsPerColumn
+      const x = column === 0 ? leftX : rightX
+      const indexedItem = `${index + 1}. ${item}`
+      pdf.text(truncatePdfText(pdf, indexedItem, columnWidth), x, yPos + row * rowHeight)
     })
+
+    const footerY = pdfHeight - 18
+    pdf.setDrawColor(153)
+    pdf.line(18, footerY - 5, pdfWidth - 18, footerY - 5)
+    pdf.addImage(logo, 'PNG', pdfWidth / 2 - 17, footerY - 2, 5, 5)
+    pdf.setFontSize(8)
+    pdf.setTextColor(68)
+    pdf.text('Group Sheet Editor', pdfWidth / 2 - 10, footerY + 2)
+    pdf.setTextColor(0)
     
     pdf.addPage()
     // --- FIN PORTADA ---
@@ -210,14 +247,12 @@ const exportCollectionPDF = async () => {
     console.log('Iniciando exportación de colección:', props.collection.name)
     
     // Preguntar por letras una sola vez al inicio
-    const includeLyrics = await askConfirm({
-        title: 'Exportar Letras',
-        message: '¿Incluir las letras (si están disponibles) en la exportación?'
-    })
+    const includeLyrics = await askConfirm(lyricsExportOptions)
+    if (includeLyrics === null) return
 
-    for (let i = 0; i < props.collection.songs.length; i++) {
-      const songId = props.collection.songs[i]
-      console.log(`Procesando canción ${i + 1}/${props.collection.songs.length} (ID: ${songId})`)
+    for (let i = 0; i < data.collection.songs.length; i++) {
+      const songId = data.collection.songs[i]
+      console.log(`Procesando canción ${i + 1}/${data.collection.songs.length} (ID: ${songId})`)
       
       const songData = songsRegistry.songs[songId]
       if (!songData) {
@@ -230,12 +265,12 @@ const exportCollectionPDF = async () => {
       console.log('Canción cargada:', sheetStore.header.center.top.name)
       
       // Preparar datos del footer
-      const nextSongId = i + 1 < props.collection.songs.length ? props.collection.songs[i + 1] : null
+      const nextSongId = i + 1 < data.collection.songs.length ? data.collection.songs[i + 1] : null
       const nextSongData = nextSongId ? songsRegistry.songs[nextSongId] : null
       
       const footerData = {
         current: i + 1,
-        total: props.collection.songs.length,
+        total: data.collection.songs.length,
         nextTitle: nextSongData ? (nextSongData.header?.center?.top?.name || 'Sin nombre') : null,
         nextAuthor: nextSongData ? (nextSongData.header?.center?.bottom?.author || '') : null
       }
@@ -244,6 +279,9 @@ const exportCollectionPDF = async () => {
       
       // Esperar a que Vue actualice el DOM
       await nextTick()
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready
+      }
       await new Promise(resolve => setTimeout(resolve, 800)) // Wait for render
       
       const sheetPage = document.getElementById('sheet-page')
@@ -253,16 +291,14 @@ const exportCollectionPDF = async () => {
         sheetPage.classList.add('pdf-export')
         
         try {
-          const canvas = await html2canvas(sheetPage, {
-            scale: 2, 
-            useCORS: true,
-            logging: false,
+          await prepareScoreExport(sheetPage)
+          const fontEmbedCSS = await getFontEmbedCSS(sheetPage)
+          const imgData = await toPng(sheetPage, {
+            quality: 1,
+            pixelRatio: 2,
             backgroundColor: '#ffffff',
-            scrollY: -window.scrollY,
-            scrollX: -window.scrollX
+            fontEmbedCSS
           })
-          
-          const imgData = canvas.toDataURL('image/jpeg', 0.95)
           const imgProps = pdf.getImageProperties(imgData)
           const imgRatio = imgProps.width / imgProps.height
           const printWidth = pdfWidth
@@ -272,7 +308,7 @@ const exportCollectionPDF = async () => {
             pdf.addPage()
           }
           
-          pdf.addImage(imgData, 'JPEG', 0, 0, printWidth, printHeight)
+          pdf.addImage(imgData, 'PNG', 0, 0, printWidth, printHeight)
           
         } catch (captureError) {
           console.error('Error capturando canción:', captureError)
@@ -288,23 +324,20 @@ const exportCollectionPDF = async () => {
           // Activar estilos de exportación también en la página de letras
           lyricsPage.classList.add('pdf-export')
           try {
-             const canvas = await html2canvas(lyricsPage, {
-              scale: 2, 
-              useCORS: true,
-              logging: false,
+            const lyricsFontCSS = await getFontEmbedCSS(lyricsPage)
+            const imgData = await toPng(lyricsPage, {
+              quality: 1,
+              pixelRatio: 2,
               backgroundColor: '#ffffff',
-              scrollY: -window.scrollY,
-              scrollX: -window.scrollX
+              fontEmbedCSS: lyricsFontCSS
             })
-            
-            const imgData = canvas.toDataURL('image/jpeg', 0.95)
             const imgProps = pdf.getImageProperties(imgData)
             const imgRatio = imgProps.width / imgProps.height
             const printWidth = pdfWidth
             const printHeight = printWidth / imgRatio
             
             pdf.addPage()
-            pdf.addImage(imgData, 'JPEG', 0, 0, printWidth, printHeight)
+            pdf.addImage(imgData, 'PNG', 0, 0, printWidth, printHeight)
   
           } catch (e) {
             console.error('Error capturing lyrics:', e)
@@ -322,7 +355,7 @@ const exportCollectionPDF = async () => {
     if (includeLyrics) {
         fileName += '_LETRAS'
     }
-    pdf.save(`${fileName}.pdf`)
+    await saveAs(pdf.output('blob'), `${fileName}.pdf`)
 
   } catch (error) {
     console.error('Error exportando colección:', error)
@@ -331,16 +364,19 @@ const exportCollectionPDF = async () => {
     sheetStore.updateExportFooter(null)
   } finally {
     isExporting.value = false
+    await nextTick()
+    if (exportTrigger?.isConnected) exportTrigger.focus()
   }
 }
 
-const exportJSON = () => {
+const exportJSON = async () => {
+  const data = prepareExport()
+  if (!data) return
   try {
-    const data = store.exportCollection(props.collection.id)
     const jsonStr = JSON.stringify(data, null, 2)
     const blob = new Blob([jsonStr], { type: 'application/json' })
     const fileName = getExportFileName()
-    saveAs(blob, `${fileName}.col`)
+    await saveAs(blob, `${fileName}.col`)
     notification.addToast('Colección exportada exitosamente', 'success')
   } catch (error) {
     console.error('Error exportando colección:', error)
@@ -349,7 +385,10 @@ const exportJSON = () => {
 }
 
 const exportEPUB = async () => {
-  if (props.collection.songs.length === 0) {
+  const exportTrigger = document.activeElement
+  const data = prepareExport()
+  if (!data) return
+  if (data.collection.songs.length === 0) {
     notification.addToast('La colección está vacía', 'warning')
     return
   }
@@ -358,21 +397,16 @@ const exportEPUB = async () => {
   await nextTick()
 
   try {
-    const songsRegistry = sheetStore.getSongsRegistry()
+    const songsRegistry = { songs: Object.fromEntries(data.songs.map(song => [song.id, song])) }
     const songsToExport = []
     const imageBlobs = []
 
     // Preguntar por letras una sola vez al inicio
-    const includeLyrics = await askConfirm({
-        title: 'Exportar Letras',
-        message: '¿Incluir las letras (si están disponibles) en la exportación?'
-    })
-    if (includeLyrics) {
-        includeLyrics = true
-    }
+    const includeLyrics = await askConfirm(lyricsExportOptions)
+    if (includeLyrics === null) return
 
     // 1. Collect Metadata and Capture Images sequentially
-    for (const songId of props.collection.songs) {
+    for (const songId of data.collection.songs) {
       if (songsRegistry.songs[songId]) {
         // Metadata copy
         const songData = JSON.parse(JSON.stringify(songsRegistry.songs[songId]))
@@ -382,6 +416,9 @@ const exportEPUB = async () => {
         
         // Wait for render
         await nextTick()
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready
+        }
         await new Promise(resolve => setTimeout(resolve, 800))
 
         const sheetPage = document.getElementById('sheet-page')
@@ -389,14 +426,15 @@ const exportEPUB = async () => {
            sheetPage.classList.add('pdf-export') // Ensure clean look
            try {
              // 1. Capture Sheet
-             const canvas = await html2canvas(sheetPage, {
-               scale: 2,
-               useCORS: true,
-               logging: false,
-               backgroundColor: '#ffffff'
+             await prepareScoreExport(sheetPage)
+             const fontEmbedCSS = await getFontEmbedCSS(sheetPage)
+             const blob = await toBlob(sheetPage, {
+               quality: 0.9,
+               pixelRatio: 2,
+               backgroundColor: '#ffffff',
+               fontEmbedCSS,
+               type: 'image/jpeg'
              })
-             
-             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
              
              // Add Sheet to lists
              songsToExport.push(songData)
@@ -415,14 +453,14 @@ const exportEPUB = async () => {
             if (lyricsPage) {
                lyricsPage.classList.add('pdf-export')
                try {
-                 const canvas = await html2canvas(lyricsPage, {
-                   scale: 2,
-                   useCORS: true,
-                   logging: false,
-                   backgroundColor: '#ffffff'
+                 const lyricsFontCSS = await getFontEmbedCSS(lyricsPage)
+                 const blob = await toBlob(lyricsPage, {
+                   quality: 0.9,
+                   pixelRatio: 2,
+                   backgroundColor: '#ffffff',
+                   fontEmbedCSS: lyricsFontCSS,
+                   type: 'image/jpeg'
                  })
-                 
-                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
                  
                  // Add Lyrics to lists as a separate "song" entry
                  // Clone data but append (Letra) to name
@@ -461,92 +499,35 @@ const exportEPUB = async () => {
     if (includeLyrics) {
         fileName += '_LETRAS'
     }
-    saveAs(blob, `${fileName}.epub`)
+    await saveAs(blob, `${fileName}.epub`)
 
   } catch (error) {
     console.error('Error exportando EPUB:', error)
     notification.addToast('Error al generar EPUB: ' + error.message, 'error')
   } finally {
     isExporting.value = false
+    await nextTick()
+    if (exportTrigger?.isConnected) exportTrigger.focus()
   }
 }
 </script>
 
 <style scoped>
-.collection-item {
-  background: var(--ui-bg-surface);
-  border: 1px solid var(--ui-border);
-  border-radius: 12px;
-  padding: 12px;
-  transition: all 0.3s ease;
-}
-
-.collection-item:hover {
-  background: var(--ui-bg-hover);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-
-.collection-info {
-  margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-}
-
-.collection-name {
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--ui-text-primary);
-}
-
-.collection-count {
-  font-size: 12px;
-  color: var(--ui-text-secondary);
-}
-
-.collection-actions {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.action-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 9999px;
-  color: var(--ui-text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.action-btn:hover {
-  background: var(--ui-bg-hover);
-  color: var(--ui-text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
-  filter: brightness(1.2);
-}
-
-.action-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--ui-danger);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-.action-btn .material-icons {
-  font-size: 20px;
-}
-
-.pdf-export-container {
-  position: absolute;
-  left: -10000px;
-  top: 0;
-  width: 210mm; /* A4 width */
-  opacity: 1;
-  background: white;
-  z-index: -1000;
-}
+.collection-item { border: 1px solid var(--ms-border); border-radius: var(--ms-radius-md); background: var(--ms-surface); padding: 12px; transition: border-color .15s; }
+.collection-item:hover { border-color: var(--ms-accent); }
+.collection-card-heading { display: flex; align-items: center; gap: 10px; }
+.collection-art { display: grid; place-items: center; width: 36px; height: 42px; flex-shrink: 0; background: var(--ms-accent-soft); color: var(--ms-accent); border-radius: var(--ms-radius-sm); }
+.collection-info { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+.collection-name { font-weight: 600; font-size: 12px; color: var(--ms-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.collection-count { font-size: 10px; color: var(--ms-text-muted); }
+.collection-integrity-warning { display: flex; align-items: center; gap: 6px; color: var(--ms-warning); background: transparent; border: 0; padding: 10px 0 0; font-size: 11px; text-align: left; }
+.collection-integrity-warning .app-icon { font-size: 15px; }
+.collection-open { display: flex; border: 0; background: transparent; color: var(--ms-text-muted); padding: 3px; border-radius: var(--ms-radius-sm); }
+.collection-open:hover { color: var(--ms-accent); background: var(--ms-surface-hover); }
+.collection-actions { display: flex; gap: 3px; padding-top: 10px; margin-top: 10px; border-top: 1px solid var(--ms-border); }
+.action-btn { display: grid; place-items: center; flex: 1; background: transparent; border: 0; padding: 6px; border-radius: var(--ms-radius-sm); color: var(--ms-text-muted); min-height: 30px; }
+.action-btn:hover { background: var(--ms-surface-hover); color: var(--ms-accent); }
+.action-btn.danger:hover { background: var(--ms-danger-soft); color: var(--ms-danger); }
+.action-btn .material-icons { font-size: 16px; }
+.pdf-export-container { position: absolute; left: -10000px; top: 0; width: 210mm; opacity: 1; background: white; z-index: -1000; }
 </style>

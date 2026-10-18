@@ -1,11 +1,11 @@
 <template>
   <div class="editable-container">
     <div class="author-display">{{ store.header.center.bottom.author }}</div>
-    <button class="edit-btn" @click="showModal = true">
-      <span class="material-icons">edit</span>
+    <button aria-label="Editar autor" class="edit-btn" @click="showModal = true">
+      <AppIcon name="edit" />
     </button>
     
-    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+    <div v-dialog v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-content">
         <div class="modal-header">Editar Autor</div>
         <div class="modal-body">

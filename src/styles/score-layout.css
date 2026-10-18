@@ -1,0 +1,74 @@
+/* Shared typography for all page text, including notes and lyrics. */
+.page-vertical, .page-horizontal { font-family: var(--sheet-font-family, 'Recovered Chords Std', 'Libre Baskerville', serif); }
+.page-vertical pre, .page-horizontal pre { font-family: inherit; }
+
+/* A4 Page dimensions - fixed height for footer anchoring */
+.page-vertical {
+  width: 210mm;
+  height: 297mm;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 10mm 10mm;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-horizontal {
+  width: 297mm;
+  height: 210mm;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 12mm 15mm;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shared by the editor, print/PDF capture, EPUB preview and exported XHTML. */
+.sections-wrapper { width: 100%; }
+.score-section, .score-section * { box-sizing: border-box; }
+.score-section { display: flex; gap: 0; margin-bottom: 12px; align-items: flex-start; border: 1px solid #e0e0e0; border-radius: 4px; background: #fff; color: var(--section-text-color, #000); break-inside: avoid; page-break-inside: avoid; }
+.score-section > .section-id-container { min-width: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 14px; }
+.score-section .section-id { font-size: 35px; font-weight: bold; line-height: 1; }
+.score-section > .section-container { padding: 5px; flex: 1; min-width: 0; }
+.score-section .section-turn { padding: 3px; font-size: 20px; font-weight: bold; }
+/* Overlap adjacent 2px barlines while keeping both ends of every row. */
+.score-compass-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); row-gap: 0; margin-top: -5px; margin-right: 2px; }
+/* Only music rows add spacing; explicit breaks occupy a zero-height grid row. */
+.score-compass-cell { display: flex; min-width: 0; grid-column: span var(--score-span, 1); margin-right: -2px; padding-top: 5px; }
+.score-compass-cell.is-break { grid-column: 1 / -1; position: relative; height: 0; min-height: 0; padding-top: 0; }
+.score-compass-break { height: 0; }
+.score-compass-grid .compass-break-marker { position: absolute; left: -49px; top: 18px; z-index: 1; }
+.score-compass-grid :is(.is-leading-break, .is-trailing-break) .compass-break-marker { left: -27px; justify-content: flex-end; }
+.score-compass-grid .is-trailing-break .compass-break-marker { top: -40px; }
+.score-compass-grid :is(.is-leading-break, .is-trailing-break) .compass-break-marker .app-icon { font-size: 12px; }
+@media (pointer: coarse) {
+  .score-compass-grid .is-break .compass-break-marker { left: -57px; top: 10px; width: 44px; height: 44px; }
+  .score-compass-grid :is(.is-leading-break, .is-trailing-break) .compass-break-marker { left: -45px; }
+  .score-compass-grid .is-trailing-break .compass-break-marker { top: -49px; }
+}
+.score-compass-grid .score-compass { display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; border: 0; border-left: 2px solid #000; border-right: 2px solid #000; padding: 0; position: relative; border-radius: 0; }
+.score-compass .chords-display { display: flex; flex: 0 0 auto; flex-wrap: nowrap; width: max-content; gap: 8px; justify-content: center; align-items: flex-end; min-height: 52px; transform: scale(var(--score-content-scale, 1)); transform-origin: center; }
+.score-compass .chord-display { display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; min-height: 52px; }
+.score-compass .duration-symbol { font-size: 20px; line-height: 1; min-height: 20px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; transform: translateY(-2px); white-space: nowrap; }
+.score-compass .chord-note { font-size: 19px; font-weight: var(--chord-font-weight, 400); font-family: var(--chord-font-family, 'Recovered Chords Std Chords', 'Libre Baskerville', serif); font-synthesis: none; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; line-height: 1.1; min-width: 28px; padding: 1px 4px; text-align: center; white-space: nowrap; }
+.score-compass .chord-note.is-minor { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.score-compass .chord-fallback { font-family: 'Libre Baskerville', serif; }
+.score-compass .chord-superscript { font-size: .68em; vertical-align: super; line-height: 0; }
+.score-compass .rest-symbol { font-size: 32px; line-height: .8; font-family: 'Segoe UI Symbol', 'Arial Unicode MS', serif; }
+.score-compass .repeat-symbol { flex: 0 0 auto; width: max-content; padding-top: 22px; font-size: 28px; font-weight: bold; text-align: center; min-height: 52px; display: flex; align-items: center; justify-content: center; transform: scale(var(--score-content-scale, 1)); }
+
+.pdf-export .compass-break-marker { display: none !important; }
+
+@media print {
+  .compass-break-marker { display: none !important; }
+  .score-compass-grid .score-compass, .score-compass-grid .score-compass.selected { border: 0 solid #000 !important; border-left-width: 2px !important; border-right-width: 2px !important; background: transparent !important; box-shadow: none !important; }
+  .score-section.selected { border-color: #e0e0e0 !important; }
+}
+
+.pdf-export .score-section.selected { border-color: #e0e0e0 !important; }

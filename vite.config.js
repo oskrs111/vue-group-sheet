@@ -5,11 +5,14 @@ import vue from '@vitejs/plugin-vue'
 
 function tutorialAssetsPlugin() {
   const tutorialOutputDir = resolve(__dirname, 'vue-group-sheet-tutorial-script', 'output')
-  const distTutorialDir = resolve(__dirname, 'dist', 'vue-group-sheet-tutorial-script', 'output')
+  let distTutorialDir
 
   return {
     name: 'tutorial-assets',
     apply: 'build',
+    configResolved(config) {
+      distTutorialDir = resolve(config.root, config.build.outDir, 'vue-group-sheet-tutorial-script', 'output')
+    },
     closeBundle() {
       if (!existsSync(tutorialOutputDir)) return
       cpSync(tutorialOutputDir, distTutorialDir, { recursive: true })

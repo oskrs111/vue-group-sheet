@@ -1,6 +1,6 @@
 <template>
   <div class="epub-page-wrapper">
-    <div class="epub-sheet-page" :class="pageClass" :style="{ fontFamily: fontFamily }">
+    <div class="epub-sheet-page" :class="pageClass" :style="fontStyles">
       <!-- Header -->
       <header class="epub-header">
         <div class="header-left">
@@ -18,58 +18,8 @@
 
       <!-- Body (Sections) -->
       <main class="epub-body">
-        <div class="sections-wrapper">
-          <section 
-            v-for="(section, sIndex) in sheetData.body" 
-            :key="sIndex"
-            class="epub-section"
-            :style="{ 
-              backgroundColor: section.b_color, 
-              color: section.f_color,
-              '--section-text-color': section.f_color 
-            }"
-          >
-            <div class="section-id-container">
-              <span class="section-id" :style="{ color: section.f_color }">{{ section.id }}</span>
-            </div>
-            
-            <div class="section-content">
-              <div class="compass-container">
-                <template v-for="(compass, cIndex) in section.compass" :key="cIndex">
-                  <!-- Normal/Repeat Compass -->
-                  <div 
-                    v-if="!isSpaceCompass(compass)"
-                    class="epub-compass"
-                  >
-                    <!-- Repeat Symbol -->
-                    <div v-if="isRepeatCompass(compass)" class="repeat-symbol">%</div>
-                    
-                    <!-- Chords -->
-                    <div v-else class="chords-display">
-                      <div v-for="(chord, chIndex) in compass.chords" :key="chIndex" class="epub-chord">
-                        <div class="duration-symbol">{{ getDurationSymbol(chord) }}</div>
-                        <div class="chord-note">
-                          <span 
-                            v-for="(char, charIndex) in getChordChars(chord)" 
-                            :key="charIndex"
-                            :class="{ 'large-char': isLargeChar(chord, charIndex) }"
-                          >
-                            {{ char }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Break Compass -->
-                  <template v-else>
-                    <div class="epub-break-filler"></div>
-                    <div class="epub-break-force"></div>
-                  </template>
-                </template>
-              </div>
-            </div>
-          </section>
+        <div class="sections-wrapper" :style="{ zoom: (sheetData.settings.zoom_sections || 100) / 100 }">
+          <ScoreSection v-for="(section, index) in sheetData.body" :key="index" :section="section" />
         </div>
       </main>
 
@@ -104,9 +54,7 @@
       <footer class="epub-notes" v-if="sheetData.settings.show_notes && sheetData.notes && sheetData.notes.length > 0">
         <h3>Notas</h3>
         <div class="notes-list">
-          <div v-for="(note, index) in sheetData.notes" :key="index" class="note-line">
-            {{ note.text }}
-          </div>
+          <pre v-for="(note, index) in sheetData.notes" :key="index" class="note-line">{{ note.text }}</pre>
         </div>
       </footer>
 
@@ -130,7 +78,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, provide } from 'vue'
+import ScoreSection from './ScoreSection.vue'
+import { CHORD_FONT_KEY, getSheetFont, getSheetFontStyles } from '../utils/sheetFonts'
 
 const props = defineProps({
   sheetData: {
@@ -144,44 +94,8 @@ const pageClass = computed(() => {
   return props.sheetData.settings.page_orientation === 'V' ? 'page-vertical' : 'page-horizontal'
 })
 
-const fontFamily = computed(() => {
-  return props.sheetData.settings.font_family || "Libre Baskerville"
-})
-
-// Helper functions for Compass/Chords
-const isRepeatCompass = (compass) => {
-  return compass.chords.length === 1 && compass.chords[0].chord === 'R'
-}
-
-const isSpaceCompass = (compass) => {
-  return compass.chords.length === 1 && compass.chords[0].chord === 'S'
-}
-
-const getChordChars = (chord) => {
-  const chordString = chord.chord || ''
-  return chordString.split('')
-}
-
-const isLargeChar = (chord, index) => {
-  const chordString = chord.chord || ''
-  if (index === 0) return true
-  const slashIndex = chordString.indexOf('/')
-  if (slashIndex !== -1 && (index === slashIndex || index === slashIndex + 1)) {
-    return true
-  }
-  return false
-}
-
-const getDurationSymbol = (chord) => {
-  if (chord.chord === 'R') return '𝄽'
-  switch (chord.div) {
-    case 1: return ''
-    case 2: return '♩♩'
-    case 3: return '♩'
-    case 4: return '♩'
-    default: return '♩'
-  }
-}
+const fontStyles = computed(() => getSheetFontStyles(props.sheetData.settings))
+provide(CHORD_FONT_KEY, computed(() => getSheetFont(props.sheetData.settings)))
 
 // Lyrics Helpers
 const hasLyrics = computed(() => {
@@ -208,11 +122,7 @@ const getLyricText = (b64) => {
 }
 
 .epub-sheet-page {
-  background: white;
-  padding: 20px;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
+  flex-shrink: 0;
 }
 
 /* Header */
@@ -243,101 +153,6 @@ const getLyricText = (b64) => {
 /* Body & Sections */
 .epub-body {
   margin-bottom: 30px;
-}
-
-.epub-section {
-  display: flex;
-  margin-bottom: 15px;
-  border: 1px solid #ccc; /* Simplified border for EPUB */
-  page-break-inside: avoid; /* Important for EPUB/PDF */
-}
-
-.section-id-container {
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 60px;
-  border-right: 1px solid rgba(0,0,0,0.1);
-}
-
-.section-id {
-  font-size: 2.5em;
-  font-weight: bold;
-  line-height: 1;
-}
-
-.section-content {
-  flex: 1;
-  padding: 5px;
-}
-
-.compass-container {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-/* Compass & Chords */
-.epub-compass {
-  flex: 1 0 calc(12.5% - 4px);
-  border: 1px solid #666;
-  padding: 5px;
-  min-width: 60px;
-  margin: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.epub-compass.space-compass {
-  border-color: transparent;
-}
-
-.repeat-symbol {
-  font-size: 1.5em;
-  font-weight: bold;
-}
-
-.chords-display {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  justify-content: center;
-}
-
-.epub-chord {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.duration-symbol {
-  font-size: 1em;
-  min-height: 1.2em;
-}
-
-.chord-note {
-  font-size: 1.4em;
-  font-weight: bold;
-  font-family: monospace;
-}
-
-.large-char {
-  font-size: 1.15em;
-}
-
-/* Structure */
-.epub-structure {
-  margin-top: 20px;
-  padding-top: 10px;
-  border-top: 2px solid #eee;
-  page-break-inside: avoid;
-}
-
-.structure-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .structure-item {
@@ -378,7 +193,13 @@ const getLyricText = (b64) => {
 
 .note-line {
   padding: 5px;
+  margin: 0;
   background-color: #f9f9f9;
+  font-family: inherit;
+  font-size: 0.82em;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.5;
 }
 
 /* Lyrics */
@@ -414,22 +235,6 @@ const getLyricText = (b64) => {
   font-size: 1.2em;
   white-space: pre-wrap;
   flex: 1;
-}
-
-/* Page Orientation (if relevant for EPUB, mostly for container width) */
-.page-vertical { max-width: 210mm; margin: 0 auto; }
-.page-horizontal { max-width: 297mm; margin: 0 auto; }
-
-/* EPUB Compass Break Styles */
-.epub-break-filler {
-  flex-grow: 1;
-  min-width: 0;
-  height: 50px; /* Match typical compass height */
-}
-
-.epub-break-force {
-  width: 100%;
-  height: 0;
 }
 
 </style>

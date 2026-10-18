@@ -1,13 +1,13 @@
 <template>
-  <div class="modal-overlay help-modal-overlay" @click.self="$emit('close')">
-    <div class="modal-content help-modal-content glassmorphism">
+  <div v-dialog class="modal-overlay help-modal-overlay" @click.self="$emit('close')">
+    <div class="modal-content help-modal-content">
       <div class="modal-header">
-        <span class="material-icons title-icon">help_outline</span>
+        <AppIcon class="title-icon" name="help_outline" />
         Guía de Usuario - Group Sheet Editor
       </div>
       <div class="modal-body help-body">
         <section class="help-section tutorial-links">
-          <h3><span class="material-icons">school</span> Tutoriales</h3>
+          <h3><AppIcon name="school" /> Tutoriales</h3>
           <p>Guías paso a paso para aprender flujos completos de edición sin perderte en la interfaz.</p>
           <a
             class="tutorial-link"
@@ -15,31 +15,31 @@
             target="_blank"
             rel="noopener noreferrer"
           >
-            <span class="material-icons">slideshow</span>
+            <AppIcon name="slideshow" />
             Tutorial #1: Crear una canción con Script
           </a>
         </section>
 
         <section class="help-section">
-          <h3><span class="material-icons">architecture</span> Conceptos Básicos</h3>
+          <h3><AppIcon name="architecture" /> Conceptos Básicos</h3>
           <p>Esta aplicación es un editor WYSIWYG (lo que ves es lo que tienes) diseñado para crear <strong>hojas de ruta musicales</strong> en formato A4 (210x297mm).</p>
           <div class="alert-info">
-            <span class="material-icons">monitor_weight</span>
-            <strong>Indicador A4:</strong> La hoja tiene un borde <strong>azul</strong> si el contenido cabe en una página, y cambiará a <strong>rojo discontinuo</strong> si excede el tamaño A4 real de impresión.
+            <AppIcon name="monitor_weight" />
+            <span><strong>Indicador A4:</strong> Un borde <strong>rojo discontinuo</strong> señala que el contenido excede el tamaño A4 de impresión.</span>
           </div>
         </section>
 
         <section class="help-section">
-          <h3><span class="material-icons">edit_note</span> Edición y Contenido</h3>
+          <h3><AppIcon name="edit_note" /> Edición y Contenido</h3>
           <ul>
-            <li><strong>Cabecera:</strong> Haz clic en el icono <span class="material-icons icon-inline">edit</span> para editar Tempo, Compás, Nombre, Autor o Tono.</li>
+            <li><strong>Cabecera:</strong> Haz clic en el icono <AppIcon class="icon-inline" name="edit" /> para editar Tempo, Compás, Nombre, Autor o Tono.</li>
             <li><strong>Cuerpo:</strong> Añade secciones principales con acordes. Dentro de cada sección puedes añadir compases individuales.</li>
             <li><strong>Estructura:</strong> Es el "mapa" de la canción. Arrastra y suelta (o usa el menú) para definir el orden en que se tocan las secciones (Intro, Estrofa, Estribillo, etc.).</li>
           </ul>
         </section>
 
         <section class="help-section">
-          <h3><span class="material-icons">music_note</span> Acordes y Notación</h3>
+          <h3><AppIcon name="music_note" /> Acordes y Notación</h3>
           <p>El editor y el exportador MusicXML soportan nomenclatura estándar avanzada y Jazz:</p>
           <ul>
             <li><strong>Mayor / Menor:</strong> Usa <code>maj</code>, <code>M</code> para acordes mayores, y <code>m</code>, <code>-</code> para menores (ej. <code>Cmaj7</code>, <code>A-7</code>).</li>
@@ -51,23 +51,33 @@
         </section>
 
         <section class="help-section">
-          <h3><span class="material-icons">lyrics</span> Letras</h3>
+          <h3><AppIcon name="lyrics" /> Letras</h3>
           <p>Si activas la página de letras en configuración, podrás escribir la letra de la canción. El sistema sincroniza automáticamente los nombres de las secciones para ayudarte a organizarte.</p>
         </section>
 
         <section class="help-section">
-          <h3><span class="material-icons">download</span> Exportación y Backup</h3>
+          <h3><AppIcon name="download" /> Exportación y Backup</h3>
           <ul>
             <li><strong>PDF:</strong> Genera un documento listo para imprimir. La app limpiará automáticamente los controles de edición.</li>
             <li><strong>EPUB:</strong> Optimizado para lectores electrónicos tipo Kindle.</li>
-            <li><strong>Biblioteca y Backup:</strong> Todas las canciones se guardan automáticamente en tu navegador. Usa "Exportar Todo" para descargar un archivo de respaldo (.json) y "Cargar Backup" para recuperarlo en otro dispositivo.</li>
+            <li><strong>Biblioteca y Backup:</strong> Guarda cada canción para activar el autoguardado. En la versión web se conserva en este navegador; en escritorio, en tu carpeta de trabajo. Usa «Exportar → Copia de seguridad» para guardar un archivo .backup y «Importar → Copia de seguridad» para recuperarlo. Elige «Fusionar bibliotecas» para combinar el contenido o «Reemplazar biblioteca…» para sustituirlo. «Cancelar» cierra la importación sin hacer cambios.</li>
           </ul>
-        </section>        <section class="help-section script-help">
-          <h3><span class="material-icons">code</span> Modo Script (Modo Experto)</h3>
-          <p>El modo Script permite representar y editar toda la canción (Acordes, Estructura y Letras) mediante un bloque de texto plano. Es la herramienta más potente para realizar cambios estructurales masivos.</p>
+        </section>
+
+        <section class="help-section script-help">
+          <h3><AppIcon name="code" /> Modo Script (Modo Experto)</h3>
+          <p>El modo Script permite representar y editar toda la canción (Cabecera, Acordes, Estructura y Letras) mediante un bloque de texto plano. Es la herramienta más potente para realizar cambios estructurales masivos.</p>
           
+          <p>Ahora el script también soporta el bloque <code>Header:</code> para editar metadatos como título, autor, tempo, compás y tono.</p>
+
           <div class="help-subsection">
-            <h4>1. Bloque de Secciones (<code>Sections:</code>)</h4>
+            <h4>1. Bloque de Cabecera (<code>Header:</code>)</h4>
+            <p>Define los metadatos principales de la canción. Cada línea usa el formato <code>Campo=Valor</code>.</p>
+            <p>Campos soportados: <code>Name</code>, <code>Author</code>, <code>Tempo</code>, <code>Signature</code> y <code>Tone</code>.</p>
+          </div>
+
+          <div class="help-subsection">
+            <h4>2. Bloque de Secciones (<code>Sections:</code>)</h4>
             <p>Define el contenido rítmico y armónico de cada sección. Formato: <code>ID = |compás1|compás2|...|</code></p>
             <div class="syntax-ref">
               <ul>
@@ -94,20 +104,27 @@
           </div>
 
           <div class="help-subsection">
-            <h4>2. Bloque de Estructura (<code>Structure:</code>)</h4>
+            <h4>3. Bloque de Estructura (<code>Structure:</code>)</h4>
             <p>Lista de IDs de sección separados por comas que define el orden de la canción.</p>
             <p>Ejemplo: <code>INTRO, ESTROFA, CORO, / , ESTROFA, CORO, FIN</code> (El símbolo <code>/</code> inserta un salto de línea).</p>
           </div>
 
           <div class="help-subsection">
-            <h4>3. Bloque de Letras (<code>Lyrics:</code>)</h4>
+            <h4>4. Bloque de Letras (<code>Lyrics:</code>)</h4>
             <p>Define el texto literario asignado a cada aparición de una sección en la estructura.</p>
             <p>Formato: <code>ID = Texto</code>. Si una sección se repite varias veces en la estructura, el sistema consumirá las definiciones de letra en orden correlativo.</p>
           </div>
 
           <div class="script-example-box">
             <div class="example-header">Ejemplo completo de Script:</div>
-<pre><code>Sections:
+<pre><code>Header:
+Name=Mi Canción,
+Author=Autor Demo,
+Tempo=120,
+Signature=4/4,
+Tone=C
+
+Sections:
 CORO = |C,G..|Am,F..|%|/|x2
 
 Structure:
@@ -120,7 +137,7 @@ CORO = Letra de la segunda con variación.</code></pre>
         </section>
 
         <section class="help-section shortcuts">
-          <h3><span class="material-icons">keyboard</span> Atajos de Teclado</h3>
+          <h3><AppIcon name="keyboard" /> Atajos de Teclado</h3>
           <div class="shortcut-grid">
             <span class="key">Ctrl + Z</span> <span>Deshacer cambios</span>
             <span class="key">Ctrl + V</span> <span>Pegar compás (en editor)</span>
@@ -198,7 +215,7 @@ const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tut
 }
 
 .syntax-ref {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--ms-surface-subtle);
   padding: 12px;
   border-radius: 8px;
   margin: 10px 0;
@@ -212,12 +229,12 @@ const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tut
 }
 
 .duration-table span {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--ms-surface-subtle);
   color: var(--ui-text-primary);
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--ms-surface-subtle);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -231,7 +248,7 @@ const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tut
 
 .script-example-box {
   margin-top: 20px;
-  background: #1e1e24;
+  background: var(--ms-surface-subtle);
   border-radius: 8px;
   border: 1px solid var(--ui-border);
   overflow: hidden;
@@ -255,7 +272,7 @@ const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tut
 .script-example-box code {
   font-family: 'Geist Mono', monospace;
   font-size: 0.9rem;
-  color: #d1d5db;
+  color: var(--ms-text);
   line-height: 1.5;
 }
 
@@ -271,8 +288,8 @@ const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tut
   gap: 10px;
   padding: 12px 16px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--ms-surface-subtle);
+  background: var(--ms-surface-subtle);
   color: var(--ui-accent);
   text-decoration: none;
   font-weight: 600;
@@ -280,8 +297,8 @@ const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tut
 }
 
 .tutorial-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.24);
+  background: var(--ms-surface-subtle);
+  border-color: var(--ms-surface-subtle);
   transform: translateY(-1px);
 }
 
@@ -307,7 +324,7 @@ const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tut
 }
 
 .alert-info {
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--ms-accent-soft);
   border-left: 4px solid var(--ui-accent);
   padding: 12px;
   margin-top: 15px;
@@ -331,7 +348,7 @@ const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tut
 }
 
 .key {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--ms-surface-subtle);
   padding: 4px 8px;
   border-radius: 4px;
   font-family: monospace;
@@ -346,10 +363,4 @@ const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tut
   color: var(--ui-accent);
 }
 
-/* Glassmorphism adjustment for modal */
-.glassmorphism {
-  background: rgba(18, 18, 21, 0.9) !important;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
 </style>

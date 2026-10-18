@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
 import md5 from 'md5'
+import { useCollectionStore } from './collectionStore'
+import { getStorageItem, setStorageItem, importDesktopDatabase } from '../utils/persistence'
+import { DEFAULT_SHEET_FONT, normalizeSheetFontSettings } from '../utils/sheetFonts'
 
 const defaultSettings = {
   b_color_default: '#f0f0f0',
   f_color_default: '#000000',
   shape_default: 'S',
   page_orientation: 'V',
-  font_family: 'Libre Baskerville',
+  font_family: DEFAULT_SHEET_FONT,
   show_notes: false,
   show_lyrics: false,
   zoom_sections: 100,
@@ -27,7 +30,7 @@ const createUndoSnapshot = (song) => {
     body: cloneData(song.body),
     structure: cloneData(song.structure),
     notes: cloneData(song.notes || []),
-    settings: { ...defaultSettings, ...(song.settings || {}) },
+    settings: { ...defaultSettings, ...normalizeSheetFontSettings(song.settings) },
     createdAt: song.createdAt || new Date().toISOString(),
     updatedAt: song.updatedAt || new Date().toISOString()
   }
@@ -173,7 +176,7 @@ export const useSheetStore = defineStore('sheet', {
       this.body = this.migrateDivValues(cloneData(snapshot.body))
       this.structure = cloneData(snapshot.structure)
       this.notes = cloneData(snapshot.notes || [])
-      this.settings = { ...defaultSettings, ...(snapshot.settings || {}) }
+      this.settings = { ...defaultSettings, ...normalizeSheetFontSettings(snapshot.settings) }
       this.currentSongId = snapshot.id
       this.selectedSectionId = null
       this.selectedStructureIndex = null
@@ -484,12 +487,12 @@ export const useSheetStore = defineStore('sheet', {
     },
 
     updateSettings(settings) {
-      this.settings = { ...this.settings, ...settings }
+      this.settings = normalizeSheetFontSettings({ ...this.settings, ...settings })
       this.saveToLocalStorage('Actualizar ajustes')
     },
 
     getSongsRegistry() {
-      const raw = localStorage.getItem('groupSheetSongs')
+      const raw = getStorageItem('groupSheetSongs')
       if (!raw) {
         return { version: 1, songs: {}, collections: {} }
       }
@@ -563,7 +566,7 @@ export const useSheetStore = defineStore('sheet', {
             body: song.body,
             structure: song.structure,
             notes: song.notes,
-            settings: song.settings || { ...defaultSettings },
+            settings: { ...defaultSettings, ...normalizeSheetFontSettings(song.settings) },
             createdAt,
             updatedAt: song.savedAt || createdAt
           }
@@ -571,7 +574,7 @@ export const useSheetStore = defineStore('sheet', {
       }
 
       const registry = { version: 4, songs, collections: {} }
-      localStorage.setItem('groupSheetSongs', JSON.stringify(registry))
+      setStorageItem('groupSheetSongs', JSON.stringify(registry))
       return registry
     },
 
@@ -628,13 +631,7 @@ export const useSheetStore = defineStore('sheet', {
         registry.collections = {}
       }
 
-      if (window.electronAPI) {
-        // Enviar a guardar en archivo local si estamos en Electron
-        window.electronAPI.saveDatabase(registry)
-      } else {
-        // Comportamiento normal web
-        localStorage.setItem('groupSheetSongs', JSON.stringify(registry))
-      }
+      setStorageItem('groupSheetSongs', JSON.stringify(registry))
     },
 
     saveToLocalStorage(operation = 'Actualizar canción') {
@@ -646,7 +643,7 @@ export const useSheetStore = defineStore('sheet', {
       const registry = this.getSongsRegistry()
       const now = new Date().toISOString()
       const existingSong = registry.songs[this.currentSongId] || null
-      const createdAt = existingSong.createdAt || now
+      const createdAt = existingSong?.createdAt || now
 
       if (existingSong?.id) {
         this.pushUndoEntry(existingSong, operation)
@@ -692,7 +689,21 @@ export const useSheetStore = defineStore('sheet', {
 
     exportCompleteDatabase() {
       // Devuelve explícitamente el registro general
-      return this.getSongsRegistry()
+      const registry = this.getSongsRegistry()
+
+      // Adjuntar las colecciones reales de su storage propio
+      const rawCollections = getStorageItem('groupSheetCollections')
+      if (rawCollections) {
+        try {
+          registry.collectionStoreData = JSON.parse(rawCollections)
+        } catch (e) {
+          registry.collectionStoreData = []
+        }
+      } else {
+        registry.collectionStoreData = []
+      }
+
+      return registry
     },
 
     importCompleteDatabase(registryData, merge = false) {
@@ -706,7 +717,14 @@ export const useSheetStore = defineStore('sheet', {
         throw new Error('El archivo no parece ser un backup válido de Vue Group Sheet')
       }
 
+      if (importDesktopDatabase(registryData, merge)) {
+        useCollectionStore().loadCollections()
+        if (!merge) this.newFile()
+        return { success: true }
+      }
+
       const currentRegistry = this.getSongsRegistry()
+      const colStore = useCollectionStore()
 
       if (merge) {
         // Combinar datos: sobrescribir conflictos pero mantener lo no existente local
@@ -718,9 +736,37 @@ export const useSheetStore = defineStore('sheet', {
         // Respetamos la versión del importante si es mayor
         currentRegistry.version = Math.max(currentRegistry.version || 1, registryData.version || 1)
         this.saveSongsRegistry(currentRegistry)
+
+        // Fusionar colecciones del store de colecciones
+        if (registryData.collectionStoreData) {
+          const rawCurrentCols = getStorageItem('groupSheetCollections')
+          let currentCols = []
+          if (rawCurrentCols) {
+            try { currentCols = JSON.parse(rawCurrentCols) } catch (e) {}
+          }
+          const mergedArray = [...currentCols]
+          registryData.collectionStoreData.forEach(incCol => {
+            const existingIdx = mergedArray.findIndex(c => c.id === incCol.id)
+            if (existingIdx !== -1) {
+              mergedArray[existingIdx] = incCol
+            } else {
+              mergedArray.push(incCol)
+            }
+          })
+          setStorageItem('groupSheetCollections', JSON.stringify(mergedArray))
+          colStore.loadCollections()
+        }
       } else {
         // Reemplazo total destructivo
         this.saveSongsRegistry(registryData)
+        
+        if (registryData.collectionStoreData) {
+          setStorageItem('groupSheetCollections', JSON.stringify(registryData.collectionStoreData))
+        } else {
+          setStorageItem('groupSheetCollections', JSON.stringify([]))
+        }
+        colStore.loadCollections()
+
         // Redirigir a una canción nueva después de purgar para evitar que el store quede colgado en una id fantasma
         this.newFile()
       }
@@ -759,7 +805,7 @@ export const useSheetStore = defineStore('sheet', {
       this.body = cloneData(data.body)
       this.structure = cloneData(data.structure)
       this.notes = cloneData(data.notes || [])
-      this.settings = { ...defaultSettings, ...(data.settings || {}) }
+      this.settings = { ...defaultSettings, ...normalizeSheetFontSettings(data.settings) }
       this.saveToLocalStorage(options.operation || 'Importar datos')
     },
 
@@ -789,7 +835,7 @@ export const useSheetStore = defineStore('sheet', {
 
       if (!songId || !registry.songs[songId]) {
         createdAt = now
-        songId = md5(createdAt)
+        songId = crypto.randomUUID()
       } else {
         createdAt = registry.songs[songId].createdAt || now
       }
@@ -829,7 +875,7 @@ export const useSheetStore = defineStore('sheet', {
       this.body = this.migrateDivValues(JSON.parse(JSON.stringify(song.body)))
       this.structure = JSON.parse(JSON.stringify(song.structure))
       this.notes = JSON.parse(JSON.stringify(song.notes || []))
-      this.settings = { ...defaultSettings, ...(song.settings || {}) }
+      this.settings = { ...defaultSettings, ...normalizeSheetFontSettings(song.settings) }
       this.currentSongId = song.id
       this.clearUndoHistory()
       this.selectedSectionId = null
@@ -903,6 +949,7 @@ export const useSheetStore = defineStore('sheet', {
       // Siempre arrancar con un archivo nuevo limpio
       // Esto evita problemas de datos corruptos o anidados
       this.newFile()
+      useCollectionStore().checkIntegrity()
     },
 
     setSelectedSection(sectionId) {

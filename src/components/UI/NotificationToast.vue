@@ -2,16 +2,16 @@
   <div 
     class="notification-toast" 
     :class="type"
-    @click="$emit('close')"
+    :role="type === 'error' ? 'alert' : 'status'"
   >
     <div class="toast-icon">
-      <span class="material-icons">{{ icon }}</span>
+      <AppIcon :name="icon" />
     </div>
     <div class="toast-content">
       {{ message }}
     </div>
-    <button class="toast-close">
-      <span class="material-icons">close</span>
+    <button class="toast-close" aria-label="Cerrar notificación" @click="$emit('close')">
+      <AppIcon name="close" />
     </button>
   </div>
 </template>
@@ -47,21 +47,17 @@ const icon = computed(() => {
   padding: 12px 20px;
   min-width: 300px;
   max-width: 450px;
-  background: rgba(24, 24, 27, 0.8);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: white;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  cursor: pointer;
+  background: var(--ms-surface);
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius-md);
+  color: var(--ms-text);
+  box-shadow: 0 4px 20px rgb(32 32 54 / 10%);
   pointer-events: auto;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color .15s;
 }
 
 .notification-toast:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--ms-accent);
 }
 
 .toast-icon {
@@ -74,9 +70,9 @@ const icon = computed(() => {
   font-size: 20px;
 }
 
-.success .toast-icon { color: #10b981; }
+.success .toast-icon { color: var(--ms-success); }
 .error .toast-icon { color: var(--ui-danger); }
-.warning .toast-icon { color: #f59e0b; }
+.warning .toast-icon { color: var(--ms-warning); }
 .info .toast-icon { color: var(--ui-accent); }
 
 .toast-content {
@@ -89,7 +85,7 @@ const icon = computed(() => {
 .toast-close {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--ms-text-muted);
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -100,6 +96,6 @@ const icon = computed(() => {
 }
 
 .toast-close:hover {
-  color: white;
+  color: var(--ms-accent);
 }
 </style>

@@ -1,11 +1,11 @@
 <template>
   <div class="editable-container">
     <div class="tempo-display">{{ store.header.left.top.tempo }} BPM</div>
-    <button class="edit-btn" @click="showModal = true">
-      <span class="material-icons">edit</span>
+    <button aria-label="Editar tempo" class="edit-btn" @click="showModal = true">
+      <AppIcon name="edit" />
     </button>
     
-    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+    <div v-dialog v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-content">
         <div class="modal-header">Editar Tempo</div>
         <div class="modal-body">

@@ -23,7 +23,7 @@
     
     <!-- Edit Modal (Triggered by Parent via ref) -->
     <Teleport to="#modal-container">
-      <div v-if="showEditModal" class="modal-overlay" @click.self="closeModal">
+      <div v-dialog v-if="showEditModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
         <div class="modal-header">Editar Elemento de Estructura</div>
         <div class="modal-body">
@@ -84,7 +84,7 @@
 
       <!-- Re-use Modals for Break Item -->
       <Teleport to="#modal-container">
-      <div v-if="showEditModal" class="modal-overlay" @click.self="closeModal">
+      <div v-dialog v-if="showEditModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
         <div class="modal-header">Editar Elemento de Estructura</div>
         <div class="modal-body">

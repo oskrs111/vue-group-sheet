@@ -71,6 +71,10 @@ La aplicación utiliza un modelo de datos JSON que incluye:
 - `@StructureItem.vue`: Elemento de estructura
 - `@NoteLine.vue`: Línea de nota
 
+## Versión de escritorio
+
+La aplicación Electron está en `vue-group-sheet-desktop`. Guarda canciones y colecciones en archivos individuales dentro de una carpeta de trabajo elegida al iniciar, con exportaciones y copias automáticas cada 5 minutos (configurable). Consulta [sus instrucciones](vue-group-sheet-desktop/README.md).
+
 ## Licencia
 
 MIT

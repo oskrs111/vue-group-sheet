@@ -1,28 +1,39 @@
 <template>
   <div class="chord-display">
     <div class="duration-symbol">{{ durationSymbol }}</div>
-    <div class="chord-note">
+    <div class="chord-note" :class="{ 'is-minor': isMinorChord }">
       <span v-if="isRest" class="rest-symbol">{{ restSymbol }}</span>
-      <span 
-        v-else
-        v-for="(char, index) in chordChars" 
-        :key="index"
-        :class="{ 'large-char': isLargeChar(index) }"
-      >
-        {{ char }}
+      <span v-else role="img" :aria-label="chord.chord">
+        <span v-for="(segment, index) in chordSegments" :key="index" aria-hidden="true"
+          :class="{ 'chord-fallback': segment.fallback, 'chord-superscript': segment.superscript }">{{ segment.text }}</span>
       </span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
+import { CHORD_FONT_KEY, DEFAULT_SHEET_FONT } from '../utils/sheetFonts'
+import { getChordSegments } from '../utils/chordTypography'
 
 const props = defineProps({
   chord: Object
 })
 
 const isRest = computed(() => props.chord.chord === 'REST')
+const chordFont = inject(CHORD_FONT_KEY, computed(() => DEFAULT_SHEET_FONT))
+const chordSegments = computed(() => getChordSegments(props.chord.chord || '', chordFont.value))
+
+const isMinorChord = computed(() => {
+  const value = props.chord.chord || ''
+  if (value === 'R' || value === 'S' || value === 'REST') return false
+
+  const match = value.match(/^[A-G](?:#|b)?([^/\\]*)/)
+  if (!match) return false
+
+  const suffix = match[1] || ''
+  return suffix.startsWith('m') && !suffix.startsWith('maj') || suffix.startsWith('-')
+})
 
 const restSymbol = computed(() => {
   if (!isRest.value) return ''
@@ -35,28 +46,6 @@ const restSymbol = computed(() => {
     default: return '𝄽'
   }
 })
-
-const chordChars = computed(() => {
-  const chordString = props.chord.chord || ''
-  return chordString.split('')
-})
-
-const isLargeChar = (index) => {
-  const chordString = props.chord.chord || ''
-  
-  // El primer carácter siempre es más grande
-  if (index === 0) {
-    return true
-  }
-  
-  // Si hay un '/', tanto '/' como el siguiente carácter son más grandes
-  const slashIndex = chordString.indexOf('/')
-  if (slashIndex !== -1 && (index === slashIndex || index === slashIndex + 1)) {
-    return true
-  }
-  
-  return false
-}
 
 const durationSymbol = computed(() => {
   if (props.chord.chord === 'R' || props.chord.chord === 'REST') {
@@ -73,44 +62,3 @@ const durationSymbol = computed(() => {
   }
 })
 </script>
-
-<style scoped>
-.chord-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  min-height: 52px;
-}
-
-.duration-symbol {
-  font-size: 20px;
-  line-height: 1;
-  min-height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.chord-note {
-  font-size: 16px;
-  font-weight: bold;
-  font-family: monospace;
-  display: flex;
-  align-items: baseline;
-}
-
-.chord-note span {
-  line-height: 1;
-}
-
-.chord-note .large-char {
-  font-size: 1.5em;
-}
-
-.rest-symbol {
-  font-size: 32px; /* Destaque para los símbolos de silencio */
-  line-height: 0.8;
-  font-family: 'Segoe UI Symbol', 'Arial Unicode MS', serif; /* Mejor soporte para símbolos musicales */
-}
-</style>

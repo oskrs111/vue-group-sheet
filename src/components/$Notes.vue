@@ -2,8 +2,8 @@
   <div class="notes-container">
     <div class="notes-header">
       <h3>Notas</h3>
-      <button @click="addNote" class="add-btn">
-        <span class="material-icons">add</span>
+      <button @click="addNote" class="add-btn" aria-label="Añadir nota" title="Añadir nota">
+        <AppIcon name="add" />
       </button>
     </div>
     <div class="notes-list">

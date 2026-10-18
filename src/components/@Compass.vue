@@ -1,50 +1,54 @@
 <template>
   <div
     v-if="!isSpaceCompass"
-    class="compass-box editable-container"
+    class="compass-box editable-container score-compass"
     :class="{ selected: isCompassSelected }"
     @click.stop="selectCompass"
   >
     <div class="compass-header">
       <button @click.stop="copyCompass" class="compass-copy-btn" title="Copiar compás">
-        <span class="material-icons">content_copy</span>
+        <AppIcon name="content_copy" />
       </button>
     </div>
 
-    <div class="chords-display" v-if="!isRepeatCompass">
-      <ChordComponent
-        v-for="(chord, index) in compass.chords"
-        :key="index"
-        :chord="chord"
-      />
-    </div>
-
-    <div class="repeat-symbol" v-else>
-      %
-    </div>
+    <ScoreCompassContent :compass="compass" />
   </div>
 
-  <template v-else>
-    <div
-      class="compass-break-filler"
-      :class="{ selected: isCompassSelected }"
-      @click.stop="selectCompass"
+  <div
+    v-else-if="breakIndices.length > 1 && compassIndex === breakIndices[breakIndices.length - 1]"
+    class="compass-break-marker"
+    :class="{ selected: selectedBreakIndex !== '' }"
+    title="Saltos de línea consecutivos"
+    @click.stop
+  >
+    <AppIcon name="subdirectory_arrow_right" />
+    <span class="break-count" aria-hidden="true">{{ breakIndices.length }}</span>
+    <select
+      class="break-picker"
+      :value="selectedBreakIndex"
+      :aria-label="`Seleccionar uno de ${breakIndices.length} saltos de línea consecutivos`"
+      @change="store.setSelectedCompass(sectionIndex, Number($event.target.value))"
     >
-      <div class="break-display">
-        <span class="break-label">Salto de línea</span>
-      </div>
-
-      <div class="compass-header">
-        <button @click.stop="copyCompass" class="compass-copy-btn" title="Copiar compás">
-          <span class="material-icons">content_copy</span>
-        </button>
-      </div>
-    </div>
-    <div class="compass-break-force"></div>
-  </template>
+      <option value="" disabled>Seleccionar salto</option>
+      <option v-for="(index, position) in breakIndices" :key="index" :value="index">Salto {{ position + 1 }} de {{ breakIndices.length }}</option>
+    </select>
+  </div>
+  <button
+    v-else-if="breakIndices.length < 2"
+    type="button"
+    class="compass-break-marker"
+    :class="{ selected: isCompassSelected }"
+    :aria-pressed="Boolean(isCompassSelected)"
+    aria-label="Seleccionar salto de línea explícito"
+    title="Salto de línea explícito · Doble clic para editar"
+    @click.stop="selectCompass"
+    @dblclick.stop="openEditModal"
+  >
+    <AppIcon name="subdirectory_arrow_right" />
+  </button>
 
   <Teleport to="#modal-container">
-    <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
+    <div v-dialog v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
       <div class="modal-content modal-compass-edit">
         <div class="modal-header">Editar Compás</div>
         <div class="modal-body">
@@ -105,7 +109,7 @@
                     class="chord-input"
                   />
                   <button class="help-btn" @click="showHelpModal = true" title="Ver caracteres permitidos">
-                    <span class="material-icons">help_outline</span>
+                    <AppIcon name="help_outline" />
                   </button>
                 </div>
                 <div v-else class="rest-placeholder">
@@ -138,11 +142,11 @@
                 </div>
               </div>
               <button @click="removeChord(idx)" class="delete-btn-small" title="Eliminar acorde">
-                <span class="material-icons">close</span>
+                <AppIcon name="close" />
               </button>
             </div>
             <button @click="addChord" class="add-btn" title="Añadir acorde">
-              <span class="material-icons">add</span>
+              <AppIcon name="add" />
             </button>
           </div>
         </div>
@@ -155,22 +159,22 @@
   </Teleport>
 
   <Teleport to="#modal-container">
-    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+    <div v-dialog v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
       <div class="modal-content">
-        <div class="modal-header">Confirmar Eliminación</div>
+        <div class="modal-header">Eliminar compás</div>
         <div class="modal-body">
-          <p>¿Está seguro de que desea eliminar este compás?</p>
+          <p>Se eliminará este compás de la sección.</p>
         </div>
         <div class="modal-footer">
           <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
-          <button class="primary" @click="confirmDelete">Eliminar</button>
+          <button class="primary" @click="confirmDelete">Eliminar compás</button>
         </div>
       </div>
     </div>
   </Teleport>
 
   <Teleport to="#modal-container">
-    <div v-if="showHelpModal" class="modal-overlay" @click.self="showHelpModal = false">
+    <div v-dialog v-if="showHelpModal" class="modal-overlay" @click.self="showHelpModal = false">
       <div class="modal-content">
         <div class="modal-header">Caracteres Permitidos</div>
         <div class="modal-body">
@@ -194,12 +198,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
-import ChordComponent from './@Chord.vue'
+import { useNotificationStore } from '../stores/notificationStore'
+import ScoreCompassContent from './ScoreCompassContent.vue'
 
 const props = defineProps({
   compass: Object,
   sectionIndex: Number,
-  compassIndex: Number
+  compassIndex: Number,
+  breakIndices: { type: Array, default: () => [] }
 })
 
 const store = useSheetStore()
@@ -226,10 +232,6 @@ const syncLocalState = () => {
 
 watch(() => props.compass.chords, syncLocalState, { deep: true, immediate: true })
 
-const isRepeatCompass = computed(() => {
-  return props.compass.chords.length === 1 && props.compass.chords[0].chord === 'R'
-})
-
 const isSpaceCompass = computed(() => {
   return props.compass.chords.length === 1 && props.compass.chords[0].chord === 'S'
 })
@@ -238,6 +240,11 @@ const isCompassSelected = computed(() => {
   return store.selectedCompass &&
     store.selectedCompass.sIndex === props.sectionIndex &&
     store.selectedCompass.cIndex === props.compassIndex
+})
+
+const selectedBreakIndex = computed(() => {
+  const selected = store.selectedCompass
+  return selected && selected.sIndex === props.sectionIndex && props.breakIndices.includes(selected.cIndex) ? selected.cIndex : ''
 })
 
 const selectCompass = () => {
@@ -297,7 +304,7 @@ const handleCompassTypeChange = () => {
 
 const save = () => {
   if (Object.keys(chordErrors.value).length > 0) {
-    alert('Por favor, corrija los errores antes de guardar')
+    useNotificationStore().addToast('Corrige los acordes señalados antes de guardar el compás.', 'error')
     return
   }
 
@@ -332,11 +339,6 @@ defineExpose({
 
 <style scoped>
 .compass-box {
-  border: 1px solid #666;
-  padding: 5px;
-  min-width: 50px;
-  position: relative;
-  border-radius: 0;
   cursor: pointer;
 }
 
@@ -371,8 +373,7 @@ defineExpose({
   pointer-events: auto;
 }
 
-.compass-box:hover .compass-copy-btn,
-.compass-break-filler:hover .compass-copy-btn {
+.compass-box:hover .compass-copy-btn {
   opacity: 0.6;
 }
 
@@ -381,58 +382,33 @@ defineExpose({
   color: #1976d2;
 }
 
-.chords-display {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  align-items: center;
-  min-height: 40px;
-}
-
-.repeat-symbol {
-  padding-top: 22px;
-  font-size: 28px;
-  font-weight: bold;
-  text-align: center;
-  min-height: 28px;
+.compass-break-marker {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.compass-break-filler {
-  flex-grow: 1;
-  min-width: 0;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #666;
   cursor: pointer;
-  border: 1px dashed #ccc;
-  background-color: #f9f9f9;
 }
 
-.compass-break-filler:hover {
-  background-color: #f0f0f0;
+.compass-break-marker:hover,
+.compass-break-marker.selected {
+  background: #e7f3ff;
+  color: #0057df;
 }
 
-.compass-break-force {
-  width: 100%;
-  height: 0;
+.compass-break-marker .app-icon {
+  font-size: 18px;
 }
 
-.break-display {
-  padding: 10px;
-}
-
-.break-label {
-  font-size: 12px;
-  color: #999;
-  font-style: italic;
-  white-space: nowrap;
-}
+.break-count { position: absolute; top: -3px; right: -3px; font: 11px Arial, sans-serif; color: #666; }
+.break-picker { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.compass-break-marker:focus-within { outline: 2px solid #0057df; outline-offset: 2px; }
 
 .modal-compass-edit {
   max-width: 90vw;

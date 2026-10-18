@@ -22,13 +22,17 @@ const store = useNotificationStore()
 <style scoped>
 .toast-provider {
   position: fixed;
-  top: 24px;
+  bottom: 48px;
   right: 24px;
   z-index: 10000;
   display: flex;
   flex-direction: column;
   gap: 12px;
   pointer-events: none;
+}
+@media (max-width: 600px) {
+  .toast-provider { left: 16px; right: 16px; }
+  .toast-provider :deep(.notification-toast) { min-width: 0; max-width: 100%; }
 }
 
 .toast-list-enter-from {

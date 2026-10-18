@@ -10,27 +10,42 @@ Un script válido se divide en tres bloques principales obligatorios, identifica
 2.  `Structure:` - Define el orden de ejecución de las secciones.
 3.  `Lyrics:` - Define el texto literario asociado a cada sección.
 
+Nota: El motor también soporta un bloque opcional `Header:` al principio del script para editar nombre, autor, tempo, compás y tono sin romper scripts antiguos que no lo incluyen.
+
 ---
 
-## 1. Bloque de Secciones (`Sections:`)
+## 1. Bloque de Cabecera (`Header:`)
+
+Contiene la información de 'header' en la canción, sobre el autor, tonalidad, signatura y tempo.
+**Ejemplo:**
+Header:
+Name=Song Name,
+Author=Author Name,
+Tempo=120,
+Signature=4/4,
+Tone=C
+
+## 2. Bloque de Secciones (`Sections:`)
 
 Cada línea define el contenido armónico de una sección siguiendo el formato:
 `ID = |compás1|compás2|...|xN`
 
 ### Notación de Compases y Acordes
+
 - **Barras (`|`)**: Delimitan el inicio y fin de cada compás. Una barra doble `||` se interpreta como una sola línea divisoria compartida.
 - **Comas (`,`)**: Separan múltiples acordes dentro de un mismo compás.
 - **Duraciones (Puntos `.` o vacíos)**:
-    - `(sin puntos)`: Redonda (División 1).
-    - `.` : Negra (División 3).
-    - `..` : Blanca (División 2).
-    - `...` : Blanca con puntillo (División 5).
+  - `(sin puntos)`: Redonda (División 1).
+  - `.` : Negra (División 3).
+  - `..` : Blanca (División 2).
+  - `...` : Blanca con puntillo (División 5).
 - **Acordes Especiales**:
-    - `%`: Repetición del acorde anterior (Internal: `R`).
-    - `_`: Silencio (Internal: `REST`).
-    - `/`: Compás de salto de línea visual (Internal: `S`).
+  - `%`: Repetición del acorde anterior (Internal: `R`).
+  - `_`: Silencio (Internal: `REST`).
+  - `/`: Compás de salto de línea visual (Internal: `S`).
 
 ### Repeticiones
+
 - `xN`: Al final de la línea, indica el número de vueltas o repeticiones de esa sección (ej. `x2`, `x4`).
 
 **Ejemplo:**
@@ -38,7 +53,7 @@ Cada línea define el contenido armónico de una sección siguiendo el formato:
 
 ---
 
-## 2. Bloque de Estructura (`Structure:`)
+## 3. Bloque de Estructura (`Structure:`)
 
 Define el flujo de la canción mediante una lista separada por comas de los IDs de sección definidos previamente.
 
@@ -50,18 +65,21 @@ Define el flujo de la canción mediante una lista separada por comas de los IDs 
 
 ---
 
-## 3. Bloque de Letras (`Lyrics:`)
+## 4. Bloque de Letras (`Lyrics:`)
 
 Asocia fragmentos de texto a cada instancia de una sección en la estructura.
 
 ### Formato
+
 `ID = Texto de la sección`
 
 - **Multi-línea**: El texto puede contener saltos de línea. El motor de script detecta el inicio de un nuevo ID para cerrar el anterior.
+- **Separación visual**: Puede haber una línea vacía entre entradas consecutivas de `Lyrics:`; el parser la acepta y el generador la inserta automáticamente.
 - **Orden**: Las letras se asignan a las secciones en el orden en que aparecen en el bloque `Structure:`. Si una sección se repite, el motor consumirá las entradas de `Lyrics:` en orden correlativo.
 - **Codificación**: Internamente las letras se almacenan en Base64, pero el script las muestra y edita en texto plano legible.
 
 **Ejemplo:**
+
 ```
 Lyrics:
 VERSO = Parte 1 de la letra

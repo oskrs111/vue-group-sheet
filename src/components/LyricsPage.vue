@@ -35,7 +35,7 @@
                 <pre class="lyrics-pre">{{ getLyricText(item.lyric) || '(Sin letra)' }}</pre>
               </div>
               <button class="lyrics-edit-btn" @click="startEditing(index, item.lyric)" title="Editar letra">
-                <span class="material-icons">edit</span>
+                <AppIcon name="edit" />
               </button>
             </div>
           </div>
@@ -55,7 +55,7 @@
     </div>
 
     <Teleport to="#modal-container">
-      <div v-if="editingIndex !== -1" class="modal-overlay" @click.self="cancelEditing">
+      <div v-dialog v-if="editingIndex !== -1" class="modal-overlay" @click.self="cancelEditing">
         <div class="modal-content lyrics-edit-modal">
           <div class="modal-header">Editar Letra - {{ store.structure[editingIndex]?.id }}</div>
           <div class="modal-body lyrics-modal-body">

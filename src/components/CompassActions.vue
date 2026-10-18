@@ -1,15 +1,15 @@
 <template>
   <div v-if="hasValidSelection" class="compass-actions-toolbar">
     <button @click="requestEdit" class="action-btn" title="Editar compás">
-      <span class="material-icons">edit</span>
+      <AppIcon name="edit" />
       <span class="btn-label">Editar Compás</span>
     </button>
     <button @click="copyCompass" class="action-btn" title="Copiar compás">
-      <span class="material-icons">content_copy</span>
+      <AppIcon name="content_copy" />
       <span class="btn-label">Copiar Compás</span>
     </button>
     <button @click="requestDelete" class="action-btn danger" title="Eliminar compás">
-      <span class="material-icons">delete</span>
+      <AppIcon name="delete" />
       <span class="btn-label">Eliminar Compás</span>
     </button>
   </div>
@@ -99,7 +99,7 @@ onUnmounted(() => {
   background: transparent;
   border: 1px solid var(--ui-border);
   color: var(--ui-text-primary);
-  border-radius: 9999px;
+  border-radius: var(--ms-radius-sm);
   cursor: pointer;
   font-size: 13px;
   transition: all 0.3s ease;
@@ -108,7 +108,7 @@ onUnmounted(() => {
 
 .action-btn:hover:not(:disabled) {
   background: var(--ui-bg-hover);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--ms-surface-subtle);
   filter: brightness(1.1);
 }
 

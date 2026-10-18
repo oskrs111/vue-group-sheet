@@ -1,39 +1,47 @@
 <template>
-  <div class="toolbar">
+  <div class="toolbar" role="toolbar" aria-label="Herramientas de edición de la canción">
+    <div class="toolbar-group" role="group" aria-label="Archivo">
     <button @click="newFile" title="Nuevo Archivo" class="toolbar-btn">
-      <span class="material-icons">note_add</span>
+      <AppIcon name="note_add" />
       <span class="btn-label">Nuevo</span>
     </button>
-    <button @click="openSaveDialog" title="Guardar Como" class="toolbar-btn">
-      <span class="material-icons">save</span>
+    <button @click="openSaveDialog" title="Guardar Como" class="toolbar-btn primary">
+      <AppIcon name="save" />
       <span class="btn-label">Guardar</span>
     </button>
     <button @click="openLoadDialog" title="Abrir Canción" class="toolbar-btn">
-      <span class="material-icons">folder_open</span>
+      <AppIcon name="folder_open" />
       <span class="btn-label">Abrir</span>
     </button>
+    </div>
+    <span class="toolbar-divider" aria-hidden="true"></span>
+    <div class="toolbar-group" role="group" aria-label="Exportación">
     <button @click="exportPDF" title="Exportar PDF" class="toolbar-btn">
-      <span class="material-icons">picture_as_pdf</span>
+      <AppIcon name="picture_as_pdf" />
       <span class="btn-label">PDF</span>
     </button>
     <button @click="exportEPUB" title="Exportar EPUB" class="toolbar-btn">
-      <span class="material-icons">book</span>
+      <AppIcon name="book" />
       <span class="btn-label">EPUB</span>
     </button>
     <button @click="print" title="Imprimir" class="toolbar-btn">
-      <span class="material-icons">print</span>
+      <AppIcon name="print" />
       <span class="btn-label">Imprimir</span>
     </button>
+    </div>
+    <span class="toolbar-divider" aria-hidden="true"></span>
+    <div class="toolbar-group" role="group" aria-label="Intercambio de archivos">
     <button @click="showExportModal = true" title="Exportar..." class="toolbar-btn">
-      <span class="material-icons">file_upload</span>
+      <AppIcon name="file_upload" />
       <span class="btn-label">Exportar</span>
     </button>
     <button @click="showImportModal = true" title="Importar..." class="toolbar-btn">
-      <span class="material-icons">file_download</span>
+      <AppIcon name="file_download" />
       <span class="btn-label">Importar</span>
       <input 
         type="file" 
         ref="fileInput" 
+        @click.stop
         style="display: none" 
         accept=".gse,.json"
         @change="handleImportJSON"
@@ -41,28 +49,32 @@
       <input 
         type="file" 
         ref="fileInputGlobal" 
+        @click.stop
         style="display: none" 
         accept=".backup,.gse,.json"
         @change="handleImportBackup"
       />
     </button>
-    <div style="height: 1px; background: var(--ui-border); width: 80%; margin: 8px auto;"></div>
+    </div>
+    <span class="toolbar-spacer"></span>
+    <div class="toolbar-group" role="group" aria-label="Herramientas">
     <button @click="openScriptDialog" title="Script" class="toolbar-btn">
-      <span class="material-icons">code</span>
+      <AppIcon name="code" />
       <span class="btn-label">Script</span>
     </button>
     <button @click="openSettings" title="Configuración" class="toolbar-btn">
-      <span class="material-icons">settings</span>
+      <AppIcon name="settings" />
       <span class="btn-label">Ajustes</span>
     </button>
     <button @click="openHelp" title="Ayuda" class="toolbar-btn">
-      <span class="material-icons">help_outline</span>
+      <AppIcon name="help_outline" />
       <span class="btn-label">Ayuda</span>
     </button>
+    </div>
     
     <!-- Modal Guardar Como -->
     <Teleport to="#modal-container">
-      <div v-if="showSaveDialog" class="modal-overlay" @click.self="showSaveDialog = false">
+      <div v-dialog v-if="showSaveDialog" class="modal-overlay" @click.self="showSaveDialog = false">
         <div class="modal-content">
         <div class="modal-header">Guardar Canción</div>
         <div class="modal-body">
@@ -78,7 +90,7 @@
         </div>
         <div class="modal-footer">
           <button class="secondary" @click="showSaveDialog = false">Cancelar</button>
-          <button class="primary" @click="saveAs">Guardar</button>
+          <button class="primary" @click="saveAs">Guardar canción</button>
         </div>
         </div>
       </div>
@@ -86,17 +98,17 @@
     
     <!-- Modal Abrir Canción -->
     <Teleport to="#modal-container">
-      <div v-if="showLoadDialog" class="modal-overlay" @click.self="showLoadDialog = false">
+      <div v-dialog v-if="showLoadDialog" class="modal-overlay" @click.self="showLoadDialog = false">
         <div class="modal-content" style="max-width: 800px; width: 90%;">
         <div class="modal-header">Abrir Canción</div>
         <div class="modal-body">
           <div class="dialog-filters" style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
-            <input type="text" v-model="searchQuery" placeholder="Buscar por título o autor..." class="search-input" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 4px; border: 1px solid var(--ui-border); background: var(--ui-bg-input); color: var(--ui-text-secondary);" />
-            <select v-model="sortBy" class="sort-select" style="padding: 10px; border-radius: 4px; border: 1px solid var(--ui-border); background: var(--ui-bg-input); color: var(--ui-text-secondary);">
+            <input type="text" v-model="searchQuery" aria-label="Buscar por título o autor" placeholder="Buscar por título o autor..." class="search-input" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 4px; border: 1px solid var(--ui-border); background: var(--ui-bg-input); color: var(--ui-text-input);" />
+            <select v-model="sortBy" aria-label="Ordenar canciones" class="sort-select" style="padding: 10px; border-radius: 4px; border: 1px solid var(--ui-border); background: var(--ui-bg-input); color: var(--ui-text-input);">
               <option value="date">Más recientes</option>
               <option value="alpha">Alfabético</option>
             </select>
-            <select v-model="filterCollection" class="collection-select" style="padding: 10px; border-radius: 4px; border: 1px solid var(--ui-border); background: var(--ui-bg-input); color: var(--ui-text-secondary);">
+            <select v-model="filterCollection" aria-label="Filtrar por colección" class="collection-select" style="padding: 10px; border-radius: 4px; border: 1px solid var(--ui-border); background: var(--ui-bg-input); color: var(--ui-text-input);">
               <option value="">Todas las colecciones</option>
               <option v-for="collection in collectionStore.collections" :key="collection.id" :value="collection.id">
                 {{ collection.name }}
@@ -112,6 +124,10 @@
               v-for="song in filteredSongsList" 
               :key="song.id"
               class="song-item"
+              role="button"
+              tabindex="0"
+              @keydown.enter.self="loadSong(song.id)"
+              @keydown.space.self.prevent="selectSong(song.id)"
               :class="{ selected: selectedSongId === song.id }"
               @click="selectSong(song.id)"
               @dblclick="loadSong(song.id)"
@@ -123,7 +139,7 @@
               </div>
               <div class="song-actions">
                 <button @click.stop="deleteSong(song.id)" class="delete-btn-small" title="Eliminar">
-                  <span class="material-icons">delete</span>
+                  <AppIcon name="delete" />
                 </button>
               </div>
             </div>
@@ -131,7 +147,7 @@
         </div>
         <div class="modal-footer">
           <button class="secondary" @click="showLoadDialog = false">Cerrar</button>
-          <button class="primary" :disabled="!selectedSongId" @click="loadSelectedSong">Abrir</button>
+          <button class="primary" :disabled="!selectedSongId" @click="loadSelectedSong">Abrir canción</button>
         </div>
         </div>
       </div>
@@ -139,7 +155,7 @@
     
     <!-- Modal Script -->
     <Teleport to="#modal-container">
-      <div v-if="showScriptDialog" class="modal-overlay" @click.self="closeScriptDialog">
+      <div v-dialog v-if="showScriptDialog" class="modal-overlay" @click.self="closeScriptDialog">
         <div class="modal-content script-modal">
           <div class="modal-header">Script</div>
           <div class="modal-body script-modal-body">
@@ -162,25 +178,29 @@
               <textarea
               ref="scriptTextareaRef"
               v-model="scriptText"
+              aria-label="Script de la canción"
               class="script-textarea"
               placeholder="Escribe tu script aquí..."
               spellcheck="false"
-              wrap="off"
+              wrap="hard"
               @input="handleScriptInput"
               @scroll="syncScriptGutterScroll"
             ></textarea>
             </div>
           </div>
           <div class="modal-footer">
-            <div
-              v-if="scriptValidationMessage"
-              class="modal-footer-message script-error-message"
-              aria-live="polite"
-            >
-              {{ scriptValidationMessage }}
+            <div class="script-footer-tools">
+              <button class="secondary script-transform-btn" @click="collapseLyricsLineBreaks" type="button" title="Convierte los saltos de línea del bloque Lyrics en separadores /">Unir líneas de letra</button>
+              <div
+                v-if="scriptValidationMessage"
+                class="modal-footer-message script-error-message"
+                aria-live="polite"
+              >
+                {{ scriptValidationMessage }}
+              </div>
             </div>
             <button class="secondary" @click="closeScriptDialog">Cancelar</button>
-            <button class="primary" @click="applyScript">Aplicar</button>
+            <button class="primary" @click="applyScript">Aplicar script</button>
           </div>
         </div>
       </div>
@@ -190,39 +210,44 @@
       <SettingsModal v-if="showSettings" @close="showSettings = false"></SettingsModal>
       <HelpModal v-if="showHelp" @close="showHelp = false" />
       <ConfirmDialog
+        :key="confirmState.id"
         v-model="confirmState.show"
         :title="confirmState.title"
         :message="confirmState.message"
         :confirmText="confirmState.confirmText"
+        :cancelText="confirmState.cancelText"
+        :alternativeText="confirmState.alternativeText"
+        :alternativeDanger="confirmState.alternativeDanger"
         :isDanger="confirmState.isDanger"
         @confirm="confirmState.onConfirm"
+        @alternative="confirmState.onAlternative"
         @cancel="confirmState.onCancel"
       />
 
       <!-- Modal Selección Importación -->
-      <div v-if="showImportModal" class="modal-overlay" @click.self="showImportModal = false">
+      <div v-dialog v-if="showImportModal" class="modal-overlay" @click.self="showImportModal = false">
         <div class="modal-content">
-          <div class="modal-header">Importar Datos</div>
+          <div class="modal-header">Importar archivos</div>
           <div class="modal-body">
             <div class="songs-list">
-              <div class="song-item" @click="selectImport('song')">
+              <div class="song-item" role="button" tabindex="0" @click="selectImport('song')" @keydown.enter="selectImport('song')" @keydown.space.prevent="selectImport('song')">
                 <div class="song-info">
                   <div class="song-name">Canción</div>
-                  <div class="song-author">Sesión Individual</div>
+                  <div class="song-author">Archivo individual</div>
                   <div class="song-date">Importar un archivo de canción (.gse o .json)</div>
                 </div>
                 <div class="song-actions">
-                  <span class="material-icons" style="color: var(--ui-text-secondary)">description</span>
+                  <AppIcon style="color: var(--ui-text-secondary)" name="description" />
                 </div>
               </div>
-              <div class="song-item" @click="selectImport('all')">
+              <div class="song-item" role="button" tabindex="0" @click="selectImport('all')" @keydown.enter="selectImport('all')" @keydown.space.prevent="selectImport('all')">
                 <div class="song-info">
-                  <div class="song-name">Todo (Restaurar)</div>
-                  <div class="song-author">Base de Datos Completa</div>
-                  <div class="song-date">Restaurar o fusionar toda la base de datos completa</div>
+                  <div class="song-name">Copia de seguridad</div>
+                  <div class="song-author">Canciones y colecciones</div>
+                  <div class="song-date">Fusionar el backup con tu biblioteca o reemplazarla</div>
                 </div>
                 <div class="song-actions">
-                  <span class="material-icons" style="color: var(--ui-danger)">storage</span>
+                  <AppIcon style="color: var(--ui-danger)" name="storage" />
                 </div>
               </div>
             </div>
@@ -234,39 +259,39 @@
       </div>
 
       <!-- Modal Selección Exportación -->
-      <div v-if="showExportModal" class="modal-overlay" @click.self="showExportModal = false">
+      <div v-dialog v-if="showExportModal" class="modal-overlay" @click.self="showExportModal = false">
         <div class="modal-content">
-          <div class="modal-header">Exportar Datos</div>
+          <div class="modal-header">Exportar archivos</div>
           <div class="modal-body">
             <div class="songs-list">
-              <div class="song-item" @click="selectExport('song')">
+              <div class="song-item" role="button" tabindex="0" @click="selectExport('song')" @keydown.enter="selectExport('song')" @keydown.space.prevent="selectExport('song')">
                 <div class="song-info">
                   <div class="song-name">{{ store.header?.center?.top?.name || 'Canción Actual' }}</div>
                   <div v-if="store.header?.center?.bottom?.author" class="song-author">{{ store.header.center.bottom.author }}</div>
                   <div class="song-date">Exportar esta canción en formato nativo (.gse)</div>
                 </div>
                 <div class="song-actions">
-                  <span class="material-icons" style="color: var(--ui-text-secondary)">description</span>
+                  <AppIcon style="color: var(--ui-text-secondary)" name="description" />
                 </div>
               </div>
-              <div class="song-item" @click="selectExport('all')">
+              <div class="song-item" role="button" tabindex="0" @click="selectExport('all')" @keydown.enter="selectExport('all')" @keydown.space.prevent="selectExport('all')">
                 <div class="song-info">
-                  <div class="song-name">Todo (Copia Seguridad)</div>
-                  <div class="song-author">Backup Completo</div>
-                  <div class="song-date">Descargar un backup de todas las canciones y colecciones</div>
+                  <div class="song-name">Copia de seguridad</div>
+                  <div class="song-author">Biblioteca completa</div>
+                  <div class="song-date">Guardar todas las canciones y colecciones en un archivo .backup</div>
                 </div>
                 <div class="song-actions">
-                  <span class="material-icons" style="color: var(--ui-primary)">cloud_download</span>
+                  <AppIcon style="color: var(--ui-primary)" name="cloud_download" />
                 </div>
               </div>
-              <div class="song-item" @click="selectExport('musicxml')">
+              <div class="song-item" role="button" tabindex="0" @click="selectExport('musicxml')" @keydown.enter="selectExport('musicxml')" @keydown.space.prevent="selectExport('musicxml')">
                 <div class="song-info">
                   <div class="song-name">MusicXML</div>
                   <div class="song-author">Formato Estándar</div>
                   <div class="song-date">Exportar para MuseScore, Sibelius, etc.</div>
                 </div>
                 <div class="song-actions">
-                  <span class="material-icons" style="color: var(--ui-accent)">music_note</span>
+                  <AppIcon style="color: var(--ui-accent)" name="music_note" />
                 </div>
               </div>
             </div>
@@ -285,13 +310,15 @@ import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useSheetStore } from '../stores/sheetStore'
 import { useCollectionStore } from '../stores/collectionStore'
 import SettingsModal from './SettingsModal.vue'
-import html2pdf from 'html2pdf.js'
-import html2canvas from 'html2canvas'
-import { saveAs as saveFile } from 'file-saver'
-import md5 from 'md5'
+import { toPng, toBlob, getFontEmbedCSS } from 'html-to-image'
+import { jsPDF } from 'jspdf'
+import { saveExport as saveFile } from '../utils/saveExport'
+import { prepareScoreExport } from '../utils/scoreLayout'
 import HelpModal from './HelpModal.vue'
 import { useNotificationStore } from '../stores/notificationStore'
 import ConfirmDialog from './UI/ConfirmDialog.vue'
+import { useConfirmDialog } from '../composables/useConfirmDialog'
+import { chooseBackupImport, lyricsExportOptions } from '../utils/dialogChoices'
 import { generateScript, parseScript } from '../utils/ScriptEngine.js'
 
 const store = useSheetStore()
@@ -305,6 +332,7 @@ const showImportModal = ref(false)
 const showExportModal = ref(false)
 const showScriptDialog = ref(false)
 const scriptText = ref('')
+const SCRIPT_INLINE_LYRIC_BREAK = ' / '
 const scriptValidationMessage = ref('')
 const scriptErrorLine = ref(null)
 const scriptScrollTop = ref(0)
@@ -319,44 +347,7 @@ const searchQuery = ref('')
 const sortBy = ref('date')
 const filterCollection = ref('')
 
-const confirmState = ref({
-  show: false,
-  title: '',
-  message: '',
-  confirmText: 'Aceptar',
-  isDanger: false,
-  onConfirm: () => {},
-  onCancel: () => {}
-})
-
-const showConfirm = (options) => {
-  confirmState.value = {
-    show: true,
-    title: options.title || 'Confirmar',
-    message: options.message || '¿Estás seguro?',
-    confirmText: options.confirmText || 'Aceptar',
-    isDanger: options.isDanger || false,
-    onConfirm: options.onConfirm || (() => {})
-  }
-}
-
-const askConfirm = (options) => {
-  return new Promise((resolve) => {
-    const originalOnConfirm = options.onConfirm
-    confirmState.value = {
-      show: true,
-      title: options.title || 'Confirmar',
-      message: options.message || '¿Estás seguro?',
-      confirmText: options.confirmText || 'Aceptar',
-      isDanger: options.isDanger || false,
-      onConfirm: () => {
-        if (originalOnConfirm) originalOnConfirm()
-        resolve(true)
-      },
-      onCancel: () => resolve(false)
-    }
-  })
-}
+const { confirmState, showConfirm, askConfirm } = useConfirmDialog()
 
 const openSettings = () => {
   showSettings.value = true
@@ -370,6 +361,7 @@ const openScriptDialog = () => {
   // Generate script from current song state
   try {
     scriptText.value = generateScript({
+      header: store.header,
       body: store.body,
       structure: store.structure,
     })
@@ -428,6 +420,7 @@ const focusScriptErrorLine = (lineNumber) => {
 const validateScriptText = ({ scrollToError = false } = {}) => {
   try {
     const patch = parseScript(scriptText.value, {
+      header: store.header,
       body: store.body,
       structure: store.structure,
     })
@@ -458,6 +451,19 @@ const handleScriptInput = () => {
   validateScriptText()
 }
 
+const collapseLyricsLineBreaks = () => {
+  scriptText.value = collapseLyricsBlockLineBreaks(scriptText.value)
+
+  if (hasAttemptedScriptValidation.value) {
+    validateScriptText()
+  } else {
+    scriptValidationMessage.value = ''
+    scriptErrorLine.value = null
+  }
+
+  nextTick(() => scriptTextareaRef.value?.focus())
+}
+
 const applyScript = () => {
   hasAttemptedScriptValidation.value = true
   const patch = validateScriptText({ scrollToError: true })
@@ -465,7 +471,7 @@ const applyScript = () => {
 
   try {
     store.importData({
-      header: store.header,
+      header: patch.header,
       body: patch.body,
       structure: patch.structure,
       notes: store.notes,
@@ -499,12 +505,15 @@ const handleGlobalKeydown = (e) => {
   }
 }
 
+let stopDesktopSettings
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown)
+  stopDesktopSettings = window.electronAPI?.onOpenSettings(() => { showSettings.value = true })
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
+  stopDesktopSettings?.()
 })
 
 const songsList = computed(() => store.getSongsList())
@@ -553,9 +562,9 @@ const syncLoadDialogFilters = () => {
   }
 }
 
-const openLoadDialog = () => {
+const openLoadDialog = (query = '') => {
   collectionStore.loadCollections()
-  searchQuery.value = ''
+  searchQuery.value = typeof query === 'string' ? query : ''
   selectedSongId.value = null
   syncLoadDialogFilters()
   showLoadDialog.value = true
@@ -563,8 +572,9 @@ const openLoadDialog = () => {
 
 const newFile = () => {
   showConfirm({
-    title: 'Nuevo Archivo',
-    message: '¿Crear un nuevo archivo? Se perderán los cambios no guardados.',
+    title: 'Nueva canción',
+    message: 'Se abrirá una canción vacía. Los cambios sin guardar del editor se descartarán.',
+    confirmText: 'Crear canción',
     onConfirm: () => {
       store.newFile()
       notification.addToast('Nuevo archivo creado', 'info')
@@ -633,8 +643,9 @@ const loadSong = (id) => {
   const name = song?.name || 'sin nombre'
 
   showConfirm({
-    title: 'Abrir Canción',
-    message: `¿Abrir la canción "${name}"? Se perderán los cambios no guardados.`,
+    title: 'Abrir canción',
+    message: `Se abrirá «${name}». Los cambios sin guardar del editor se descartarán.`,
+    confirmText: 'Abrir canción',
     onConfirm: () => {
       try {
         store.loadSong(id)
@@ -652,10 +663,10 @@ const deleteSong = (id) => {
   const name = song?.name || 'sin nombre'
 
   showConfirm({
-    title: 'Eliminar Canción',
-    message: `¿Eliminar la canción "${name}"? Esta acción no se puede deshacer.`,
+    title: 'Eliminar canción',
+    message: `Se eliminará «${name}» de la biblioteca. Las colecciones que la incluyan conservarán la referencia como pendiente.`,
     isDanger: true,
-    confirmText: 'Eliminar',
+    confirmText: 'Eliminar canción',
     onConfirm: () => {
       store.deleteSong(id)
       notification.addToast(`Canción "${name}" eliminada`, 'info')
@@ -700,7 +711,7 @@ const getExportFileName = () => {
     return `${name}_${dateTime}`
 }
 
-// Rewriting exportPDF to use explicit html2canvas + jsPDF
+// Rewriting exportPDF to use html-to-image + jsPDF
 const exportPDF = async () => {
     const sheetPage = document.getElementById('sheet-page')
     if (!sheetPage) {
@@ -708,16 +719,19 @@ const exportPDF = async () => {
         return
     }
 
+    const hadInBounds = sheetPage.classList.contains('in-bounds')
+    const hadOutOfBounds = sheetPage.classList.contains('out-of-bounds')
+    const prevOutline = sheetPage.style.outline
+    const prevBoxShadow = sheetPage.style.boxShadow
+
     try {
         let fileName = getExportFileName()
         let includeLyrics = false
 
         // Check if lyrics are available/enabled and ask user
         if (store.settings.show_lyrics) {
-            includeLyrics = await askConfirm({
-                title: 'Exportar PDF',
-                message: '¿Incluir las letras en la exportación?'
-            })
+            includeLyrics = await askConfirm(lyricsExportOptions)
+            if (includeLyrics === null) return
             if (includeLyrics) {
                 fileName += '_LETRAS'
             }
@@ -725,95 +739,93 @@ const exportPDF = async () => {
 
         sheetPage.classList.add('pdf-export')
         // Quitar indicadores visuales A4 para evitar que box-shadow/outline agrande el canvas
-        const hadInBounds = sheetPage.classList.contains('in-bounds')
-        const hadOutOfBounds = sheetPage.classList.contains('out-of-bounds')
         sheetPage.classList.remove('in-bounds', 'out-of-bounds')
 
-        // Forzar min-height/outline/box-shadow a 0 via inline style (mayor prioridad que cualquier CSS).
-        const prevMinHeight = sheetPage.style.minHeight
-        const prevOutline = sheetPage.style.outline
-        const prevBoxShadow = sheetPage.style.boxShadow
-        sheetPage.style.minHeight = 'auto'
+        // Forzar sin sombra/outline vía inline style (mayor prioridad que cualquier CSS)
         sheetPage.style.outline = 'none'
         sheetPage.style.boxShadow = 'none'
 
-        // Esperar un tick para que el DOM refleje el nuevo tamaño antes de capturar
+        // Esperar un tick y asegurarse de que las fuentes estén cargadas
         await nextTick()
-        
-        // Setup PDF
-        const opt = {
-             margin: 0,
-             filename: `${fileName}.pdf`,
-             image: { type: 'jpeg', quality: 0.98 },
-             html2canvas: { scale: 3, useCORS: true, logging: false, backgroundColor: '#ffffff', scrollY: -window.scrollY },
-             jsPDF: { unit: 'mm', format: 'a4', orientation: store.settings.page_orientation === 'V' ? 'portrait' : 'landscape', compress: true }
+        if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready
         }
 
-    // Generate Worker
-        const worker = html2pdf().set(opt).from(sheetPage).toPdf()
-        
-        // Wait for first page to be added to PDF
-        await worker.get('pdf').then(async (doc) => {
-             // Now check for lyrics ONLY if user agreed
-             if (includeLyrics) {
-                 const lyricsPage = document.getElementById('lyrics-page')
-                 
-                 if (lyricsPage) {
-                     lyricsPage.classList.add('pdf-export')
-                     try {
-                         const canvas = await html2canvas(lyricsPage, {
-                            scale: 3,
-                            useCORS: true,
-                            logging: false,
-                            backgroundColor: '#ffffff',
-                            scrollY: -window.scrollY
-                         })
-                         
-                         const imgData = canvas.toDataURL('image/jpeg', 0.98)
-                         
-                         // Get dimensions from the PDF document context
-                         const pageSize = doc.internal.pageSize
-                         const pageWidth = pageSize.getWidth()
-                         const pageHeight = pageSize.getHeight() 
-                         
-                         const imgProps = doc.getImageProperties(imgData)
-                         const imgRatio = imgProps.width / imgProps.height
-                         
-                         // Calculate width-based dimensions first (Match Page Width)
-                         let printWidth = pageWidth
-                         let printHeight = printWidth / imgRatio
-                         
-                         // Check if height overflows page
-                         if (printHeight > pageHeight) {
-                            // Scale to fit height instead
-                            printHeight = pageHeight
-                            printWidth = printHeight * imgRatio
-                         }
-    
-                         // Calculate Centering (if width is less than page width)
-                         const xOffset = (pageWidth - printWidth) / 2
-                         const yOffset = 0 // Top alignment
-    
-                         doc.addPage()
-                         doc.addImage(imgData, 'JPEG', xOffset, yOffset, printWidth, printHeight)
-                     } catch (e) {
-                         console.error("Error capturing lyrics:", e)
-                     } finally {
-                         lyricsPage.classList.remove('pdf-export')
-                     }
-                 }
-             }
-             
-             // Manual save after modification
-             doc.save(`${fileName}.pdf`)
+        // Pre-embeber fuentes para captura fiel
+        await prepareScoreExport(sheetPage)
+        const fontEmbedCSS = await getFontEmbedCSS(sheetPage)
+
+        // Setup PDF - A4
+        const isPortrait = store.settings.page_orientation === 'V'
+        const pdf = new jsPDF({
+            orientation: isPortrait ? 'portrait' : 'landscape',
+            unit: 'mm',
+            format: 'a4',
+            compress: true
         })
+        const pdfWidth = pdf.internal.pageSize.getWidth()
+        const pdfHeight = pdf.internal.pageSize.getHeight()
+
+        // Capturar sheet con html-to-image
+        const sheetDataUrl = await toPng(sheetPage, {
+            quality: 1,
+            pixelRatio: 3,
+            backgroundColor: '#ffffff',
+            fontEmbedCSS
+        })
+
+        const sheetImgProps = pdf.getImageProperties(sheetDataUrl)
+        const sheetRatio = sheetImgProps.width / sheetImgProps.height
+        let printWidth = pdfWidth
+        let printHeight = printWidth / sheetRatio
+        if (printHeight > pdfHeight) {
+            printHeight = pdfHeight
+            printWidth = printHeight * sheetRatio
+        }
+        const xOffset = (pdfWidth - printWidth) / 2
+        pdf.addImage(sheetDataUrl, 'PNG', xOffset, 0, printWidth, printHeight)
+
+        // Capturar lyrics si el usuario lo pidió
+        if (includeLyrics) {
+            const lyricsPage = document.getElementById('lyrics-page')
+            if (lyricsPage) {
+                lyricsPage.classList.add('pdf-export')
+                try {
+                    const lyricsFontCSS = await getFontEmbedCSS(lyricsPage)
+                    const lyricsDataUrl = await toPng(lyricsPage, {
+                        quality: 1,
+                        pixelRatio: 3,
+                        backgroundColor: '#ffffff',
+                        fontEmbedCSS: lyricsFontCSS
+                    })
+
+                    const lyricsImgProps = pdf.getImageProperties(lyricsDataUrl)
+                    const lyricsRatio = lyricsImgProps.width / lyricsImgProps.height
+                    let lw = pdfWidth
+                    let lh = lw / lyricsRatio
+                    if (lh > pdfHeight) {
+                        lh = pdfHeight
+                        lw = lh * lyricsRatio
+                    }
+                    const lx = (pdfWidth - lw) / 2
+
+                    pdf.addPage()
+                    pdf.addImage(lyricsDataUrl, 'PNG', lx, 0, lw, lh)
+                } catch (e) {
+                    console.error('Error capturing lyrics:', e)
+                } finally {
+                    lyricsPage.classList.remove('pdf-export')
+                }
+            }
+        }
+
+        await saveFile(pdf.output('blob'), `${fileName}.pdf`)
 
     } catch (error) {
         console.error('Error generating PDF:', error)
         notification.addToast('Error al generar el PDF: ' + error.message, 'error')
     } finally {
         sheetPage.classList.remove('pdf-export')
-        sheetPage.style.minHeight = prevMinHeight
         sheetPage.style.outline = prevOutline
         sheetPage.style.boxShadow = prevBoxShadow
         // Restaurar indicadores visuales A4
@@ -837,10 +849,8 @@ const exportEPUB = async () => {
 
         // Check if lyrics are available/enabled and ask user
         if (store.settings.show_lyrics) {
-            includeLyrics = await askConfirm({
-                title: 'Exportar EPUB',
-                message: '¿Incluir las letras en la exportación?'
-            })
+            includeLyrics = await askConfirm(lyricsExportOptions)
+            if (includeLyrics === null) return
             if (includeLyrics) {
                 fileName += '_LETRAS'
             }
@@ -860,15 +870,20 @@ const exportEPUB = async () => {
 
         // 1. Capture Sheet
         sheetPage.classList.add('pdf-export')
+        await nextTick()
+        if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready
+        }
         try {
-            const canvas = await html2canvas(sheetPage, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
+            await prepareScoreExport(sheetPage)
+            const fontEmbedCSS = await getFontEmbedCSS(sheetPage)
+            const blob = await toBlob(sheetPage, {
+                quality: 0.9,
+                pixelRatio: 2,
                 backgroundColor: '#ffffff',
-                scrollY: -window.scrollY
+                fontEmbedCSS,
+                type: 'image/jpeg'
             })
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
             
             songsToExport.push(songData)
             imageBlobs.push(blob)
@@ -882,14 +897,14 @@ const exportEPUB = async () => {
             if (lyricsPage) {
                 lyricsPage.classList.add('pdf-export')
                 try {
-                    const canvas = await html2canvas(lyricsPage, {
-                        scale: 2,
-                        useCORS: true,
-                        logging: false,
+                    const fontEmbedCSS = await getFontEmbedCSS(lyricsPage)
+                    const blob = await toBlob(lyricsPage, {
+                        quality: 0.9,
+                        pixelRatio: 2,
                         backgroundColor: '#ffffff',
-                        scrollY: -window.scrollY
+                        fontEmbedCSS,
+                        type: 'image/jpeg'
                     })
-                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
                     
                     // Clone data but append (Letra) to name
                     const lyricData = JSON.parse(JSON.stringify(songData))
@@ -913,7 +928,7 @@ const exportEPUB = async () => {
         const blob = await generator.generateFromImages(imageBlobs)
         
         // 4. Download
-        saveFile(blob, `${fileName}.epub`)
+        await saveFile(blob, `${fileName}.epub`)
 
     } catch (error) {
         console.error('Error exportando EPUB:', error)
@@ -921,7 +936,7 @@ const exportEPUB = async () => {
     }
 }
 
-const exportJSON = () => {
+const exportJSON = async () => {
   try {
     const fileName = getExportFileName()
     const now = new Date().toISOString()
@@ -929,7 +944,7 @@ const exportJSON = () => {
     // Si no hay ID (canción nueva no guardada), generamos uno temporal para el archivo
     let exportId = store.currentSongId
     if (!exportId) {
-        exportId = md5(now)
+        exportId = crypto.randomUUID()
     }
 
     const songData = {
@@ -954,7 +969,7 @@ const exportJSON = () => {
     }
 
     const blob = new Blob([JSON.stringify(songData, null, 2)], { type: 'application/json' })
-    saveFile(blob, `${fileName}.gse`)
+    await saveFile(blob, `${fileName}.gse`)
     notification.addToast('Canción exportada exitosamente', 'success')
   } catch (error) {
     console.error('Error exportando canción:', error)
@@ -993,8 +1008,10 @@ const processImport = async (songData, overwrite = false) => {
 
         if (registry.songs[songData.id] && !overwrite) {
             const overwriteConfirm = await askConfirm({
-                title: 'Sobrescribir Canción',
-                message: `La canción "${songData.name}" ya existe. ¿Deseas sobrescribirla?`
+                title: 'Reemplazar canción',
+                message: `Ya existe «${songData.name}» en la biblioteca. Se sustituirá por la canción del archivo importado.`,
+                confirmText: 'Reemplazar canción',
+                isDanger: true
             })
             if (overwriteConfirm) {
                 await processImport(songData, true)
@@ -1025,14 +1042,14 @@ const processImport = async (songData, overwrite = false) => {
 }
 
 // Global DB Backup/Restore
-const downloadCompleteBackup = () => {
+const downloadCompleteBackup = async () => {
     try {
         const fullDatabase = store.exportCompleteDatabase()
         const dateTime = formatDateForFileName(new Date())
         const fileName = `VueGroupSheet_Backup_${dateTime}.backup`
 
         const blob = new Blob([JSON.stringify(fullDatabase, null, 2)], { type: 'application/json' })
-        saveFile(blob, fileName)
+        await saveFile(blob, fileName)
     } catch (error) {
         console.error('Error exportando Backup:', error)
         notification.addToast('Error al generar el Backup: ' + error.message, 'error')
@@ -1055,27 +1072,9 @@ const handleImportBackup = (event) => {
         try {
             const registryData = JSON.parse(e.target.result)
             
-            // Confirmación Estricta Multi-Nivel
-            const mode = await askConfirm({
-                title: 'Restaurar Base de Datos',
-                message: '¡CUIDADO! Estás a punto de importar una base de datos de respaldo completa.<br><br>' +
-                         '¿Deseas <b>FUSIONAR</b> esta base con tus canciones actuales (Aceptar) ' +
-                         'o <b>SOBRESCRIBIR</b> y perder todo el contenido local actual (Cancelar)?'
-            })
-            
-            if (!mode) {
-                // If cancelled the merge (so wants to overwrite), let's ask for definitive confirmation
-                const definitive = await askConfirm({
-                    title: '¡ACCIÓN IRREVERSIBLE!',
-                    message: '¿ESTÁS ABSOLUTAMENTE SEGURO de que quieres borrar toda la base de datos local? No podrás deshacer esto.',
-                    isDanger: true,
-                    confirmText: 'Borrar y Sobrescribir'
-                })
-                
-                if (!definitive) return
-            }
+            const mode = await chooseBackupImport(askConfirm)
+            if (mode === null) return
 
-            // mode: true = fusionar, false = destrutivo/sobrescribir
             store.importCompleteDatabase(registryData, mode)
             
             notification.addToast(
@@ -1085,7 +1084,7 @@ const handleImportBackup = (event) => {
 
         } catch (error) {
             console.error('Error parsing backup:', error)
-            notification.addToast('El archivo no pudo leerse correctamente o no es un JSON estructurado.', 'error')
+            notification.addToast('No se pudo importar el backup: ' + error.message, 'error')
         }
     }
     reader.readAsText(file)
@@ -1124,7 +1123,7 @@ const exportMusicXML = async () => {
     const xml = generator.generate()
     const fileName = getExportFileName()
     const blob = new Blob([xml], { type: 'application/xml' })
-    saveFile(blob, `${fileName}.musicxml`)
+    await saveFile(blob, `${fileName}.musicxml`)
     
     notification.addToast('Exportación MusicXML completada', 'success')
   } catch (error) {
@@ -1132,4 +1131,54 @@ const exportMusicXML = async () => {
     notification.addToast('Error al exportar MusicXML: ' + error.message, 'error')
   }
 }
+
+function collapseLyricsBlockLineBreaks(script) {
+  const lines = script.split('\n')
+  const output = []
+  let currentBlock = null
+  let currentLyricLine = null
+
+  const flushLyricLine = () => {
+    if (currentLyricLine === null) return
+    output.push(currentLyricLine)
+    currentLyricLine = null
+  }
+
+  for (const sourceLine of lines) {
+    const rawLine = sourceLine.replace(/\r$/, '')
+    const trimmed = rawLine.trim()
+    const trimmedStart = rawLine.trimStart()
+
+    if (trimmed === 'Header:' || trimmed === 'Sections:' || trimmed === 'Structure:' || trimmed === 'Lyrics:') {
+      flushLyricLine()
+      currentBlock = trimmed
+      output.push(rawLine)
+      continue
+    }
+
+    if (currentBlock !== 'Lyrics:') {
+      output.push(rawLine)
+      continue
+    }
+
+    const lyricMatch = trimmedStart.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*=(.*)$/)
+    if (lyricMatch) {
+      flushLyricLine()
+      currentLyricLine = `${lyricMatch[1]}=${lyricMatch[2]}`
+      continue
+    }
+
+    if (currentLyricLine !== null) {
+      currentLyricLine += `${SCRIPT_INLINE_LYRIC_BREAK}${rawLine}`
+      continue
+    }
+
+    output.push(rawLine)
+  }
+
+  flushLyricLine()
+
+  return output.join('\n')
+}
+defineExpose({ openLibrary: openLoadDialog, openSong: loadSong, openSave: openSaveDialog })
 </script>

@@ -1,23 +1,23 @@
 <template>
   <div class="note-line editable-container">
-    <span class="note-text">{{ note.text }}</span>
+    <pre class="note-text">{{ note.text }}</pre>
     <div class="note-header">
-      <button @click="showEditModal = true" class="note-edit-btn">
-        <span class="material-icons">edit</span>
+      <button @click="showEditModal = true" class="note-edit-btn" aria-label="Editar nota">
+        <AppIcon name="edit" />
       </button>
-      <button @click="showDeleteModal = true" class="delete-btn-small">
-        <span class="material-icons">close</span>
+      <button @click="showDeleteModal = true" class="delete-btn-small" aria-label="Eliminar nota">
+        <AppIcon name="close" />
       </button>
     </div>
     
     <Teleport to="#modal-container">
-      <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
+      <div v-dialog v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
         <div class="modal-content">
           <div class="modal-header">Editar Nota</div>
           <div class="modal-body">
             <div class="form-group">
               <label>Texto:</label>
-              <textarea v-model="localText" rows="3"></textarea>
+              <textarea v-model="localText" rows="8" class="mono-textarea"></textarea>
             </div>
           </div>
           <div class="modal-footer">
@@ -29,15 +29,15 @@
     </Teleport>
     
     <Teleport to="#modal-container">
-      <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+      <div v-dialog v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
         <div class="modal-content">
-          <div class="modal-header">Confirmar Eliminación</div>
+          <div class="modal-header">Eliminar nota</div>
           <div class="modal-body">
-            <p>¿Está seguro de que desea eliminar esta nota?</p>
+            <p>Se eliminará esta nota de la canción.</p>
           </div>
           <div class="modal-footer">
             <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
-            <button class="primary" @click="confirmDelete">Eliminar</button>
+            <button class="primary" @click="confirmDelete">Eliminar nota</button>
           </div>
         </div>
       </div>
@@ -73,7 +73,7 @@ const confirmDelete = () => {
 <style scoped>
 .note-line {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 8px 12px;
   border: 0px solid #ccc;
   border-radius: 4px;
@@ -83,7 +83,13 @@ const confirmDelete = () => {
 
 .note-text {
   flex: 1;
-  padding: 0 30px; /* Add padding to avoid overlap with buttons */
+  padding: 4px 30px; /* Add padding to avoid overlap with buttons */
+  margin: 0;
+  font-family: inherit;
+  font-size: 0.82em;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.5;
 }
 
 .note-header {
@@ -142,5 +148,13 @@ const confirmDelete = () => {
 .note-header .delete-btn-small:hover {
   opacity: 1 !important;
   color: red;
+}
+
+.mono-textarea {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85em;
+  white-space: pre;
+  overflow-x: auto;
+  resize: both;
 }
 </style>

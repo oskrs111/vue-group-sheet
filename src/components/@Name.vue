@@ -3,11 +3,11 @@
     <div class="name-display" :class="{ 'placeholder': !store.header.center.top.name }">
       {{ store.header.center.top.name || 'Nueva Canción' }}
     </div>
-    <button class="edit-btn" @click="showModal = true">
-      <span class="material-icons">edit</span>
+    <button aria-label="Editar nombre de la canción" class="edit-btn" @click="showModal = true">
+      <AppIcon name="edit" />
     </button>
     
-    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+    <div v-dialog v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-content">
         <div class="modal-header">Editar Nombre de la Canción</div>
         <div class="modal-body">

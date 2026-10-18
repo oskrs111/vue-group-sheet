@@ -5,15 +5,15 @@
       <div class="header-controls">
         <div class="zoom-control">
           <button @click="decreaseZoom" class="zoom-btn" title="Reducir zoom">
-            <span class="material-icons">zoom_out</span>
+            <AppIcon name="zoom_out" />
           </button>
           <span class="zoom-label">{{ store.settings.zoom_sections }}%</span>
           <button @click="increaseZoom" class="zoom-btn" title="Aumentar zoom">
-            <span class="material-icons">zoom_in</span>
+            <AppIcon name="zoom_in" />
           </button>
         </div>
-        <button @click="addSection" class="add-btn">
-          <span class="material-icons">add</span>
+        <button @click="addSection" class="add-btn" aria-label="Añadir sección" title="Añadir sección">
+          <AppIcon name="add" />
         </button>
       </div>
     </div>
@@ -30,7 +30,7 @@
 
     <!-- Edit Section Modal -->
     <Teleport to="#modal-container">
-      <div v-if="showEditModal && localSectionData" class="modal-overlay" @click.self="showEditModal = false">
+      <div v-dialog v-if="showEditModal && localSectionData" class="modal-overlay" @click.self="showEditModal = false">
         <div class="modal-content">
           <div class="modal-header">Editar Sección {{ localSectionData.id }}</div>
           <div class="modal-body">
@@ -41,10 +41,6 @@
             <div class="form-group">
               <label>Repeticiones:</label>
               <input type="number" v-model.number="localSectionData.turns" min="1" max="32" />
-            </div>
-            <div class="form-group">
-              <label>Color de Fondo:</label>
-              <ColorPickerWithHistory v-model="localSectionData.b_color" />
             </div>
             <div class="form-group">
               <label>Color de Fuente:</label>
@@ -177,10 +173,6 @@ const decreaseZoom = () => {
   min-width: 45px;
   text-align: center;
   color: var(--ui-text-primary);
-}
-
-.sections-wrapper {
-  width: fit-content;
 }
 
 /* add-btn usa estilos globales */

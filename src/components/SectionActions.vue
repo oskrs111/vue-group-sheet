@@ -1,49 +1,49 @@
 <template>
   <div v-if="selectedSectionId !== null" class="section-actions-toolbar">
     <button @click="addCompass" class="action-btn" title="Añadir compás">
-      <span class="material-icons">add</span>
+      <AppIcon name="add" />
       <span class="btn-label">Añadir Compás</span>
     </button>
     <button @click="pasteCompass" class="action-btn" :disabled="!hasCopiedCompass" title="Pegar compás al final">
-      <span class="material-icons">content_paste</span>
+      <AppIcon name="content_paste" />
       <span class="btn-label">Pegar Compás</span>
     </button>
     <button @click="editSection" class="action-btn" title="Editar sección">
-      <span class="material-icons">edit</span>
+      <AppIcon name="edit" />
       <span class="btn-label">Editar Sección</span>
     </button>
     <button @click="copySection" class="action-btn" title="Copiar sección">
-      <span class="material-icons">content_copy</span>
+      <AppIcon name="content_copy" />
       <span class="btn-label">Copiar Sección</span>
     </button>
     <button @click="pasteSection" class="action-btn" :disabled="!hasCopiedSection" title="Pegar sección">
-      <span class="material-icons">content_paste</span>
+      <AppIcon name="content_paste" />
       <span class="btn-label">Pegar Sección</span>
     </button>
     <button @click="moveSectionUp" class="action-btn" :disabled="isFirst" title="Subir sección">
-      <span class="material-icons">arrow_upward</span>
+      <AppIcon name="arrow_upward" />
       <span class="btn-label">Subir Sección</span>
     </button>
     <button @click="moveSectionDown" class="action-btn" :disabled="isLast" title="Bajar sección">
-      <span class="material-icons">arrow_downward</span>
+      <AppIcon name="arrow_downward" />
       <span class="btn-label">Bajar Sección</span>
     </button>
     <button @click="showDeleteModal = true" class="action-btn danger" title="Eliminar sección">
-      <span class="material-icons">delete</span>
+      <AppIcon name="delete" />
       <span class="btn-label">Eliminar Sección</span>
     </button>
 
     <!-- Delete Confirmation Modal -->
     <Teleport to="#modal-container">
-      <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+      <div v-dialog v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
         <div class="modal-content">
-          <div class="modal-header">Confirmar Eliminación</div>
+          <div class="modal-header">Eliminar sección</div>
           <div class="modal-body">
-            <p>¿Está seguro de que desea eliminar la sección {{ selectedSection?.id }}?</p>
+            <p>Se eliminará la sección {{ selectedSection?.id }} y sus apariciones en la estructura de la canción.</p>
           </div>
           <div class="modal-footer">
             <button class="secondary" @click="showDeleteModal = false">Cancelar</button>
-            <button class="primary" @click="confirmDelete">Eliminar</button>
+            <button class="primary" @click="confirmDelete">Eliminar sección</button>
           </div>
         </div>
       </div>
@@ -172,7 +172,7 @@ onUnmounted(() => {
   background: transparent;
   border: 1px solid var(--ui-border);
   color: var(--ui-text-primary);
-  border-radius: 9999px;
+  border-radius: var(--ms-radius-sm);
   cursor: pointer;
   font-size: 13px;
   transition: all 0.3s ease;
@@ -181,7 +181,7 @@ onUnmounted(() => {
 
 .action-btn:hover:not(:disabled) {
   background: var(--ui-bg-hover);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--ms-surface-subtle);
   filter: brightness(1.1);
 }
 

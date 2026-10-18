@@ -32,10 +32,26 @@ const DOTS_TO_DIV = {
 
 const SCRIPT_ID_REGEX = /^[A-Za-z][A-Za-z0-9_-]*$/
 
+const HEADER_FIELDS = {
+  Name: ['center', 'top', 'name'],
+  Author: ['center', 'bottom', 'author'],
+  Tempo: ['left', 'top', 'tempo'],
+  Signature: ['left', 'bottom', 'signature'],
+  Tone: ['right', 'top', 'tone'],
+}
+
 export function generateScript(songData) {
-  const { body, structure } = songData
+  const { header, body, structure } = songData
+  const normalizedHeader = normalizeHeader(header)
   const lines = []
 
+  lines.push('Header:')
+  lines.push(`Name=${getHeaderField(normalizedHeader, HEADER_FIELDS.Name)},`)
+  lines.push(`Author=${getHeaderField(normalizedHeader, HEADER_FIELDS.Author)},`)
+  lines.push(`Tempo=${getHeaderField(normalizedHeader, HEADER_FIELDS.Tempo)},`)
+  lines.push(`Signature=${getHeaderField(normalizedHeader, HEADER_FIELDS.Signature)},`)
+  lines.push(`Tone=${getHeaderField(normalizedHeader, HEADER_FIELDS.Tone)}`)
+  lines.push('')
   lines.push('Sections:')
   for (const section of body) {
     const parts = []
@@ -69,9 +85,12 @@ export function generateScript(songData) {
   lines.push('')
   lines.push('Lyrics:')
 
-  for (const item of structure) {
-    if (item.isBreak) continue
+  const lyricItems = structure.filter((item) => !item.isBreak)
+  for (const [index, item] of lyricItems.entries()) {
     lines.push(`${item.id}=${fromBase64(item.lyric || '')}`)
+    if (index < lyricItems.length - 1) {
+      lines.push('')
+    }
   }
 
   return lines.join('\n')
@@ -89,6 +108,7 @@ function encodeChord(chord) {
 
 export function parseScript(script, currentSongData = {}) {
   const blocks = splitBlocks(script)
+  const header = parseHeaderLines(blocks.header, currentSongData.header)
   const existingSections = {}
   const existingStructure = {}
   const parsedSectionIds = new Set()
@@ -184,7 +204,7 @@ export function parseScript(script, currentSongData = {}) {
       throw createScriptError(`Hay mas entradas de Lyrics para "${entry.id}" que apariciones en Structure.`, entry.lineNumber)
     }
 
-    lyricMap[entry.id].push(entry.text)
+    lyricMap[entry.id].push(normalizeLyricText(entry.text))
   }
 
   const lyricConsumed = {}
@@ -199,17 +219,19 @@ export function parseScript(script, currentSongData = {}) {
     lyricConsumed[item.id] = currentIndex + 1
   }
 
-  return { body, structure }
+  return { header, body, structure }
 }
 
 function splitBlocks(script) {
   const blocks = {
+    header: [],
     sections: [],
     structure: [],
     lyrics: [],
   }
 
   const headersSeen = {
+    header: null,
     sections: null,
     structure: null,
     lyrics: null,
@@ -217,11 +239,13 @@ function splitBlocks(script) {
 
   let currentBlock = null
   let currentLyricEntry = null
+  let pendingLyricBlankLines = 0
 
   const finalizeLyricEntry = () => {
     if (!currentLyricEntry) return
     blocks.lyrics.push(currentLyricEntry)
     currentLyricEntry = null
+    pendingLyricBlankLines = 0
   }
 
   for (const [index, sourceLine] of script.split('\n').entries()) {
@@ -231,10 +255,14 @@ function splitBlocks(script) {
     const trimmed = line.trim()
     const trimmedStart = rawLine.trimStart()
 
-    if (trimmed === 'Sections:' || trimmed === 'Structure:' || trimmed === 'Lyrics:') {
+    if (trimmed === 'Header:' || trimmed === 'Sections:' || trimmed === 'Structure:' || trimmed === 'Lyrics:') {
       finalizeLyricEntry()
 
-      if (trimmed === 'Sections:') {
+      if (trimmed === 'Header:') {
+        if (headersSeen.header) throw createScriptError('El bloque Header esta repetido.', lineNumber)
+        headersSeen.header = lineNumber
+        currentBlock = 'header'
+      } else if (trimmed === 'Sections:') {
         if (headersSeen.sections) throw createScriptError('El bloque Sections esta repetido.', lineNumber)
         headersSeen.sections = lineNumber
         currentBlock = 'sections'
@@ -253,7 +281,13 @@ function splitBlocks(script) {
 
     if (!currentBlock) {
       if (!trimmed) continue
-      throw createScriptError('Hay contenido fuera de Sections, Structure o Lyrics.', lineNumber)
+      throw createScriptError('Hay contenido fuera de Header, Sections, Structure o Lyrics.', lineNumber)
+    }
+
+    if (currentBlock === 'header') {
+      if (!trimmed) continue
+      blocks.header.push({ text: trimmed, lineNumber })
+      continue
     }
 
     if (currentBlock === 'sections') {
@@ -281,6 +315,16 @@ function splitBlocks(script) {
     }
 
     if (currentLyricEntry) {
+      if (!trimmed) {
+        pendingLyricBlankLines += 1
+        continue
+      }
+
+      if (pendingLyricBlankLines > 0) {
+        currentLyricEntry.text += '\n'.repeat(pendingLyricBlankLines)
+        pendingLyricBlankLines = 0
+      }
+
       currentLyricEntry.text += `\n${rawLine}`
       continue
     }
@@ -297,6 +341,34 @@ function splitBlocks(script) {
   if (!headersSeen.lyrics) throw createScriptError('Falta el bloque Lyrics.', 1)
 
   return blocks
+}
+
+function parseHeaderLines(lines, currentHeader) {
+  const header = normalizeHeader(currentHeader)
+  const seenFields = new Set()
+
+  for (const entry of lines) {
+    const line = entry.text.replace(/,\s*$/, '').trim()
+    const match = line.match(/^([A-Za-z]+)\s*[:=](.*)$/)
+
+    if (!match) {
+      throw createScriptError('Formato de Header invalido. Usa Campo=Valor.', entry.lineNumber)
+    }
+
+    const fieldName = resolveHeaderFieldName(match[1])
+    if (!fieldName) {
+      throw createScriptError(`Campo de Header invalido: "${match[1]}".`, entry.lineNumber)
+    }
+
+    if (seenFields.has(fieldName)) {
+      throw createScriptError(`El campo Header "${fieldName}" esta repetido.`, entry.lineNumber)
+    }
+
+    setHeaderField(header, HEADER_FIELDS[fieldName], match[2].trim())
+    seenFields.add(fieldName)
+  }
+
+  return header
 }
 
 function parseStructureTokens(lines) {
@@ -428,4 +500,42 @@ function createScriptError(message, lineNumber) {
   const error = new Error(lineNumber ? `Linea ${lineNumber}: ${message}` : message)
   error.lineNumber = lineNumber || null
   return error
+}
+
+function normalizeLyricText(text) {
+  return text
+}
+
+function normalizeHeader(header = {}) {
+  return {
+    left: {
+      top: { tempo: stringifyHeaderValue(header.left?.top?.tempo, '120') },
+      bottom: { signature: stringifyHeaderValue(header.left?.bottom?.signature, '4/4') },
+    },
+    center: {
+      top: { name: stringifyHeaderValue(header.center?.top?.name, '') },
+      bottom: { author: stringifyHeaderValue(header.center?.bottom?.author, '') },
+    },
+    right: {
+      top: { tone: stringifyHeaderValue(header.right?.top?.tone, 'C') },
+    },
+  }
+}
+
+function stringifyHeaderValue(value, fallback) {
+  return value === undefined || value === null ? fallback : String(value)
+}
+
+function getHeaderField(header, path) {
+  return stringifyHeaderValue(path.reduce((current, segment) => current?.[segment], header), '')
+}
+
+function setHeaderField(header, path, value) {
+  const [group, slot, key] = path
+  header[group][slot][key] = value
+}
+
+function resolveHeaderFieldName(value) {
+  const normalizedValue = value.trim().toLowerCase()
+  return Object.keys(HEADER_FIELDS).find((field) => field.toLowerCase() === normalizedValue) || null
 }

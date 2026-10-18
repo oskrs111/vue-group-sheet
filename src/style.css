@@ -1,5 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-@import url("https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap");
+@import './styles/tokens.css';
+
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('./asset/fonts/LibreBaskerville-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('./asset/fonts/LibreBaskerville-Bold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('./asset/fonts/LibreBaskerville-Italic.ttf') format('truetype');
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+}
 
 * {
   margin: 0;
@@ -7,51 +30,12 @@
   box-sizing: border-box;
 }
 
-:root {
-  /* Loopra AI Dark Glassmorphism Theme Variables */
-  --ui-bg-base: #030712;
-  --ui-bg-surface: rgba(24, 24, 27, 0.6);
-  --ui-bg-elevated: rgba(24, 24, 27, 0.85);
-  --ui-bg-hover: rgba(255, 255, 255, 0.05);
-  --ui-bg-active: rgba(255, 255, 255, 0.1);
-  --ui-border: rgba(255, 255, 255, 0.1);
-  --ui-border-focus: #38bdf8;
-  --ui-text-primary: #ffffff;
-  --ui-text-secondary: #a1a1aa;
-  --ui-accent: #3b82f6;
-  --ui-accent-hover: #60a5fa;
-  --ui-danger: #ef4444;
-  --ui-danger-hover: #dc2626;
-  --ui-bg-input: #f5f5f5;
-
-  --ui-glow-primary: 0 0 20px rgba(59, 130, 246, 0.4);
-}
-
-/* Material Icons */
-.material-icons {
-  font-family: 'Material Icons';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 20px;
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
-  white-space: nowrap;
-  direction: ltr;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'liga';
-}
-
 body,
 input,
 select,
 button,
 textarea {
-  font-family: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--ms-font-ui);
   background-color: var(--ui-bg-base);
   color: var(--ui-text-primary);
   padding: 0;
@@ -60,10 +44,6 @@ textarea {
 
 #app {
   font-family: inherit;
-}
-
-#sheet-page {
-  font-family: var(--sheet-font-family, 'Libre Baskerville', serif);
 }
 
 #sheet-page,
@@ -87,28 +67,19 @@ textarea {
   z-index: -1;
 }
 
-.chord-note {
-  font-family: var(--sheet-font-family, 'Libre Baskerville', serif);
-  font-feature-settings: "tnum";
-  font-variant-numeric: tabular-nums;
-}
-
 #app {
   display: flex;
   min-height: 100vh;
-  margin-left: 80px;
+  margin-left: 0;
   position: relative;
 }
 
 /* PDF export specific styles */
 .pdf-export {
-  /* Para PDF quitamos solo la sombra, sin alterar posición ni tamaño */
   box-shadow: none !important;
   outline: none !important;
-  /* Prevent extra blank page by un-forcing the A4 height */
+  /* Keep height from specific overrides; only clear min-height */
   min-height: auto !important;
-  height: auto !important;
-  /* Fix vertical overflow just in case */
   overflow: visible !important;
 }
 
@@ -124,46 +95,9 @@ textarea {
   width: 100%;
 }
 
-.toolbar-container-top {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background: var(--ui-bg-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 10px;
-  border-bottom: 1px solid var(--ui-border);
-  height: 60px;
-  display: flex;
-  align-items: center;
-}
-
-/* A4 Page dimensions */
-.page-vertical {
-  width: 210mm;
-  min-height: 297mm;
-  margin: 0 auto;
-  background: white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  position: relative;
-}
-
-.page-horizontal {
-  width: 297mm;
-  min-height: 210mm;
-  background: white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 20mm;
-  position: relative;
-}
-
 /* AISLAMIENTO DEL CANVAS A4 */
 .page-vertical,
 .page-horizontal {
-  /* Forzamos explícitamente el color negro base de la impresión en las páginas A4 */
   color: #000000;
 }
 
@@ -280,190 +214,6 @@ textarea {
   z-index: 10000;
 }
 
-/* Section Actions Toolbar */
-.section-actions-toolbar {
-  display: flex;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--ui-bg-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--ui-border);
-  position: sticky;
-  top: 0;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.section-actions-toolbar .action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  background: transparent;
-  border: 1px solid var(--ui-border);
-  color: var(--ui-text-primary);
-  border-radius: 9999px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.3s ease;
-  text-decoration: none;
-}
-
-.section-actions-toolbar .action-btn:hover {
-  background: var(--ui-bg-hover);
-  border-color: rgba(255, 255, 255, 0.2);
-  filter: brightness(1.1);
-}
-
-.section-actions-toolbar .action-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  border-color: var(--ui-border);
-  background: transparent;
-}
-
-.section-actions-toolbar .action-btn.danger {
-  color: #ff6b6b;
-  border-color: rgba(255, 107, 107, 0.3);
-}
-
-.section-actions-toolbar .action-btn.danger:hover {
-  background: rgba(255, 107, 107, 0.1);
-  border-color: #ff6b6b;
-}
-
-.section-actions-toolbar .btn-label {
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.section-actions-toolbar .material-icons {
-  font-size: 18px;
-}
-
-/* Modal - Material Design */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
-  animation: fadeIn 0.2s ease;
-  pointer-events: auto;
-  transform: none !important;
-  transform-origin: initial !important;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-.modal-content {
-  background: var(--ui-bg-elevated);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  padding: 0;
-  border-radius: 12px;
-  border: 1px solid var(--ui-border);
-  min-width: 400px;
-  max-width: 600px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
-  font-family: 'Geist', 'Inter', system-ui, sans-serif;
-  position: relative;
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  color: var(--ui-text-primary);
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.modal-header {
-  font-size: 18px;
-  font-weight: 500;
-  margin: 0;
-  padding: 20px 24px 16px;
-  color: var(--ui-text-primary);
-  border-bottom: 1px solid var(--ui-border);
-}
-
-.modal-body {
-  padding: 20px 24px;
-  margin: 0;
-  background: var(--ui-bg-elevated);
-  color: var(--ui-text-secondary);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 16px 24px;
-  background: var(--ui-bg-surface);
-  border-top: 1px solid var(--ui-border);
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
-.modal-footer button {
-  padding: 10px 20px;
-  border: 1px solid transparent;
-  border-radius: 9999px;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 500;
-  font-size: 13px;
-  transition: all 0.3s ease;
-}
-
-.modal-footer button.primary {
-  background: var(--ui-accent);
-  color: #ffffff;
-  border-color: var(--ui-accent);
-  box-shadow: var(--ui-glow-primary);
-}
-
-.modal-footer button.primary:hover {
-  background: var(--ui-accent-hover);
-  border-color: var(--ui-accent-hover);
-  box-shadow: 0 0 25px rgba(96, 165, 250, 0.6);
-  transform: translateY(-1px);
-}
-
-.modal-footer button.secondary {
-  background: transparent;
-  color: var(--ui-text-primary);
-  border-color: var(--ui-border);
-}
-
-.modal-footer button.secondary:hover {
-  background: var(--ui-bg-hover);
-}
-
-.modal-footer button.secondary:active {
-  background: var(--ui-bg-active);
-}
-
 .form-group {
   margin-bottom: 20px;
   position: relative;
@@ -485,11 +235,11 @@ textarea {
   padding: 10px 12px;
   border: 1px solid var(--ui-border);
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--ms-font-ui);
   font-size: 14px;
   background: var(--ui-bg-input);
   transition: all 0.2s ease;
-  color: var(--ui-text-secondary);
+  color: var(--ui-text-input);
 }
 
 .form-group input:hover,
@@ -540,7 +290,7 @@ textarea {
   border-radius: 2px;
 }
 
-/* Songs List - Antigravity styled */
+/* Song library rows */
 .songs-list {
   max-height: 400px;
   overflow-y: auto;
@@ -674,111 +424,6 @@ textarea {
   background: rgba(211, 47, 47, 0.2);
 }
 
-.main-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  align-items: flex-start;
-  min-height: 100vh;
-  height: 100vh;
-  width: calc(100% - 300px);
-  /* Ajuste inicial para el panel derecho */
-  position: relative;
-  overflow: hidden;
-  transition: width 0.3s ease;
-}
-
-.section-actions-container {
-  /* Barra de acciones pegajosa en la parte superior */
-  position: sticky;
-  top: 0;
-  left: 0;
-  height: 56px;
-  width: 100%;
-  z-index: 900;
-  background-color: var(--ui-bg-base);
-}
-
-.page-wrapper {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 20px;
-  overflow-y: auto;
-  min-height: 0;
-  width: 100%;
-}
-
-.toolbar-container {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 80px;
-  height: 100vh;
-  z-index: 1000;
-  background: var(--ui-bg-surface);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-right: 1px solid var(--ui-border);
-}
-
-.toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 16px 8px;
-  height: 100%;
-}
-
-.toolbar button {
-  padding: 8px;
-  background: transparent;
-  color: var(--ui-text-secondary);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-height: 56px;
-  min-width: 64px;
-  transition: all 0.3s ease;
-}
-
-.toolbar button .material-icons {
-  font-size: 24px;
-  color: var(--ui-text-secondary);
-  transition: color 0.3s ease;
-}
-
-.toolbar button .btn-label {
-  font-size: 10px;
-  color: var(--ui-text-secondary);
-  text-align: center;
-  line-height: 1.2;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.toolbar button:hover {
-  background: var(--ui-bg-hover);
-  color: var(--ui-text-primary);
-}
-
-.toolbar button:hover .material-icons,
-.toolbar button:hover .btn-label {
-  color: var(--ui-text-primary);
-}
-
-.toolbar button:active {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 @media print {
   body {
     background: white;
@@ -811,7 +456,6 @@ textarea {
   .page-horizontal {
     box-shadow: none;
     margin: 0;
-    padding: 20mm;
   }
 }
 
@@ -836,8 +480,12 @@ textarea {
 }
 
 /* Mejorar visibilidad de bordes en PDF */
-.pdf-export .compass-box {
-  border: 2px solid #000000 !important;
+.pdf-export .score-compass-grid .score-compass {
+  border: 0 solid #000 !important;
+  border-left-width: 2px !important;
+  border-right-width: 2px !important;
+  box-shadow: none !important;
+  background: transparent !important;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -1071,10 +719,8 @@ textarea {
 }
 
 /* Script Modal */
-.script-modal {
-  width: 70vw;
-  max-width: 70vw;
-  min-width: 400px;
+.modal-content.script-modal {
+  width: 1120px;
 }
 
 .script-modal-body {
@@ -1134,12 +780,13 @@ textarea {
   background: #ffffff;
   color: #000000;
   font-family: 'Geist Mono', 'Fira Code', 'Courier New', monospace;
-  font-size: 13px;
+  font-size: 18px;
   line-height: 20px;
   outline: none;
   transition: border-color 0.2s ease;
   box-sizing: border-box;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .script-textarea:focus {
@@ -1172,6 +819,24 @@ textarea {
   margin-right: auto;
   font-size: 12px;
   line-height: 1.45;
+}
+
+.script-footer-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+  min-width: 0;
+}
+
+.script-footer-tools .modal-footer-message {
+  margin-right: 0;
+  min-width: 0;
+}
+
+.script-transform-btn {
+  font-family: 'Geist Mono', 'Fira Code', 'Courier New', monospace;
+  white-space: nowrap;
 }
 
 .script-error-message {
