@@ -1,0 +1,30 @@
+Header:
+Name=Rockin' Around The Christmas Tree,
+Author=Brenda Lee,
+Tempo=142,
+Signature=4/4,
+Tone=Ab
+
+Sections:
+In=|Ab6|Fm|Db|Eb7|
+A=|Ab|%|Eb7|%|%|%|%|Ab|%|%|Eb7|%|%|%|%|Ab|
+B=|Db|%|Cm|%|Fm..,Fm7+..|Fm7|Bb7|Eb7|
+SS=|Ab|%|Eb7|%|%|%|%|Ab|%|%|Eb7|%|%|%|%|Ab|%|%|Eb7|%|%|%|%|Ab|
+C=|Db|%|Cm|%|Fm|%|Bb7|Eb7.,Bb7\D.,Eb7\Db.,Eb7\Bb.|
+D=|Ab|%|Eb7|%|%|%|%|%|%|%|%|Ab6|
+
+Structure:
+In,A,B,SS,C,D
+
+Lyrics:
+In=
+
+A=
+
+B=
+
+SS=
+
+C=
+
+D=

@@ -7,17 +7,18 @@
       </div>
       <div class="modal-body help-body">
         <section class="help-section tutorial-links">
-          <h3><AppIcon name="school" /> Tutoriales</h3>
-          <p>Guías paso a paso para aprender flujos completos de edición sin perderte en la interfaz.</p>
+          <h3><AppIcon name="school" /> Manual con capturas</h3>
+          <p>Aprende a crear «Rockin’ Around The Christmas Tree» con Script, editar la hoja, preparar una colección y exportarla.</p>
           <a
             class="tutorial-link"
-            :href="tutorialScriptHref"
+            :href="helpHref"
             target="_blank"
             rel="noopener noreferrer"
           >
             <AppIcon name="slideshow" />
-            Tutorial #1: Crear una canción con Script
+            Abrir el manual con capturas
           </a>
+          <p><a :href="exampleHref" download>Descargar el script completo del ejemplo</a></p>
         </section>
 
         <section class="help-section">
@@ -93,7 +94,7 @@
                 </li>
                 <li><strong>Símbolos Especiales:</strong>
                   <ul>
-                    <li><code>%</code> : Repite el acorde anterior.</li>
+                    <li><code>%</code> : Repite el compás anterior.</li>
                     <li><code>_</code> : Silencio (Rest).</li>
                     <li><code>/</code> : Salto de línea visual en la partitura.</li>
                     <li><code>xN</code> : Repeticiones al final de la línea (ej. <code>x2</code>).</li>
@@ -116,33 +117,16 @@
           </div>
 
           <div class="script-example-box">
-            <div class="example-header">Ejemplo completo de Script:</div>
-<pre><code>Header:
-Name=Mi Canción,
-Author=Autor Demo,
-Tempo=120,
-Signature=4/4,
-Tone=C
-
-Sections:
-CORO = |C,G..|Am,F..|%|/|x2
-
-Structure:
-CORO, CORO
-
-Lyrics:
-CORO = Letra de la primera vuelta.
-CORO = Letra de la segunda con variación.</code></pre>
+            <div class="example-header">Fragmento de Rockin’ Around The Christmas Tree:</div>
+<pre><code>B=|Db|%|Cm|%|Fm..,Fm7+..|Fm7|Bb7|Eb7|</code></pre>
           </div>
+          <p>Dos blancas comparten el quinto compás de B. El manual incluye las seis secciones, sus 72 compases y el script completo con las letras vacías.</p>
         </section>
 
         <section class="help-section shortcuts">
           <h3><AppIcon name="keyboard" /> Atajos de Teclado</h3>
           <div class="shortcut-grid">
             <span class="key">Ctrl + Z</span> <span>Deshacer cambios</span>
-            <span class="key">Ctrl + V</span> <span>Pegar compás (en editor)</span>
-            <span class="key">Ctrl + S</span> <span>Guardar canción</span>
-            <span class="key">Ctrl + P</span> <span>Exportar PDF</span>
             <span class="key">Esc</span> <span>Cerrar modales</span>
           </div>
         </section>
@@ -156,7 +140,8 @@ CORO = Letra de la segunda con variación.</code></pre>
 
 <script setup>
 const emit = defineEmits(['close'])
-const tutorialScriptHref = new URL('./vue-group-sheet-tutorial-script/output/tutorial.html', window.location.href).href
+const helpHref = new URL('./help.html', window.location.href).href
+const exampleHref = new URL('./help/rockin-around-the-christmas-tree.txt', window.location.href).href
 </script>
 
 <style scoped>

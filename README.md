@@ -1,80 +1,102 @@
 # Group Sheet Editor
 
-Aplicación web para editar gráficamente estructuras de canciones para bandas musicales de versiones.
+A visual chord-chart and setlist editor for bands. Build reusable sections, arrange their playing order, add lyrics and notes, and export sheets for rehearsals and live shows.
 
-## Características
+![The web editor showing Rockin’ Around The Christmas Tree and a Christmas setlist](public/help/images/editor.jpg)
 
-- **Editor WYSIWYG**: Espacio de trabajo visual tipo DIN-A4 (vertical u horizontal)
-- **Cabecera configurable**: Tempo, compás, nombre de canción, autor y tono
-- **Secciones de canción**: Crea y edita secciones con acordes y compases
-- **Estructura visual**: Representación gráfica de la secuencia de secciones
-- **Notas**: Añade notas adicionales a tus partituras
-- **Persistencia**: Almacenamiento automático en localStorage del navegador
-- **Exportación**: Imprime o exporta a PDF
+The interface and [illustrated user guide](public/help.html) are in Spanish. Open **Ayuda → Abrir el manual con capturas** inside the app, or `help.html` on your deployment. Desktop opens the bundled guide in a separate window after rebuilding the app with the current sources.
 
-## Tecnologías
+## Features
 
-- Vue 3
-- Vite
-- Pinia (gestión de estado)
-- html2pdf.js (exportación PDF)
+- A4 portrait and landscape sheets with editable title, artist, tempo, time signature and key.
+- Chord sections with bar repeats, rests, multiple chords per bar and note-value markers.
+- A separate song structure: reuse a section without rewriting its chords.
+- Lyrics attached to each occurrence in the structure, plus optional sheet notes.
+- A Script editor for headers, sections, structure and lyrics.
+- A searchable song library and collections with an ordered setlist.
+- PDF, print, EPUB and MusicXML export; native song, collection and library-backup files.
+- Collection integrity checks that identify missing songs while preserving their references.
+- Shared sheet layout and font settings for the editor, PDF and EPUB.
 
-## Instalación
+## Run locally
 
-```bash
-# Instalar dependencias
-npm install
+Use Node.js 22 or later with npm:
 
-# Iniciar servidor de desarrollo
+```sh
+git clone --recurse-submodules https://github.com/oskrs111/vue-group-sheet.git
+cd vue-group-sheet
+npm ci
 npm run dev
-
-# Compilar para producción
-npm run build
 ```
 
-## Estructura de Datos
+Open the local URL printed by Vite. For an existing checkout, retrieve the optional desktop and tutorial projects with `git submodule update --init --recursive`.
 
-La aplicación utiliza un modelo de datos JSON que incluye:
+```sh
+npm run build    # Production files in dist/
+npm run preview  # Preview the production build
+```
 
-- **$header**: Cabecera con tempo, compás, nombre, autor y tono
-- **@body**: Secciones con compases y acordes
-- **$structure**: Secuencia visual de las secciones
-- **$notes**: Notas adicionales
-- **settings**: Configuración de colores, formas y orientación
+GitHub Pages is built and deployed by the workflow in `.github/workflows/`. Generated `dist/` files are excluded from Git.
 
-## Uso
+## Create the example song
 
-1. **Editar campos**: Haz clic en el icono de lápiz (✏️) en cualquier campo editable
-2. **Añadir secciones**: Usa el botón "+ Añadir Sección" en el cuerpo
-3. **Añadir compases**: Dentro de cada sección, usa "+ Compás"
-4. **Editar acordes**: Haz clic en el lápiz de cada compás para editar los acordes
-5. **Estructura**: Añade elementos a la estructura para visualizar la secuencia
-6. **Guardar**: Los cambios se guardan automáticamente en el navegador
-7. **Exportar**: Usa los botones de la barra superior para imprimir o exportar a PDF
+1. Start a new song with **Nuevo** and open **Script**.
+2. Copy the complete [Rockin’ Around The Christmas Tree example](public/help/rockin-around-the-christmas-tree.txt).
+3. Click **Aplicar script**. It creates six sections, 72 bars and the structure `In,A,B,SS,C,D` in Ab, at 142 BPM and 4/4.
+4. Click **Guardar** to add the song to the library and activate autosave for subsequent edits.
+5. Open **Mi biblioteca**, create a collection, and add the saved song to your setlist.
 
-## Componentes
+The example preserves the supplied script, including its backslash bass notation and empty lyrics. Enable **Ajustes → Mostrar página de letras** and enter lyrics separately when needed. See the [illustrated guide](public/help.html) for the complete walkthrough and [SCRIPTING.md](SCRIPTING.md) for the format reference.
 
-### Estructurales ($)
-- `$Header.vue`: Cabecera del documento
-- `$Left.vue`, `$Center.vue`, `$Right.vue`: Secciones de la cabecera
-- `$Structure.vue`: Visualización de la estructura
-- `$Notes.vue`: Sección de notas
+## Storage and file formats
 
-### Editables (@)
-- `@Tempo.vue`, `@Signature.vue`: Tempo y compás
-- `@Name.vue`, `@Author.vue`: Nombre y autor
-- `@Tone.vue`: Tono de la canción
-- `@Body.vue`: Cuerpo con secciones
-- `@Section.vue`: Sección individual
-- `@Compass.vue`: Compás con acordes
-- `@Chord.vue`: Acorde individual
-- `@StructureItem.vue`: Elemento de estructura
-- `@NoteLine.vue`: Línea de nota
+The web version stores saved songs and collections in this browser’s `localStorage`. Save a new draft once to activate library autosave. Browser data is specific to the site, browser and profile; use a backup to move your library to another device or to the desktop app.
 
-## Versión de escritorio
+| Format | Contents | Where to find it |
+| --- | --- | --- |
+| `.gse` | One song in the native JSON format | **Exportar → current song** |
+| `.col` | A collection and its included songs | Collection export button in **Mi biblioteca** |
+| `.backup` | The complete song and collection library | **Exportar → Copia de seguridad** |
+| PDF / print | Printable song sheets or collection documents | Toolbar or collection actions |
+| EPUB | Song or collection document for compatible readers | Toolbar or collection actions |
+| MusicXML | Musical data for compatible score editors | **Exportar → MusicXML** |
 
-La aplicación Electron está en `vue-group-sheet-desktop`. Guarda canciones y colecciones en archivos individuales dentro de una carpeta de trabajo elegida al iniciar, con exportaciones y copias automáticas cada 5 minutos (configurable). Consulta [sus instrucciones](vue-group-sheet-desktop/README.md).
+Use **Importar → Copia de seguridad** to restore a `.backup`: **Fusionar bibliotecas** combines its content with the current library, **Reemplazar biblioteca…** replaces the library after confirmation, and **Cancelar** leaves it unchanged. Import individual songs through **Importar → Canción**, and collections through the collection import button.
 
-## Licencia
+PDF, EPUB and native collection exports check for missing songs first. Use **Comprobar colecciones** to inspect unresolved references and import the missing songs to restore their links.
 
-MIT
+## Desktop app
+
+The Electron wrapper lives in the independent [vue-group-sheet-desktop](https://github.com/oskrs111/vue-group-sheet-desktop) repository, also included here as a submodule. It uses the current web editor and stores portable `.gse` and `.col` files in a selected workspace folder, with configurable automatic backups.
+
+See the [desktop README](vue-group-sheet-desktop/README.md) for setup, Windows installer commands and moving a library between computers. Commit and push changes inside a submodule before updating its reference in this repository.
+
+## Project layout
+
+| Path | Purpose |
+| --- | --- |
+| `src/components/` | Editor, library, dialogs and sheet components |
+| `src/stores/` | Song, collection and notification state |
+| `src/utils/` | Script parsing, persistence, layout, fonts and exports |
+| `src/styles/` | Workspace and shared sheet styles |
+| `public/help.html`, `public/help/` | Illustrated guide, screenshots and downloadable example |
+| `vue-group-sheet-desktop/` | Electron wrapper and integration tests |
+| `vue-group-sheet-tutorial-script/` | Optional tutorial project |
+
+The web app uses Vue 3, Pinia and Vite. PDF export uses `html-to-image` and `jsPDF`; EPUB packaging uses `JSZip`.
+
+## Checks
+
+```sh
+npm run build
+cd vue-group-sheet-desktop
+npm ci
+npm test
+npm run build-web
+```
+
+Desktop tests also cover shared browser persistence, import/export behavior, chord typography and sheet layout. Check layout changes together in the editor, PDF and EPUB.
+
+## License
+
+The web application uses the [MIT license](LICENSE). Bundled fonts retain their own terms; the recovered chord font and its license are documented in [src/asset/fonts/RECOVERED-CHORDS.md](src/asset/fonts/RECOVERED-CHORDS.md).

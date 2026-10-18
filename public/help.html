@@ -1,217 +1,194 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ayuda - Editor de Partituras</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Montserrat', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-            margin-top: 1.5em;
-        }
-        h1 {
-            text-align: center;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }
-        h2 {
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-        }
-        .toc {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
-        }
-        .toc ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        .toc li {
-            margin-bottom: 8px;
-        }
-        .toc a {
-            text-decoration: none;
-            color: #1976d2;
-            font-weight: 500;
-        }
-        .toc a:hover {
-            text-decoration: underline;
-        }
-        .section {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        code {
-            background: #f1f1f1;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-family: monospace;
-            color: #d63384;
-        }
-        .icon {
-            font-family: 'Material Icons';
-            font-size: 18px;
-            vertical-align: middle;
-            color: #666;
-        }
-        .note {
-            background-color: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 10px 15px;
-            margin: 15px 0;
-            font-size: 0.9em;
-        }
-        img {
-            max-width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-        .back-to-top {
-            display: block;
-            text-align: right;
-            margin-top: 10px;
-            font-size: 0.8em;
-            color: #999;
-            text-decoration: none;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aprende a crear hojas de acordes, usar scripts, organizar colecciones y exportar tu repertorio con Group Sheet Editor.">
+  <title>Manual con capturas · Group Sheet Editor</title>
+  <link rel="stylesheet" href="help/help.css">
+  <script src="help/help.js" defer></script>
 </head>
 <body>
-
-    <h1>Manual de Usuario</h1>
-
-    <div class="toc">
-        <h3>Índice</h3>
-        <ul>
-            <li><a href="#introduccion">1. Introducción</a></li>
-            <li><a href="#interfaz">2. Interfaz Principal</a></li>
-            <li><a href="#crear-cancion">3. Crear y Editar Canciones</a>
-                <ul>
-                    <li><a href="#cabecera">Cabecera (Título, Tono, Tempo)</a></li>
-                    <li><a href="#estructura">Estructura y Secciones</a></li>
-                    <li><a href="#acordes-letra">Acordes y Letra</a></li>
-                </ul>
-            </li>
-            <li><a href="#colecciones">4. Colecciones</a>
-                <ul>
-                    <li><a href="#crear-coleccion">Crear y Gestionar</a></li>
-                    <li><a href="#exportar-importar">Exportar e Importar (JSON)</a></li>
-                    <li><a href="#exportar-pdf">Exportar a PDF</a></li>
-                </ul>
-            </li>
-            <li><a href="#ajustes">5. Ajustes y Configuración</a></li>
-        </ul>
-    </div>
-
-    <div id="introduccion" class="section">
-        <h2>1. Introducción</h2>
-        <p>Bienvenido al editor de partituras para grupos. Esta herramienta te permite crear, organizar y exportar partituras de manera sencilla y profesional. Está diseñada para facilitar la gestión de repertorios y la creación de documentos listos para imprimir o compartir.</p>
-    </div>
-
-    <div id="interfaz" class="section">
-        <h2>2. Interfaz Principal</h2>
-        <p>La pantalla se divide en tres áreas principales:</p>
-        <ul>
-            <li><strong>Barra Superior:</strong> Contiene herramientas globales como Guardar, Abrir, Exportar PDF, Imprimir y Ajustes.</li>
-            <li><strong>Área Central (Partitura):</strong> Es el lienzo donde editas tu canción. Muestra el título, autor, tono, tempo y las secciones musicales.</li>
-            <li><strong>Panel Lateral (Colecciones):</strong> Situado a la derecha, permite organizar tus canciones en listas o repertorios.</li>
-        </ul>
-        <a href="#" class="back-to-top">Volver al índice</a>
-    </div>
-
-    <div id="crear-cancion" class="section">
-        <h2>3. Crear y Editar Canciones</h2>
-        
-        <h3 id="cabecera">Cabecera</h3>
-        <p>Haz clic directamente sobre los elementos de la cabecera para editarlos:</p>
-        <ul>
-            <li><strong>Título y Autor:</strong> Escribe el nombre de la canción y el artista.</li>
-            <li><strong>Tono (Key):</strong> Selecciona la tonalidad principal.</li>
-            <li><strong>Tempo (BPM):</strong> Ajusta la velocidad de la canción.</li>
-            <li><strong>Compás (Signature):</strong> Define el compás (ej. 4/4, 6/8).</li>
-        </ul>
-
-        <h3 id="estructura">Estructura y Secciones</h3>
-        <p>Las canciones se dividen en secciones (Intro, Verso, Coro, etc.).</p>
-        <ul>
-            <li><strong>Añadir Sección:</strong> Usa el botón <strong>+</strong> al final de la partitura.</li>
-            <li><strong>Tipo de Sección:</strong> Haz clic en el nombre de la sección (ej. "Intro") para cambiar su tipo y color.</li>
-            <li><strong>Compases:</strong> Dentro de cada sección, puedes añadir compases. Cada compás puede dividirse en 2, 3 o 4 partes para acomodar varios acordes.</li>
-        </ul>
-
-        <h3 id="acordes-letra">Acordes y Letra</h3>
-        <p>En cada división del compás puedes escribir:</p>
-        <ul>
-            <li><strong>Acorde:</strong> En la parte superior (ej. C, Am7).</li>
-            <li><strong>Letra:</strong> Debajo del acorde, para indicar en qué sílaba cae el cambio.</li>
-        </ul>
-        <div class="note">
-            <strong>Tip:</strong> Usa las herramientas de copiar y pegar secciones para agilizar la escritura de partes repetidas.
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <header class="site-header">
+    <a class="brand" href="index.html" data-return-editor><img class="brand-mark" src="help/logo.png" width="36" height="36" alt=""><span>Group Sheet Editor<small>Manual de usuario</small></span></a>
+    <a class="button button-quiet" href="index.html" data-return-editor>Volver al editor <span aria-hidden="true">↗</span></a>
+  </header>
+  <div class="guide-layout">
+    <aside class="guide-index">
+      <p class="eyebrow">EN ESTA GUÍA</p>
+      <nav aria-label="Índice del manual">
+        <a href="#inicio"><span>01</span> Primeros pasos</a>
+        <a href="#script"><span>02</span> Crear con Script</a>
+        <a href="#edicion"><span>03</span> Editar la canción</a>
+        <a href="#estructura"><span>04</span> Secciones y estructura</a>
+        <a href="#letras"><span>05</span> Letras y ajustes</a>
+        <a href="#colecciones"><span>06</span> Colecciones</a>
+        <a href="#exportar"><span>07</span> Exportar y compartir</a>
+        <a href="#biblioteca"><span>08</span> Biblioteca y dudas</a>
+      </nav>
+      <a class="example-download" href="help/rockin-around-the-christmas-tree.txt" download>↓ Descargar el script de ejemplo<small>Texto completo · listo para pegar</small></a>
+    </aside>
+    <main id="contenido">
+      <div class="hero">
+        <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> GUÍA DE LA VERSIÓN WEB</p>
+        <h1>Manual de Group Sheet Editor</h1>
+        <p class="lead">Crea una hoja de acordes, organiza sus secciones y prepara una colección para el ensayo. Aquí lo hacemos con <strong>Rockin’ Around The Christmas Tree</strong>.</p>
+        <p class="access-note"><b>Acceso en web y escritorio:</b> Ayuda → Abrir el manual con capturas. En escritorio, el manual se abre en una ventana aparte; «Volver al editor» la cierra.</p>
+        <div class="song-meta"><span>Brenda Lee</span><span>142 BPM</span><span>4/4</span><span>Ab</span><span>6 secciones</span></div>
+        <a class="button button-primary" href="#script">Crear la canción de ejemplo <span aria-hidden="true">↓</span></a>
+      </div>
+      <figure class="screenshot hero-shot">
+        <a href="help/images/editor.jpg" target="_blank" rel="noopener" aria-label="Ampliar la captura del editor"><img src="help/images/editor.jpg" width="1430" height="892" alt="Editor con la cabecera de Rockin’ Around The Christmas Tree, sus acordes y la colección Repertorio de Navidad."></a>
+        <figcaption>El editor a la izquierda y «Mi biblioteca» a la derecha. Pulsa cualquier captura para ampliarla.</figcaption>
+      </figure>
+      <section id="inicio" aria-labelledby="titulo-inicio">
+        <div class="section-heading"><span class="step">01</span><div><p class="eyebrow">UN RECORRIDO RÁPIDO</p><h2 id="titulo-inicio">Empieza por una canción</h2></div></div>
+        <div class="quick-steps">
+          <div class="card"><strong>1. Crea</strong><p>Usa <b>Nuevo</b> para empezar un borrador. Edita sobre la hoja o pega un script.</p></div>
+          <div class="card"><strong>2. Guarda</strong><p>Pulsa <b>Guardar</b> una primera vez. A partir de ahí, las ediciones de esa canción se guardan automáticamente.</p></div>
+          <div class="card"><strong>3. Organiza</strong><p>En <b>Mi biblioteca</b>, añade la canción guardada a una colección para preparar tu repertorio.</p></div>
+          <div class="card"><strong>4. Comparte</strong><p>Exporta a PDF o EPUB, o usa los archivos nativos para seguir editando.</p></div>
         </div>
-        <a href="#" class="back-to-top">Volver al índice</a>
-    </div>
-
-    <div id="colecciones" class="section">
-        <h2>4. Colecciones</h2>
-        <p>Las colecciones te permiten agrupar canciones para crear repertorios (ej. "Concierto Verano", "Misa Domingo").</p>
-
-        <h3 id="crear-coleccion">Crear y Gestionar</h3>
-        <p>En el panel derecho:</p>
-        <ul>
-            <li><strong>Crear:</strong> Pulsa "Crear Colección" y dale un nombre.</li>
-            <li><strong>Editar:</strong> Usa el icono de lápiz para cambiar el nombre o reordenar las canciones.</li>
-            <li><strong>Añadir canciones:</strong> En el modo edición, busca tus canciones guardadas y añádelas a la lista.</li>
-        </ul>
-
-        <h3 id="exportar-importar">Exportar e Importar (JSON)</h3>
-        <p>Puedes hacer copias de seguridad o compartir colecciones con otros miembros del grupo.</p>
-        <ul>
-            <li><strong>Exportar:</strong> Pulsa el icono de descarga (flecha abajo) en una colección. Se descargará un archivo <code>.json</code> que contiene la colección y todas las canciones incluidas.</li>
-            <li><strong>Importar:</strong> Pulsa el icono de subida (flecha arriba) en la cabecera del panel. Selecciona un archivo <code>.json</code>.
-                <ul>
-                    <li>Si una canción ya existe y la versión importada es más nueva, el sistema te preguntará si quieres actualizarla.</li>
-                    <li>Si el nombre de la colección ya existe, se creará una copia con un número (ej. "Repertorio (1)").</li>
-                </ul>
-            </li>
-        </ul>
-
-        <h3 id="exportar-pdf">Exportar a PDF</h3>
-        <p>Pulsa el icono de PDF en una colección para generar un único archivo que contiene:</p>
-        <ol>
-            <li>Una <strong>portada</strong> con el nombre de la colección y la fecha.</li>
-            <li>Todas las <strong>canciones</strong> seguidas, cada una en su propia página.</li>
+        <p>La barra superior reúne los controles de archivo, exportación, <b>Script</b>, <b>Ajustes</b> y <b>Ayuda</b>. El zoom situado encima de la hoja cambia su tamaño en pantalla; <b>Ajustar</b> adapta su anchura al espacio disponible.</p>
+      </section>
+      <section id="script" aria-labelledby="titulo-script">
+        <div class="section-heading"><span class="step">02</span><div><p class="eyebrow">EL EJEMPLO COMPLETO</p><h2 id="titulo-script">Crea la canción con Script</h2></div></div>
+        <ol class="instructions">
+          <li>Pulsa <b>Nuevo</b> para comenzar un borrador y abre <b>Script</b> en la barra superior.</li>
+          <li>Copia el ejemplo, selecciona todo el contenido del editor de scripts y pégalo.</li>
+          <li>Pulsa <b>Aplicar script</b>. La cabecera, las seis secciones y su orden aparecerán en la hoja.</li>
+          <li>Pulsa <b>Guardar → Guardar canción</b> para incorporarla a tu biblioteca.</li>
         </ol>
-        <a href="#" class="back-to-top">Volver al índice</a>
-    </div>
+        <div class="script-panel">
+          <div class="script-panel-header"><div><strong>Rockin’ Around The Christmas Tree</strong><small>Script original · 72 compases</small></div><div class="script-actions"><a href="help/rockin-around-the-christmas-tree.txt" download>Descargar TXT</a><button type="button" class="button button-primary" id="copy-script">Copiar script</button></div></div>
+          <details><summary>Ver el script completo</summary><pre tabindex="0" aria-label="Script completo del ejemplo"><code id="example-script">Header:
+Name=Rockin' Around The Christmas Tree,
+Author=Brenda Lee,
+Tempo=142,
+Signature=4/4,
+Tone=Ab
 
-    <div id="ajustes" class="section">
-        <h2>5. Ajustes y Configuración</h2>
-        <p>En el menú de ajustes (icono de engranaje) puedes personalizar la apariencia:</p>
-        <ul>
-            <li><strong>Fuente:</strong> Cambia la tipografía de la partitura.</li>
-            <li><strong>Colores:</strong> Define colores por defecto para las secciones.</li>
-            <li><strong>Zoom:</strong> Ajusta el tamaño de visualización.</li>
+Sections:
+In=|Ab6|Fm|Db|Eb7|
+A=|Ab|%|Eb7|%|%|%|%|Ab|%|%|Eb7|%|%|%|%|Ab|
+B=|Db|%|Cm|%|Fm..,Fm7+..|Fm7|Bb7|Eb7|
+SS=|Ab|%|Eb7|%|%|%|%|Ab|%|%|Eb7|%|%|%|%|Ab|%|%|Eb7|%|%|%|%|Ab|
+C=|Db|%|Cm|%|Fm|%|Bb7|Eb7.,Bb7\D.,Eb7\Db.,Eb7\Bb.|
+D=|Ab|%|Eb7|%|%|%|%|%|%|%|%|Ab6|
+
+Structure:
+In,A,B,SS,C,D
+
+Lyrics:
+In=
+
+A=
+
+B=
+
+SS=
+
+C=
+
+D=</code></pre></details>
+          <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+        </div>
+        <figure class="screenshot"><a href="help/images/script.jpg" target="_blank" rel="noopener" aria-label="Ampliar la captura del modo Script"><img src="help/images/script.jpg" width="1430" height="892" loading="lazy" alt="Ventana Script con el ejemplo de Rockin’ y el botón Aplicar script."></a><figcaption>Cabecera, acordes, estructura y letras en un texto editable.</figcaption></figure>
+        <h3>Qué significa cada bloque</h3>
+        <dl class="block-reference">
+          <div><dt><code>Header:</code></dt><dd>Define <code>Name</code>, <code>Author</code>, <code>Tempo</code>, <code>Signature</code> y <code>Tone</code>.</dd></div>
+          <div><dt><code>Sections:</code></dt><dd>Asigna un identificador a los compases de cada sección. Por ejemplo, <code>In=|Ab6|Fm|Db|Eb7|</code>.</dd></div>
+          <div><dt><code>Structure:</code></dt><dd>Enumera las secciones en orden de interpretación. Repite un identificador para volver a tocar esa sección.</dd></div>
+          <div><dt><code>Lyrics:</code></dt><dd>Asocia texto a cada aparición de una sección. Las seis entradas del ejemplo están vacías de forma intencionada.</dd></div>
+        </dl>
+        <h3>Símbolos y duraciones</h3>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Tabla de sintaxis del script"><table><thead><tr><th>Símbolo</th><th>Uso</th><th>Ejemplo</th></tr></thead><tbody>
+          <tr><td><code>|</code></td><td>Delimita un compás.</td><td><code>|Ab6|Fm|</code></td></tr>
+          <tr><td><code>%</code></td><td>Repite el compás anterior.</td><td><code>|Db|%|</code></td></tr>
+          <tr><td><code>,</code></td><td>Separa acordes dentro de un compás.</td><td><code>|Fm..,Fm7+..|</code></td></tr>
+          <tr><td>Sin puntos</td><td>Redonda: cuatro tiempos en 4/4.</td><td><code>Ab6</code></td></tr>
+          <tr><td><code>..</code></td><td>Blanca: dos tiempos.</td><td><code>Fm..</code></td></tr>
+          <tr><td><code>.</code></td><td>Negra: un tiempo.</td><td><code>Eb7.</code></td></tr>
+          <tr><td><code>...</code></td><td>Blanca con puntillo: tres tiempos.</td><td><code>Ab...</code></td></tr>
+          <tr><td><code>_</code></td><td>Silencio; admite los mismos puntos de duración.</td><td><code>|_|</code> o <code>|Ab.,_...|</code></td></tr>
+          <tr><td><code>/</code></td><td>Como elemento independiente, inserta un salto de línea visual.</td><td><code>In,A,/,B,SS,C,D</code> en Structure</td></tr>
+          <tr><td><code>xN</code></td><td>Indica vueltas al final de una sección.</td><td><code>In=|Ab6|Fm|Db|Eb7|x2</code></td></tr>
+          <tr><td><code>/</code> o <code>\</code> en un acorde</td><td>Escribe el bajo junto al acorde. El ejemplo conserva la contrabarra original.</td><td><code>Bb7\D.</code></td></tr>
+        </tbody></table></div>
+        <p class="callout">En 4/4, las duraciones de los acordes y silencios de cada compás deben sumar cuatro tiempos. <code>Fm..,Fm7+..</code> son dos blancas; el último compás de C contiene cuatro negras.</p>
+        <p>Si hay un error de sintaxis, el editor muestra el mensaje y la línea afectada. <b>Unir líneas de letra</b> sustituye los saltos internos de las letras por separadores <code>/</code>; no cambia los acordes.</p>
+      </section>
+      <section id="edicion" aria-labelledby="titulo-edicion">
+        <div class="section-heading"><span class="step">03</span><div><p class="eyebrow">TRABAJA SOBRE LA HOJA</p><h2 id="titulo-edicion">Edita los detalles</h2></div></div>
+        <ul class="feature-list">
+          <li><b>Cabecera.</b> Acerca el puntero al título, autor, tempo, compás o tono y pulsa su lápiz de edición.</li>
+          <li><b>Secciones.</b> Usa <b>+</b> junto a «Secciones» para crear una nueva. Selecciona una sección para ver sus herramientas de edición.</li>
+          <li><b>Compases.</b> Selecciona un compás para editar sus acordes y duraciones, copiarlo, insertar otro o eliminarlo con las herramientas de la selección.</li>
+          <li><b>Deshacer.</b> Usa <kbd>Ctrl</kbd> + <kbd>Z</kbd> fuera de los campos de texto para deshacer cambios registrados. En macOS, usa <kbd>⌘</kbd> + <kbd>Z</kbd>.</li>
         </ul>
-        <a href="#" class="back-to-top">Volver al índice</a>
-    </div>
-
+        <p>El pie de la ventana indica <b>Borrador sin guardar</b> o <b>Autoguardado activo</b>, y el estado de deshacer. Pulsa <b>Abrir</b> o la pestaña <b>Canciones</b> de la biblioteca para recuperar una canción guardada.</p>
+      </section>
+      <section id="estructura" aria-labelledby="titulo-estructura">
+        <div class="section-heading"><span class="step">04</span><div><p class="eyebrow">ACORDES Y ORDEN DE INTERPRETACIÓN</p><h2 id="titulo-estructura">Una sección, varias apariciones</h2></div></div>
+        <p><b>Secciones</b> contiene los acordes de cada parte. <b>Estructura</b> es el recorrido de la canción: sus casillas indican qué se toca y en qué orden. Repetir una sección reutiliza sus acordes y permite asignarle otra letra.</p>
+        <div class="structure-flow" aria-label="Orden del ejemplo"><span>In <small>4 compases</small></span><span>A <small>16 compases</small></span><span>B <small>8 compases</small></span><span>SS <small>24 compases</small></span><span>C <small>8 compases</small></span><span>D <small>12 compases</small></span></div>
+        <p>El ejemplo tiene <b>72 compases</b>. SS reúne la parte previa al solo y el solo de saxo. Para añadir otra aparición, usa <b>+</b> junto a «Estructura» y elige una sección existente; sus herramientas permiten cambiar el orden y la apariencia.</p>
+        <figure class="screenshot"><a href="help/images/score.jpg" target="_blank" rel="noopener" aria-label="Ampliar la captura de la hoja completa"><img src="help/images/score.jpg" width="1430" height="892" loading="lazy" alt="Hoja al 60 por ciento de zoom, con las seis secciones y la estructura In, A, B, SS, C, D."></a><figcaption>La hoja al 60 % de zoom muestra las secciones y su orden sin modificar el tamaño de impresión.</figcaption></figure>
+      </section>
+      <section id="letras" aria-labelledby="titulo-letras">
+        <div class="section-heading"><span class="step">05</span><div><p class="eyebrow">PERSONALIZA EL DOCUMENTO</p><h2 id="titulo-letras">Letras, notas y ajustes</h2></div></div>
+        <p>En <b>Ajustes</b> puedes elegir la orientación, la fuente de la hoja y la forma y color de los elementos. Activa <b>Mostrar página de letras</b> para editar el texto de cada aparición de la estructura. La letra se presenta en una página separada; no debajo de cada acorde.</p>
+        <p>También puedes rellenar <code>Lyrics:</code> desde Script. Si una sección aparece dos veces en la estructura, escribe dos entradas con su identificador: se asignarán en ese orden. El ejemplo de Rockin’ no incluye letras, por lo que esos campos empiezan vacíos.</p>
+        <p><b>Mostrar apartado de notas</b> añade un espacio para indicaciones de interpretación. <b>Fuente de la hoja</b> se aplica a textos y acordes; los caracteres que faltan en Recovered Chords Std usan Libre Baskerville.</p>
+        <figure class="screenshot"><a href="help/images/settings.jpg" target="_blank" rel="noopener" aria-label="Ampliar la captura de ajustes"><img src="help/images/settings.jpg" width="1430" height="892" loading="lazy" alt="Configuración con orientación, forma, fuente y casillas para mostrar notas y letras."></a><figcaption>Pulsa «Guardar ajustes» para aplicar la configuración a la canción.</figcaption></figure>
+        <p class="callout">Un borde rojo discontinuo en la hoja vertical indica que el contenido supera el área A4. Revisa la distribución antes de exportar; el zoom general de pantalla solo cambia la vista.</p>
+      </section>
+      <section id="colecciones" aria-labelledby="titulo-colecciones">
+        <div class="section-heading"><span class="step">06</span><div><p class="eyebrow">PREPARA EL ENSAYO</p><h2 id="titulo-colecciones">Agrupa canciones en colecciones</h2></div></div>
+        <ol class="instructions">
+          <li>Guarda la canción y abre <b>Mi biblioteca → Colecciones</b>.</li>
+          <li>Pulsa <b>+</b>, escribe «Repertorio de Navidad» y confirma con <b>Crear colección</b>.</li>
+          <li>Abre la colección con su flecha o su lápiz y pulsa <b>Añadir Canción</b>.</li>
+          <li>Busca «Rockin» y pulsa <b>Añadir</b>. Puedes arrastrar las canciones para ordenar el repertorio.</li>
+          <li>Cierra el diálogo. Los botones de la tarjeta permiten editar, duplicar, exportar o eliminar la colección.</li>
+        </ol>
+        <figure class="screenshot"><a href="help/images/collection.jpg" target="_blank" rel="noopener" aria-label="Ampliar la captura de edición de colecciones"><img src="help/images/collection.jpg" width="1430" height="892" loading="lazy" alt="Colección Repertorio de Navidad con Rockin’ Around The Christmas Tree como primera canción."></a><figcaption>Una colección guarda el orden del repertorio. Quitar una canción de ella conserva la canción en tu biblioteca.</figcaption></figure>
+        <p><b>Comprobar colecciones</b>, en la cabecera de la aplicación, muestra las canciones que faltan. Sus identificadores se conservan para recuperar el enlace al importar la canción original. Resuelve las referencias pendientes antes de exportar la colección a <code>.col</code>, PDF o EPUB.</p>
+      </section>
+      <section id="exportar" aria-labelledby="titulo-exportar">
+        <div class="section-heading"><span class="step">07</span><div><p class="eyebrow">ELIGE EL FORMATO ADECUADO</p><h2 id="titulo-exportar">Exporta y comparte</h2></div></div>
+        <p><b>PDF</b>, <b>EPUB</b> e <b>Imprimir</b> actúan sobre la canción abierta. <b>Exportar</b> ofrece el archivo nativo, la copia de seguridad y MusicXML. Para exportar una colección completa, usa los botones de su tarjeta.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Formatos de exportación"><table><thead><tr><th>Formato</th><th>Para qué sirve</th><th>Cómo abrirlo o importarlo</th></tr></thead><tbody>
+          <tr><td><code>.gse</code></td><td>Seguir editando una canción con sus datos y ajustes.</td><td>Importar → Canción.</td></tr>
+          <tr><td><code>.col</code></td><td>Compartir una colección y sus canciones.</td><td>Importar Colección en Mi biblioteca.</td></tr>
+          <tr><td><code>.backup</code></td><td>Transportar o recuperar la biblioteca completa.</td><td>Importar → Copia de seguridad.</td></tr>
+          <tr><td>PDF / impresión</td><td>Obtener hojas para leer, compartir o imprimir.</td><td>Un lector de PDF o una impresora.</td></tr>
+          <tr><td>EPUB</td><td>Llevar la canción o colección a un lector compatible.</td><td>Una aplicación o dispositivo que admita EPUB.</td></tr>
+          <tr><td>MusicXML</td><td>Intercambiar datos musicales con un editor compatible.</td><td>MuseScore, Sibelius u otro editor compatible.</td></tr>
+        </tbody></table></div>
+        <figure class="screenshot"><a href="help/images/export.jpg" target="_blank" rel="noopener" aria-label="Ampliar la captura de exportación"><img src="help/images/export.jpg" width="1430" height="892" loading="lazy" alt="Menú Exportar con canción actual en formato gse, Copia de seguridad y MusicXML."></a><figcaption>«Exportar» ofrece los datos editables; PDF, EPUB e Imprimir tienen botones propios.</figcaption></figure>
+        <p>Cuando corresponde, puedes elegir <b>Exportar con letras</b>, <b>Exportar sin letras</b> o <b>Cancelar</b>. Los controles de edición se retiran del documento exportado.</p>
+      </section>
+      <section id="biblioteca" aria-labelledby="titulo-biblioteca">
+        <div class="section-heading"><span class="step">08</span><div><p class="eyebrow">GUARDA Y RECUPERA TU TRABAJO</p><h2 id="titulo-biblioteca">Tu biblioteca y las dudas habituales</h2></div></div>
+        <p>La web guarda tu biblioteca en el almacenamiento local de <b>este navegador y este sitio</b>. No la sincroniza automáticamente con otro navegador, ordenador o con la versión de escritorio.</p>
+        <p>Usa <b>Exportar → Copia de seguridad</b> para descargar un <code>.backup</code>. Al recuperarlo desde <b>Importar → Copia de seguridad</b>, elige <b>Fusionar bibliotecas</b> para combinar los datos o <b>Reemplazar biblioteca…</b> para sustituirlos tras otra confirmación. <b>Cancelar</b> no modifica la biblioteca.</p>
+        <div class="faq">
+          <details><summary>¿Por qué aparece «Borrador sin guardar»?</summary><p>La canción todavía no está en tu biblioteca. Pulsa Guardar y confirma su nombre para activar el autoguardado.</p></details>
+          <details><summary>¿Por qué no veo mis canciones en otro navegador?</summary><p>Los datos pertenecen al navegador, perfil y dirección donde los guardaste. Exporta un .backup en el origen e impórtalo en el destino.</p></details>
+          <details><summary>¿Por qué la página de letras del ejemplo está vacía?</summary><p>El script deja vacías las seis entradas de Lyrics. Activa la página en Ajustes y escribe tus textos en ella o en el bloque Lyrics.</p></details>
+          <details><summary>¿Por qué algunos caracteres usan otra tipografía?</summary><p>Recovered Chords Std es parcial. Los caracteres ausentes usan Libre Baskerville. Puedes cambiar la fuente de la hoja en Ajustes.</p></details>
+          <details><summary>¿Cómo llevo mi biblioteca a escritorio?</summary><p>Exporta un .backup desde la web e impórtalo en escritorio. Allí los documentos se guardan en una carpeta de trabajo y puedes configurar copias automáticas.</p></details>
+        </div>
+      </section>
+      <footer class="guide-footer"><span>Group Sheet Editor · Manual de la versión web</span><a href="#contenido">Volver arriba ↑</a></footer>
+    </main>
+  </div>
+  <dialog id="screenshot-dialog" aria-labelledby="screenshot-caption">
+    <button class="button button-quiet" id="close-screenshot" type="button" autofocus>Cerrar imagen</button>
+    <img id="screenshot-image" alt="">
+    <p id="screenshot-caption"></p>
+  </dialog>
 </body>
 </html>

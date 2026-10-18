@@ -19,11 +19,11 @@ Nota: El motor también soporta un bloque opcional `Header:` al principio del sc
 Contiene la información de 'header' en la canción, sobre el autor, tonalidad, signatura y tempo.
 **Ejemplo:**
 Header:
-Name=Song Name,
-Author=Author Name,
-Tempo=120,
+Name=Rockin' Around The Christmas Tree,
+Author=Brenda Lee,
+Tempo=142,
 Signature=4/4,
-Tone=C
+Tone=Ab
 
 ## 2. Bloque de Secciones (`Sections:`)
 
@@ -40,7 +40,7 @@ Cada línea define el contenido armónico de una sección siguiendo el formato:
   - `..` : Blanca (División 2).
   - `...` : Blanca con puntillo (División 5).
 - **Acordes Especiales**:
-  - `%`: Repetición del acorde anterior (Internal: `R`).
+  - `%`: Repetición del compás anterior (Internal: `R`).
   - `_`: Silencio (Internal: `REST`).
   - `/`: Compás de salto de línea visual (Internal: `S`).
 
@@ -49,7 +49,7 @@ Cada línea define el contenido armónico de una sección siguiendo el formato:
 - `xN`: Al final de la línea, indica el número de vueltas o repeticiones de esa sección (ej. `x2`, `x4`).
 
 **Ejemplo:**
-`CORO = |C,G..|Am,F..|%|/|x2`
+`B = |Db|%|Cm|%|Fm..,Fm7+..|Fm7|Bb7|Eb7|x2`
 
 ---
 
